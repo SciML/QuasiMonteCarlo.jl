@@ -35,7 +35,7 @@ using UnsafeArrays
 Everything has the same interface:
 
 ```julia
-QuasiMonteCarlo.sample(n,lb,ub,sample_method)
+A = QuasiMonteCarlo.sample(n,lb,ub,sample_method)
 ```
 
 where:
@@ -44,6 +44,15 @@ where:
 - `lb` is the lower bound for each variable. The length determines the dimensionality.
 - `ub` is the upper bound.
 - `sample_method` is the quasi-Monte Carlo sampling strategy.
+
+Additionally there is a helper function for generating design matrices:
+
+```julia
+As = QuasiMonteCarlo.generate_design_matrices(n,lb,ub,sample_method,k=2)
+```
+
+which returns `As` which is an array of `k` design matrices `A[i]` which are
+all sampled from the same low discrepancy sequence.
 
 ## Available Sampling Methods
 

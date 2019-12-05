@@ -152,6 +152,13 @@ function sample(n,d,D::Distribution)
     end
 end
 
+function generate_design_matrices(n,lb,ub,sampler,num_mats = 2)
+    @assert length(lb) == length(ub)
+    d = length(lb)
+    out = sample(n,repeat(lb,num_mats),repeat(ub,num_mats),sampler)
+    [out[(j*d+1):((j+1)*d),:] for j in 0:num_mats-1]
+end
+
 export GridSample, UniformSample, SobolSample, LatinHypercubeSample,
        RandomSample, LowDiscrepancySample
 
