@@ -1,5 +1,7 @@
 # QuasiMonteCarlo.jl
 
+[![Build Status](https://travis-ci.org/JuliaDiffEq/QuasiMonteCarlo.jl.svg?branch=master)](https://travis-ci.org/JuliaDiffEq/QuasiMonteCarlo.jl)
+
 This is a lightweight package for generating Quasi Monte Carlo (QMC) samples
 using various different methods.
 
