@@ -72,7 +72,7 @@ Adding a new sampling method is a two step process:
 
 **Example**
 
-```
+```julia
 struct NewAmazingSamplingAlgorithm{OPTIONAL} <: SamplingAlgorithm end
 
 function sample(n,lb,ub,::NewAmazingSamplingAlgorithm)
