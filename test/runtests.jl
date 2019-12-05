@@ -22,28 +22,28 @@ d = 2
 
 #GridSample{T}
 s = QuasiMonteCarlo.sample(n,lb,ub,GridSample([0.1,0.5]))
-@test isa(s,Array{Tuple{typeof(s[1][1]),typeof(s[1][1])},1}) == true
+@test isa(s,Matrix{typeof(s[1][1])}) == true
 
 #UniformSample()
 s = QuasiMonteCarlo.sample(n,lb,ub,UniformSample())
-@test isa(s,Array{Tuple{typeof(s[1][1]),typeof(s[1][1])},1}) == true
+@test isa(s,Matrix{typeof(s[1][1])}) == true
 
 #SobolSample()
 s = QuasiMonteCarlo.sample(n,lb,ub,SobolSample())
-@test isa(s,Array{Tuple{typeof(s[1][1]),typeof(s[1][1])},1}) == true
+@test isa(s,Matrix{typeof(s[1][1])}) == true
 
 #LHS
 s = QuasiMonteCarlo.sample(n,lb,ub,LatinHypercubeSample())
-@test isa(s,Array{Tuple{typeof(s[1][1]),typeof(s[1][1])},1}) == true
+@test isa(s,Matrix{typeof(s[1][1])}) == true
 
 #LDS
 s = QuasiMonteCarlo.sample(n,lb,ub,LowDiscrepancySample([10,3]))
-@test isa(s,Array{Tuple{typeof(s[1][1]),typeof(s[1][1])},1}) == true
+@test isa(s,Matrix{typeof(s[1][1])}) == true
 
 #Distribution 1
 s = QuasiMonteCarlo.sample(n,d,Cauchy())
-@test isa(s,Array{Tuple{typeof(s[1][1]),typeof(s[1][1])},1}) == true
+@test isa(s,Matrix{typeof(s[1][1])}) == true
 
 #Distribution 2
 s = QuasiMonteCarlo.sample(n,d,Normal(3,5))
-@test isa(s,Array{Tuple{typeof(s[1][1]),typeof(s[1][1])},1}) == true
+@test isa(s,Matrix{typeof(s[1][1])}) == true

@@ -37,7 +37,7 @@ function sample(n,lb,ub,S::GridSample)
     else
         d = length(lb)
         x = [[rand(lb[j]:dx[j]:ub[j]) for j = 1:d] for i in 1:n]
-        return Tuple.(x)
+        return reduce(hcat,x)
     end
 end
 
@@ -51,7 +51,7 @@ function sample(n,lb,ub,::UniformSample)
     else
         d = length(lb)
         x = [[rand(Uniform(lb[j],ub[j])) for j in 1:d] for i in 1:n]
-        return Tuple.(x)
+        return reduce(hcat,x)
     end
 end
 
@@ -65,7 +65,7 @@ function sample(n,lb,ub,::SobolSample)
     if lb isa Number
         return [next!(s)[1] for i = 1:n]
     else
-        return Tuple.([next!(s) for i = 1:n])
+        return reduce(hcat,[next!(s) for i = 1:n])
     end
 end
 
@@ -85,8 +85,7 @@ function sample(n,lb,ub,::LatinHypercubeSample)
         @inbounds for c = 1:d
             lib_out[:,c] = (ub[c]-lb[c])*lib_out[:,c]/n .+ lb[c]
         end
-        x = [lib_out[i,:] for i = 1:n]
-        return Tuple.(x)
+        return lib_out
     end
 end
 
@@ -136,9 +135,7 @@ function sample(n,lb,ub,S::LowDiscrepancySample)
         @inbounds for c = 1:d
             x[:,c] = (ub[c]-lb[c])*x[:,c] .+ lb[c]
         end
-
-        y = [x[i,:] for i = 1:n]
-        return Tuple.(y)
+        return x
     end
 end
 
@@ -150,8 +147,8 @@ function sample(n,d,D::Distribution)
     if d == 1
         return rand(D,n)
     else
-        x = [[rand(D) for j in 1:d] for i in 1:n]
-        return Tuple.(x)
+        x = reduce(hcat,[[rand(D) for j in 1:d] for i in 1:n])
+        return x
     end
 end
 
