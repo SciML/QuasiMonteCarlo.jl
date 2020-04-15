@@ -37,7 +37,7 @@ function sample(n,lb,ub,S::GridSample)
     else
         d = length(lb)
         x = [[rand(lb[j]:dx[j]:ub[j]) for j = 1:d] for i in 1:n]
-        return reduce(vcat,x')
+        return reduce(hcat,x)
     end
 end
 
@@ -51,7 +51,7 @@ function sample(n,lb,ub,::UniformSample)
     else
         d = length(lb)
         x = [[rand(Uniform(lb[j],ub[j])) for j in 1:d] for i in 1:n]
-        return reduce(vcat,x')
+        return reduce(hcat,x)
     end
 end
 
@@ -65,7 +65,7 @@ function sample(n,lb,ub,::SobolSample)
     if lb isa Number
         return [next!(s)[1] for i = 1:n]
     else
-        return reduce(vcat,[next!(s) for i = 1:n]')
+        return reduce(hcat,[next!(s) for i = 1:n])
     end
 end
 
@@ -80,10 +80,10 @@ function sample(n,lb,ub,::LatinHypercubeSample)
         # x∈[0,n], so affine transform
         return @. (ub-lb) * x/(n) + lb
     else
-        lib_out = float(LHCoptim(n,d,1)[1])
+        lib_out = float(LHCoptim(d,n,1)[1])
         # x∈[0,n], so affine transform column-wise
         @inbounds for c = 1:d
-            lib_out[:,c] = (ub[c]-lb[c])*lib_out[:,c]/n .+ lb[c]
+            lib_out[c, :] = (ub[c]-lb[c])*lib_out[c, :]/n .+ lb[c]
         end
         return lib_out
     end
@@ -116,7 +116,7 @@ function sample(n,lb,ub,S::LowDiscrepancySample)
         return @. (ub-lb) * x + lb
     else
         #Halton sequence
-        x = zeros(Float32,n,d)
+        x = zeros(Float32,d,n)
         for j = 1:d
             b = S.base[j]
             for i = 1:n
@@ -127,13 +127,13 @@ function sample(n,lb,ub,S::LowDiscrepancySample)
                 for k = 1:L
                     val += expansion[k]*float(b)^(-(k-1)-1)
                 end
-                x[i,j] = val
+                x[j,i] = val
             end
         end
         #Resizing
         # x∈[0,1], so affine transform column-wise
         @inbounds for c = 1:d
-            x[:,c] = (ub[c]-lb[c])*x[:,c] .+ lb[c]
+            x[c, :] = (ub[c]-lb[c])*x[c, :] .+ lb[c]
         end
         return x
     end
@@ -148,14 +148,14 @@ function sample(n,d,D::Distribution)
         return rand(D,n)
     else
         x = [[rand(D) for j in 1:d] for i in 1:n]
-        return reduce(vcat, x')
+        return reduce(hcat, x)
     end
 end
 
 function generate_design_matrices(n,lb,ub,sampler,num_mats = 2)
     @assert length(lb) == length(ub)
     d = length(lb)
-    out = sample(n,repeat(lb,num_mats),repeat(ub,num_mats),sampler)
+    out = sample(n, repeat(lb,num_mats), repeat(ub,num_mats),sampler)
     [out[(j*d+1):((j+1)*d),:] for j in 0:num_mats-1]
 end
 
