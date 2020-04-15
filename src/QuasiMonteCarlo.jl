@@ -37,7 +37,7 @@ function sample(n,lb,ub,S::GridSample)
     else
         d = length(lb)
         x = [[rand(lb[j]:dx[j]:ub[j]) for j = 1:d] for i in 1:n]
-        return reduce(hcat,x)
+        return reduce(vcat,x')
     end
 end
 
@@ -51,7 +51,7 @@ function sample(n,lb,ub,::UniformSample)
     else
         d = length(lb)
         x = [[rand(Uniform(lb[j],ub[j])) for j in 1:d] for i in 1:n]
-        return reduce(hcat,x)
+        return reduce(vcat,x')
     end
 end
 
@@ -65,7 +65,7 @@ function sample(n,lb,ub,::SobolSample)
     if lb isa Number
         return [next!(s)[1] for i = 1:n]
     else
-        return reduce(hcat,[next!(s) for i = 1:n])
+        return reduce(vcat,[next!(s) for i = 1:n]')
     end
 end
 
@@ -147,8 +147,8 @@ function sample(n,d,D::Distribution)
     if d == 1
         return rand(D,n)
     else
-        x = reduce(hcat,[[rand(D) for j in 1:d] for i in 1:n])
-        return x
+        x = [[rand(D) for j in 1:d] for i in 1:n]
+        return reduce(vcat, x')
     end
 end
 

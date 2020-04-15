@@ -20,30 +20,51 @@ ub = [1.0,20.0]
 n = 5
 d = 2
 
-#GridSample{T}
-s = QuasiMonteCarlo.sample(n,lb,ub,GridSample([0.1,0.5]))
-@test isa(s,Matrix{typeof(s[1][1])}) == true
+@testset "GridSample" begin
+    #GridSample{T}
+    s = QuasiMonteCarlo.sample(n,lb,ub,GridSample([0.1,0.5]))
+    @test isa(s,Matrix{typeof(s[1][1])}) == true
+    @test size(s) == (n, d)
+end
 
-#UniformSample()
-s = QuasiMonteCarlo.sample(n,lb,ub,UniformSample())
-@test isa(s,Matrix{typeof(s[1][1])}) == true
+@testset "UniformSample" begin
+    #UniformSample()
+    s = QuasiMonteCarlo.sample(n,lb,ub,UniformSample())
+    @test isa(s,Matrix{typeof(s[1][1])}) == true
+    @test size(s) == (n, d)
+end
 
-#SobolSample()
-s = QuasiMonteCarlo.sample(n,lb,ub,SobolSample())
-@test isa(s,Matrix{typeof(s[1][1])}) == true
+@testset "SobolSample" begin
+    #SobolSample()
+    s = QuasiMonteCarlo.sample(n,lb,ub,SobolSample())
+    @test isa(s,Matrix{typeof(s[1][1])}) == true
+    @test size(s) == (n, d)
+end
 
-#LHS
-s = QuasiMonteCarlo.sample(n,lb,ub,LatinHypercubeSample())
-@test isa(s,Matrix{typeof(s[1][1])}) == true
+@testset "LHS" begin
+    #LHS
+    s = QuasiMonteCarlo.sample(n,lb,ub,LatinHypercubeSample())
+    @test isa(s,Matrix{typeof(s[1][1])}) == true
+    @test size(s) == (n, d)
+end
 
-#LDS
-s = QuasiMonteCarlo.sample(n,lb,ub,LowDiscrepancySample([10,3]))
-@test isa(s,Matrix{typeof(s[1][1])}) == true
+@testset "LDS" begin
+    #LDS
+    s = QuasiMonteCarlo.sample(n,lb,ub,LowDiscrepancySample([10,3]))
+    @test isa(s,Matrix{typeof(s[1][1])}) == true
+    @test size(s) == (n, d)
+end
 
-#Distribution 1
-s = QuasiMonteCarlo.sample(n,d,Cauchy())
-@test isa(s,Matrix{typeof(s[1][1])}) == true
+@testset "Distribution 1" begin
+    #Distribution 1
+    s = QuasiMonteCarlo.sample(n,d,Cauchy())
+    @test isa(s,Matrix{typeof(s[1][1])}) == true
+    @test size(s) == (n, d)
+end
 
-#Distribution 2
-s = QuasiMonteCarlo.sample(n,d,Normal(3,5))
-@test isa(s,Matrix{typeof(s[1][1])}) == true
+@testset "Distribution 2" begin
+    #Distribution 2
+    s = QuasiMonteCarlo.sample(n,d,Normal(3,5))
+    @test isa(s,Matrix{typeof(s[1][1])}) == true
+    @test size(s) == (n, d)
+end
