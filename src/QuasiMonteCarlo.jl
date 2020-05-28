@@ -1,6 +1,6 @@
 module QuasiMonteCarlo
 
-using Sobol, LatinHypercubeSampling, Distributions
+using Sobol, LatinHypercubeSampling, LatticeRules, Distributions
 
 abstract type SamplingAlgorithm end
 
@@ -15,6 +15,7 @@ end
 struct UniformSample <: SamplingAlgorithm end
 struct SobolSample <: SamplingAlgorithm end
 struct LatinHypercubeSample <: SamplingAlgorithm end
+struct LatticeRuleSample <: SamplingAlgorithm end
 
 """
 LowDiscrepancySample{T}
@@ -89,6 +90,32 @@ function sample(n,lb,ub,::LatinHypercubeSample)
     end
 end
 
+"""
+sample(n,lb,ub,::LatticeRuleSample)
+Returns a matrix with the `n` rank-1 lattice points in each column if `lb` is a vector, or a vector with the `n` rank-1 lattice points if `lb` is a number. 
+"""
+function sample(n,lb,ub,::LatticeRuleSample)
+    if lb isa Number
+        lat = ShiftedLatticeRule(1)
+        pts = reduce(vcat,Iterators.take(lat, n))
+        # transform from [0, 1] to [lb, ub]
+        @inbounds for i in 1:n
+            pts[i] = (ub-lb)*pts[i] + lb
+        end
+        return pts
+    else
+        d = length(lb)
+        lat = ShiftedLatticeRule(d)
+        pts = reduce(hcat,Iterators.take(lat, n))
+        # transform from [0, 1]^d to [lb, ub]
+        @inbounds for j in 1:n
+            for i in 1:d
+                pts[i, j] = (ub[i]-lb[i])*pts[i, j] + lb[i]
+            end
+        end
+        return pts
+    end
+end
 
 """
 sample(n,lb,ub,S::LowDiscrepancySample)
@@ -159,7 +186,7 @@ function generate_design_matrices(n,lb,ub,sampler,num_mats = 2)
     [out[(j*d+1):((j+1)*d),:] for j in 0:num_mats-1]
 end
 
-export GridSample, UniformSample, SobolSample, LatinHypercubeSample,
+export GridSample, UniformSample, SobolSample, LatinHypercubeSample, LatticeRuleSample,
        RandomSample, LowDiscrepancySample
 
 end # module

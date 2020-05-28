@@ -10,6 +10,7 @@ QuasiMonteCarlo.sample(n,lb,ub,GridSample(0.1))
 QuasiMonteCarlo.sample(n,lb,ub,UniformSample())
 QuasiMonteCarlo.sample(n,lb,ub,SobolSample())
 QuasiMonteCarlo.sample(n,lb,ub,LatinHypercubeSample())
+QuasiMonteCarlo.sample(n,lb,ub,LatticeRuleSample())
 QuasiMonteCarlo.sample(20,lb,ub,LowDiscrepancySample(10))
 QuasiMonteCarlo.sample(5,d,Cauchy())
 QuasiMonteCarlo.sample(5,d,Normal(0,4))
@@ -44,6 +45,13 @@ end
 @testset "LHS" begin
     #LHS
     s = QuasiMonteCarlo.sample(n,lb,ub,LatinHypercubeSample())
+    @test isa(s,Matrix{typeof(s[1][1])}) == true
+    @test size(s) == (d, n)
+end
+
+@testset "LatticeRuleSample" begin
+    #LatticeRuleSample()
+    s = QuasiMonteCarlo.sample(n,lb,ub,LatticeRuleSample())
     @test isa(s,Matrix{typeof(s[1][1])}) == true
     @test size(s) == (d, n)
 end
