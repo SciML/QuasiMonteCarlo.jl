@@ -18,6 +18,7 @@ s = QuasiMonteCarlo.sample(n,lb,ub,GridSample([0.1,0.5]))
 s = QuasiMonteCarlo.sample(n,lb,ub,UniformSample())
 s = QuasiMonteCarlo.sample(n,lb,ub,SobolSample())
 s = QuasiMonteCarlo.sample(n,lb,ub,LatinHypercubeSample())
+s = QuasiMonteCarlo.sample(n,lb,ub,LatticeRuleSample())
 s = QuasiMonteCarlo.sample(n,lb,ub,LowDiscrepancySample([10,3]))
 ```
 
@@ -60,6 +61,7 @@ all sampled from the same low discrepancy sequence.
 * `UniformSample` for uniformly distributed random numbers.
 * `SobolSample` for the Sobol sequence.
 * `LatinHypercubeSample` for a Latin Hypercube.
+* `LatticeRuleSample` for a randomly-shifted rank-1 lattice rule.
 * `LowDiscrepancySample(base)` where `base[i]` is the base in the ith direction.
 * Additionally, any `Distribution` can be used, and it will be sampled from.
 

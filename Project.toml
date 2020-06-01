@@ -6,6 +6,7 @@ version = "0.2.0"
 [deps]
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
 LatinHypercubeSampling = "a5e1c1ea-c99a-51d3-a14d-a9a37257b02d"
+LatticeRules = "73f95e8e-ec14-4e6a-8b18-0d2e271c4e55"
 Sobol = "ed01d8cd-4d21-5b2a-85b4-cc3bdc58bad4"
 
 [compat]
