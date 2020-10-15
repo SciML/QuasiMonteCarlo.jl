@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/JuliaDiffEq/QuasiMonteCarlo.jl.svg?branch=master)](https://travis-ci.org/JuliaDiffEq/QuasiMonteCarlo.jl)
 
-This is a lightweight package for generating Quasi Monte Carlo (QMC) samples
+This is a lightweight package for generating Quasi-Monte Carlo (QMC) samples
 using various different methods.
 
 ## Example
@@ -46,14 +46,14 @@ where:
 - `ub` is the upper bound.
 - `sample_method` is the quasi-Monte Carlo sampling strategy.
 
-Additionally there is a helper function for generating design matrices:
+Additionally, there is a helper function for generating design matrices:
 
 ```julia
 As = QuasiMonteCarlo.generate_design_matrices(n,lb,ub,sample_method,k=2)
 ```
 
-which returns `As` which is an array of `k` design matrices `A[i]` which are
-all sampled from the same low discrepancy sequence.
+which returns `As` which is an array of `k` design matrices `A[i]` that are
+all sampled from the same low-discrepancy sequence.
 
 ## Available Sampling Methods
 
@@ -67,9 +67,9 @@ all sampled from the same low discrepancy sequence.
 
 ## Adding a new sampling method
 
-Adding a new sampling method is a two step process:
+Adding a new sampling method is a two-step process:
 
-1. Add a new SamplingAlgorithm type
+1. Add a new SamplingAlgorithm type.
 2. Overload the sample function with the new type.
 
 **Example**
