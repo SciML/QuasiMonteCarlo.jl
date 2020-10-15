@@ -44,7 +44,7 @@ end
 
 """
 sample(n,lb,ub,::UniformRandom)
-Returns a Tuple containig uniform random numbers.
+Returns a tuple containing uniform random numbers.
 """
 function sample(n,lb,ub,::UniformSample)
     if lb isa Number
@@ -58,7 +58,7 @@ end
 
 """
 sample(n,lb,ub,::SobolSampling)
-Returns a Tuple containig Sobol sequences.
+Returns a tuple containing Sobol sequences.
 """
 function sample(n,lb,ub,::SobolSample)
     s = SobolSeq(lb,ub)
@@ -72,7 +72,7 @@ end
 
 """
 sample(n,lb,ub,::LatinHypercube)
-Returns a Tuple containig LatinHypercube sequences.
+Returns a tuple containing LatinHypercube sequences.
 """
 function sample(n,lb,ub,::LatinHypercubeSample)
     d = length(lb)
@@ -92,7 +92,7 @@ end
 
 """
 sample(n,lb,ub,::LatticeRuleSample)
-Returns a matrix with the `n` rank-1 lattice points in each column if `lb` is a vector, or a vector with the `n` rank-1 lattice points if `lb` is a number. 
+Returns a matrix with the `n` rank-1 lattice points in each column if `lb` is a vector, or a vector with the `n` rank-1 lattice points if `lb` is a number.
 """
 function sample(n,lb,ub,::LatticeRuleSample)
     if lb isa Number
@@ -119,10 +119,10 @@ end
 
 """
 sample(n,lb,ub,S::LowDiscrepancySample)
-Low discrepancy sample:
-- Dimension 1: Van der corput sequence
+Low-discrepancy sample:
+- Dimension 1: Van der Corput sequence
 - Dimension > 1: Halton sequence
-If dimension d > 1, every bases must be coprime with each other.
+If dimension d > 1, all bases must be coprime with one other.
 """
 function sample(n,lb,ub,S::LowDiscrepancySample)
     d = length(lb)
@@ -168,7 +168,7 @@ end
 
 """
 sample(n,d,D::Distribution)
-Returns a Tuple containig numbers distributed as D
+Returns a tuple containing numbers distributed as D.
 """
 function sample(n,d,D::Distribution)
     if d == 1
