@@ -1,6 +1,6 @@
 # QuasiMonteCarlo.jl
 
-[![Build Status](https://travis-ci.org/JuliaDiffEq/QuasiMonteCarlo.jl.svg?branch=master)](https://travis-ci.org/JuliaDiffEq/QuasiMonteCarlo.jl)
+[![Build Status](https://github.com/SciML/QuasiMonteCarlo.jl/workflows/CI/badge.svg)](https://github.com/SciML/QuasiMonteCarlo.jl/actions?query=workflow%3ACI)
 
 This is a lightweight package for generating Quasi-Monte Carlo (QMC) samples
 using various different methods.
