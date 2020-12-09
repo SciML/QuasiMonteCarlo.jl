@@ -49,7 +49,8 @@ where:
 Additionally, there is a helper function for generating design matrices:
 
 ```julia
-As = QuasiMonteCarlo.generate_design_matrices(n,lb,ub,sample_method,k=2)
+k=2
+As = QuasiMonteCarlo.generate_design_matrices(n,lb,ub,sample_method,k)
 ```
 
 which returns `As` which is an array of `k` design matrices `A[i]` that are
