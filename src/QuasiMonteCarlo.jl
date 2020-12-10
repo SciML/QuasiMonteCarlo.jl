@@ -81,7 +81,7 @@ function sample(n,lb,ub,::LatinHypercubeSample)
         # x∈[0,n], so affine transform
         return @. (ub-lb) * x/(n) + lb
     else
-        lib_out = float(LHCoptim(d,n,1)[1])
+        lib_out = float(LHCoptim(n,d,1)[1])
         # x∈[0,n], so affine transform column-wise
         @inbounds for c = 1:d
             lib_out[c, :] = (ub[c]-lb[c])*lib_out[c, :]/n .+ lb[c]
