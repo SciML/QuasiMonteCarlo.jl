@@ -11,9 +11,22 @@ QuasiMonteCarlo.sample(n,lb,ub,UniformSample())
 QuasiMonteCarlo.sample(n,lb,ub,SobolSample())
 QuasiMonteCarlo.sample(n,lb,ub,LatinHypercubeSample())
 QuasiMonteCarlo.sample(n,lb,ub,LatticeRuleSample())
-QuasiMonteCarlo.sample(20,lb,ub,LowDiscrepancySample(10))
 QuasiMonteCarlo.sample(5,d,Cauchy())
 QuasiMonteCarlo.sample(5,d,Normal(0,4))
+
+@testset "1D" begin
+    @testset "LowDiscrepancySample" begin
+        s = QuasiMonteCarlo.sample(n, 0.0, 1.0, LowDiscrepancySample(2))
+        @test isa(s, Vector{Float64})
+        @test size(s) == (n,)
+        @test s ≈ [0.5, 0.25, 0.75, 0.125, 0.625]
+
+        s = QuasiMonteCarlo.sample(n, zero(Float32), one(Float32), LowDiscrepancySample(2))
+        @test isa(s, Vector{Float32})
+        @test size(s) == (n,)
+        @test s ≈ [0.5, 0.25, 0.75, 0.125, 0.625] rtol = 1e-7
+    end
+end
 
 #ND
 lb = [0.0,0.0]
@@ -59,10 +72,16 @@ end
 @testset "LDS" begin
     #LDS
     s = QuasiMonteCarlo.sample(n,lb,ub,LowDiscrepancySample([2,3]))
-    @test isa(s,Matrix)
+    @test isa(s,Matrix{Float64})
     @test size(s) == (d, n)
     @test s[1, :] ≈ [0.5, 0.25, 0.75, 0.125, 0.625]
     @test s[2, :] ≈ [1/3, 2/3, 1/9, 4/9, 7/9]
+
+    s = QuasiMonteCarlo.sample(n,zeros(Float32, 2),ones(Float32, 2),LowDiscrepancySample([2,3]))
+    @test isa(s,Matrix{Float32})
+    @test size(s) == (d, n)
+    @test s[1, :] ≈ [0.5, 0.25, 0.75, 0.125, 0.625] rtol = 1e-7
+    @test s[2, :] ≈ [1/3, 2/3, 1/9, 4/9, 7/9] rtol = 1e-7
 end
 
 @testset "Distribution 1" begin
