@@ -16,8 +16,8 @@ QuasiMonteCarlo.sample(5,d,Cauchy())
 QuasiMonteCarlo.sample(5,d,Normal(0,4))
 
 #ND
-lb = [0 0]
-ub = [1 1]
+lb = [0.0,0.0]
+ub = [1.0,1.0]
 n = 5
 d = 2
 
