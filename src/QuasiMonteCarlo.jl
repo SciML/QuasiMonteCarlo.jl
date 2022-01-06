@@ -129,11 +129,11 @@ function sample(n,lb,ub,S::LowDiscrepancySample)
     if d == 1
         #Van der Corput
         b = S.base
-        x = zeros(n)
+        x = zeros(typeof(lb[1]), n)
         for i = 1:n
             expansion = digits(i,base = b)
             L = length(expansion)
-            val = 0.0
+            val = zero(typeof(lb[1]))
             for k = 1:L
                 val += expansion[k]*float(b)^(-(k-1)-1)
             end
@@ -143,11 +143,11 @@ function sample(n,lb,ub,S::LowDiscrepancySample)
         return @. (ub-lb) * x + lb
     else
         #Halton sequence
-        x = zeros(d,n)
+        x = zeros(typeof(lb[1]), d,n)
         for j = 1:d
             b = S.base[j]
             for i = 1:n
-                val = 0.0
+                val = zero(typeof(lb[1]))
                 expansion = digits(i, base = b)
                 L = length(expansion)
                 for k = 1:L
