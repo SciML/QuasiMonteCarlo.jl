@@ -125,15 +125,18 @@ Low-discrepancy sample:
 If dimension d > 1, all bases must be coprime with one other.
 """
 function sample(n,lb,ub,S::LowDiscrepancySample)
+    @assert length(lb) == length(ub)
+
     d = length(lb)
+    t = float(eltype(lb)) # infer data type for return values
     if d == 1
         #Van der Corput
         b = S.base
-        x = zeros(Float32,n)
+        x = zeros(t, n)
         for i = 1:n
             expansion = digits(i,base = b)
             L = length(expansion)
-            val = zero(Float32)
+            val = zero(t)
             for k = 1:L
                 val += expansion[k]*float(b)^(-(k-1)-1)
             end
@@ -143,14 +146,13 @@ function sample(n,lb,ub,S::LowDiscrepancySample)
         return @. (ub-lb) * x + lb
     else
         #Halton sequence
-        x = zeros(Float32,d,n)
+        x = zeros(t,d,n)
         for j = 1:d
             b = S.base[j]
             for i = 1:n
-                val = zero(Float32)
+                val = zero(t)
                 expansion = digits(i, base = b)
                 L = length(expansion)
-                val = zero(Float32)
                 for k = 1:L
                     val += expansion[k]*float(b)^(-(k-1)-1)
                 end
