@@ -125,6 +125,8 @@ Low-discrepancy sample:
 If dimension d > 1, all bases must be coprime with one other.
 """
 function sample(n,lb,ub,S::LowDiscrepancySample)
+    @assert length(lb) == length(ub)
+
     d = length(lb)
     t = float(eltype(lb)) # infer data type for return values
     if d == 1
