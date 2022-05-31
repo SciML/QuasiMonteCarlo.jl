@@ -31,6 +31,33 @@ QuasiMonteCarlo.sample(5,d,Normal(0,4))
         @test size(s) == (n,)
         @test s ≈ [0.5, 0.25, 0.75, 0.125, 0.625] rtol = 1e-7
     end
+
+    @testset "KroneckerSample" begin
+        s = QuasiMonteCarlo.sample(n,lb,ub,KroneckerSample(sqrt(2),0))
+        @test s isa Vector{Float64} && length(s) == n && all(x -> lb ≤ x ≤ ub, s)
+    end
+
+    @testset "GoldenSample" begin
+        s = QuasiMonteCarlo.sample(n,lb,ub,GoldenSample())
+        @test s isa Vector{Float64} && length(s) == n && all(x -> lb ≤ x ≤ ub, s)
+    end
+
+    @testset "SectionSample" begin
+        constrained_val = 1.0
+        sampler = SectionSample([NaN64], UniformSample())
+        s = QuasiMonteCarlo.sample(n, lb, ub, sampler)
+        @test s isa Vector{Float64} && length(s) == n && all(x -> lb ≤ x ≤ ub, s)
+        @test !all(==(constrained_val), s)
+        @test QuasiMonteCarlo.free_dimensions(sampler) == [1]
+        @test QuasiMonteCarlo.fixed_dimensions(sampler) == Int[]
+
+        sampler = SectionSample([constrained_val], UniformSample())
+        s = QuasiMonteCarlo.sample(n, lb, ub, sampler)
+        @test s isa Vector{Float64} && length(s) == n && all(x -> lb ≤ x ≤ ub, s)
+        @test all(==(constrained_val), s)
+        @test QuasiMonteCarlo.free_dimensions(sampler) == Int[]
+        @test QuasiMonteCarlo.fixed_dimensions(sampler) == [1]
+    end
 end
 
 #ND
@@ -119,18 +146,21 @@ end
 end
 
 @testset "Kronecker" begin
-    s = QuasiMonteCarlo.sample(n,lb,ub,KroneckerSample(sqrt(2),0))
+    s = QuasiMonteCarlo.sample(n,lb,ub,KroneckerSample([sqrt(2),3.1415],[0,0]))
     @test isa(s, Matrix{Float64})
     @test size(s) == (d, n)
 end
 
 @testset "Section Sample" begin
     constrained_val = 1.0
-    s = QuasiMonteCarlo.sample(n, lb, ub, SectionSample([NaN64, constrained_val], UniformSample()))
+    sampler = SectionSample([NaN64, constrained_val], UniformSample())
+    s = QuasiMonteCarlo.sample(n, lb, ub, sampler)
     @test all(s[2, :] .== constrained_val)
     @test isa(s, Matrix{Float64})
     @test size(s) == (d, n)
     @test all(lb[1] .≤ s[1, :] .≤ ub[1])
+    @test QuasiMonteCarlo.fixed_dimensions(sampler) == [2]
+    @test QuasiMonteCarlo.free_dimensions(sampler) == [1]
 end
 
 @testset "generate_design_matrices" begin
