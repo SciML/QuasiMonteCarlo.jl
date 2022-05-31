@@ -65,7 +65,7 @@ all sampled from the same low-discrepancy sequence.
 * `LatticeRuleSample` for a randomly-shifted rank-1 lattice rule.
 * `LowDiscrepancySample(base)` where `base[i]` is the base in the ith direction.
 * `GoldenSample` for a Golden Ratio sequence.
-* `KroneckerSample(alpha, s0)` for a Kronecker sequence, where alpha is an irrational number (typically sqrt(d)) and s0 is a seed (often 0).
+* `KroneckerSample(alpha, s0)` for a Kronecker sequence, where alpha is an length-d vector of irrational numbers (often sqrt(d)) and s0 is a length-d seed vector (often 0).
 * `SectionSample(x0, sampler)` where `sampler` is any sampler above and `x0` is a vector of either `NaN` for a free dimension or some scalar for a constrained dimension.
 * Additionally, any `Distribution` can be used, and it will be sampled from.
 
