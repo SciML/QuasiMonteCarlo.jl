@@ -64,6 +64,9 @@ all sampled from the same low-discrepancy sequence.
 * `LatinHypercubeSample` for a Latin Hypercube.
 * `LatticeRuleSample` for a randomly-shifted rank-1 lattice rule.
 * `LowDiscrepancySample(base)` where `base[i]` is the base in the ith direction.
+* `GoldenSample` for a Golden Ratio sequence.
+* `KroneckerSample(alpha, s0)` for a Kronecker sequence, where alpha is an irrational number (typically sqrt(d)) and s0 is a seed (often 0).
+* `SectionSample(x0, sampler)` where `sampler` is any sampler above and `x0` is a vector of either `NaN` for a free dimension or some scalar for a constrained dimension.
 * Additionally, any `Distribution` can be used, and it will be sampled from.
 
 ## Adding a new sampling method
@@ -73,18 +76,20 @@ Adding a new sampling method is a two-step process:
 1. Add a new SamplingAlgorithm type.
 2. Overload the sample function with the new type.
 
+All sampling methods are expected to return a matrix with dimension `d` by `n`, where `d` is the dimension of the sample space and `n` is the number of samples.
+
 **Example**
 
 ```julia
 struct NewAmazingSamplingAlgorithm{OPTIONAL} <: SamplingAlgorithm end
 
 function sample(n,lb,ub,::NewAmazingSamplingAlgorithm)
-    if lb is  Number
+    if lb isa Number
         ...
         return x
     else
         ...
-        return Tuple.(x)
+        return reduce(hcat, x)
     end
 end
 ```
