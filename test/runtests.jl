@@ -119,7 +119,7 @@ end
 end
 
 @testset "Kronecker" begin
-    s = QuasiMonteCarlo.sample(n,lb,ub,KroneckerSample(sqrt(2),0))
+    s = QuasiMonteCarlo.sample(n,lb,ub,KroneckerSample([sqrt(2),3.1415],[0,0]))
     @test isa(s, Matrix{Float64})
     @test size(s) == (d, n)
 end

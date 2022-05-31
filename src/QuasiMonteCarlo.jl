@@ -36,7 +36,7 @@ struct GoldenSample <: SamplingAlgorithm end
 
 struct SectionSample{T} <: SamplingAlgorithm
     x0::Vector{T}
-    sa::QuasiMonteCarlo.SamplingAlgorithm
+    sa::SamplingAlgorithm
 end
 
 """
