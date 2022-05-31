@@ -109,6 +109,30 @@ end
     @test size(s) == (d, n)
 end
 
+@testset "GoldenSample" begin
+    s = QuasiMonteCarlo.sample(n,lb,ub,GoldenSample())
+    @test isa(s, Matrix{Float64})
+    @test size(s) == (d, n)
+    for id in 1:d
+        @test all(lb[id] .≤ s[id, :] .≤ ub[id])
+    end
+end
+
+@testset "Kronecker" begin
+    s = QuasiMonteCarlo.sample(n,lb,ub,KroneckerSample(sqrt(2),0))
+    @test isa(s, Matrix{Float64})
+    @test size(s) == (d, n)
+end
+
+@testset "Section Sample" begin
+    constrained_val = 1.0
+    s = QuasiMonteCarlo.sample(n, lb, ub, SectionSample([NaN64, constrained_val], UniformSample()))
+    @test all(s[2, :] .== constrained_val)
+    @test isa(s, Matrix{Float64})
+    @test size(s) == (d, n)
+    @test all(lb[1] .≤ s[1, :] .≤ ub[1])
+end
+
 @testset "generate_design_matrices" begin
     num_mat = 3
     Ms = QuasiMonteCarlo.generate_design_matrices(n,lb,ub,UniformSample(), num_mat)
