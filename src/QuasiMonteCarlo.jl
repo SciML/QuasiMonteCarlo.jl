@@ -277,9 +277,6 @@ function sample(n,lb,ub,section_sampler::SectionSample)
         d_free = free_dimensions(section_sampler)
         new_samples = sample(n, lb[d_free], ub[d_free], section_sampler.sa)
         out_as_vec = collect(repeat(section_sampler.x0', n, 1)')
-
-        @show size(new_samples)
-        @show size(out_as_vec, 2)
         for y in 1:size(out_as_vec,2)
             for (xi, d) in enumerate(d_free)
                 out_as_vec[d,y] = new_samples[xi, y]
