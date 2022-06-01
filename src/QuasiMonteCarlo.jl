@@ -279,7 +279,7 @@ function sample(n,lb,ub,section_sampler::SectionSample)
         out_as_vec = collect(repeat(section_sampler.x0', n, 1)')
         for y in 1:size(out_as_vec,2)
             for (xi, d) in enumerate(d_free)
-                out_as_vec[d,y] = new_samples[y][xi]
+                out_as_vec[d,y] = new_samples[xi, y]
             end
         end
         return out_as_vec

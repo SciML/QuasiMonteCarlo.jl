@@ -152,6 +152,10 @@ end
 end
 
 @testset "Section Sample" begin
+    lb = [0.0,0.0]
+    ub = [1.0,1.0]
+    n = 5
+    d = 2
     constrained_val = 1.0
     sampler = SectionSample([NaN64, constrained_val], UniformSample())
     s = QuasiMonteCarlo.sample(n, lb, ub, sampler)
@@ -161,6 +165,21 @@ end
     @test all(lb[1] .≤ s[1, :] .≤ ub[1])
     @test QuasiMonteCarlo.fixed_dimensions(sampler) == [2]
     @test QuasiMonteCarlo.free_dimensions(sampler) == [1]
+
+    constrained_val = 2.0
+    d = 3
+    sampler = SectionSample([NaN64, constrained_val, NaN64], SobolSample())
+    @test QuasiMonteCarlo.free_dimensions(sampler) == [1, 3]
+    @test QuasiMonteCarlo.fixed_dimensions(sampler) == [2]
+    lb = [-1.0,constrained_val,-1.0]
+    ub = [6.0,constrained_val,6.0]
+    s = QuasiMonteCarlo.sample(n, lb, ub, sampler)
+
+    @test all(lb[1] .≤ s[1, :] .≤ ub[1])
+    @test all(lb[3] .≤ s[3, :] .≤ ub[3])
+    @test all(s[2, :] .== constrained_val)
+    @test isa(s, Matrix{Float64})
+    @test size(s) == (d, n)
 end
 
 @testset "generate_design_matrices" begin
