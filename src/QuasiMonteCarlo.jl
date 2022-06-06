@@ -5,39 +5,115 @@ using Sobol, LatinHypercubeSampling, LatticeRules, Distributions
 abstract type SamplingAlgorithm end
 
 """
+```julia
 GridSample{T}
-T is the step dx for lb:dx:ub
+```
+
+The grid is given by `lb:dx[i]:ub` in the ith direction.
 """
 struct GridSample{T} <: SamplingAlgorithm
     dx::T
 end
 
+"""
+```julia
 struct UniformSample <: SamplingAlgorithm end
+```
+
+Uniformly distributed random numbers.
+"""
+struct UniformSample <: SamplingAlgorithm end
+
+"""
+```julia
 struct SobolSample <: SamplingAlgorithm end
+```
+
+Samples using the Sobol sequence.
+"""
+struct SobolSample <: SamplingAlgorithm end
+
+"""
+```julia
 struct LatinHypercubeSample <: SamplingAlgorithm end
+```
+
+Samples using a Latin Hypercube.
+"""
+struct LatinHypercubeSample <: SamplingAlgorithm end
+
+"""
+```julia
+struct LatticeRuleSample <: SamplingAlgorithm end
+```
+
+Samples using a randomly-shifted rank-1 lattice rule.
+"""
 struct LatticeRuleSample <: SamplingAlgorithm end
 
 """
-LowDiscrepancySample{T}
-T is the base for the sequence
+```julia
+struct LowDiscrepancySample{T} <: SamplingAlgorithm
+```
+
+`base[i]` is the base in the ith direction.
 """
 struct LowDiscrepancySample{T} <: SamplingAlgorithm
     base::T
 end
 
+"""
+```julia
+struct RandomSample <: SamplingAlgorithm end
+```
+"""
 struct RandomSample <: SamplingAlgorithm end
 
+"""
+```julia
+struct KroneckerSample{A,B} <: SamplingAlgorithm
+```
+
+`KroneckerSample(alpha, s0)` for a Kronecker sequence, where alpha is an length-d vector of irrational numbers (often sqrt(d)) and s0 is a length-d seed vector (often 0).
+"""
 struct KroneckerSample{A,B} <: SamplingAlgorithm
     alpha::A
     s0::B
 end
 
+"""
+```julia
+struct GoldenSample <: SamplingAlgorithm end
+```
+"""
 struct GoldenSample <: SamplingAlgorithm end
 
+"""
+```julia
+struct SectionSample{T} <: SamplingAlgorithm
+```
+
+`SectionSample(x0, sampler)` where `sampler` is any sampler above and `x0` is a vector of either `NaN` for a free dimension or some scalar for a constrained dimension.
+"""
 struct SectionSample{T} <: SamplingAlgorithm
     x0::Vector{T}
     sa::SamplingAlgorithm
 end
+
+"""
+```julia
+A = QuasiMonteCarlo.sample(n,lb,ub,sample_method)
+```
+
+where:
+
+- `n` is the number of points to sample.
+- `lb` is the lower bound for each variable. The length determines the dimensionality.
+- `ub` is the upper bound.
+- `sample_method` is the quasi-Monte Carlo sampling strategy. Note that any Distributions.jl
+  distribution can be used in addition to any `SamplingAlgorithm`.
+"""
+function sample end
 
 """
 sample(n,lb,ub,S::GridSample)
@@ -299,6 +375,15 @@ function sample(n,d,D::Distribution)
     end
 end
 
+"""
+```julia
+k=2
+As = QuasiMonteCarlo.generate_design_matrices(n,lb,ub,sample_method,k)
+```
+
+which returns `As` which is an array of `k` design matrices `A[i]` that are
+all sampled from the same low-discrepancy sequence.
+"""
 function generate_design_matrices(n,lb,ub,sampler,num_mats = 2)
     @assert length(lb) == length(ub)
     d = length(lb)
