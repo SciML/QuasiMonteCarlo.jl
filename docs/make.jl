@@ -5,7 +5,7 @@ include("pages.jl")
 makedocs(
     sitename="QuasiMonteCarlo.jl",
     authors="Chris Rackauckas",
-    modules=[PoissonRandom],
+    modules=[QuasiMonteCarlo],
     clean=true,doctest=false,
     format = Documenter.HTML(analytics = "UA-90474609-3",
                              assets = ["assets/favicon.ico"],
