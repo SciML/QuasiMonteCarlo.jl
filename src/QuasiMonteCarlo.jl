@@ -1,6 +1,6 @@
 module QuasiMonteCarlo
 
-using Sobol, LatinHypercubeSampling, LatticeRules, Distributions
+using Sobol, LatinHypercubeSampling, LatticeRules, Distributions, Parameters
 
 abstract type SamplingAlgorithm end
 
@@ -40,7 +40,9 @@ struct LatinHypercubeSample <: SamplingAlgorithm end
 
 Samples using a Latin Hypercube.
 """
-struct LatinHypercubeSample <: SamplingAlgorithm end
+@with_kw struct LatinHypercubeSample{T} <: SamplingAlgorithm 
+    threading::T = false
+end
 
 """
 ```julia
@@ -102,6 +104,17 @@ end
 
 """
 ```julia
+struct LogRandomSample{T} <: SamplingAlgorithm
+```
+
+`base` is the base of the logarithm to scale by in each dimension.
+"""
+struct LogRandomSample{T} <: SamplingAlgorithm
+    base::T
+end
+
+"""
+```julia
 A = QuasiMonteCarlo.sample(n,lb,ub,sample_method)
 ```
 
@@ -159,17 +172,18 @@ function sample(n,lb,ub,::SobolSample)
 end
 
 """
-sample(n,lb,ub,::LatinHypercube)
+sample(n,lb,ub,T::LatinHypercubeSample)
 Returns a tuple containing LatinHypercube sequences.
 """
-function sample(n,lb,ub,::LatinHypercubeSample)
+function sample(n,lb,ub,T::LatinHypercubeSample)
+    threading = T.threading
     d = length(lb)
     if lb isa Number
-        x = vec(LHCoptim(n,d,1)[1])
+        x = vec(LHCoptim(n,d,1; threading=threading)[1])
         # x∈[0,n], so affine transform
         return @. (ub-lb) * x/(n) + lb
     else
-        lib_out = collect(float(LHCoptim(n,d,1)[1])')
+        lib_out = collect(float(LHCoptim(n,d,1; threading=threading)[1])')
         # x∈[0,n], so affine transform column-wise
         @inbounds for c = 1:d
             lib_out[c, :] = (ub[c]-lb[c])*lib_out[c, :]/n .+ lb[c]
@@ -363,6 +377,20 @@ function sample(n,lb,ub,section_sampler::SectionSample)
 end
 
 """
+sample(n,lb,ub,B::LogRandomSample)
+Returns a tuple containing log-scaled random numbers where lb and ub contain exponents for the specified base.
+"""
+function sample(n,lb,ub,B::LogRandomSample)
+    if lb isa Number
+        return shuffle!([B.base .^ range(lb,stop=ub,length=n)])
+    # else
+        # d = length(lb)
+        # x = [shuffle!([B.base .^ range(lb[i],stop=ub[i],length=n)]) for i in 1:d]
+        # return x
+    end
+end
+
+"""
 sample(n,d,D::Distribution)
 Returns a tuple containing numbers distributed as D.
 """
@@ -392,6 +420,7 @@ function generate_design_matrices(n,lb,ub,sampler,num_mats = 2)
 end
 
 export GridSample, UniformSample, SobolSample, LatinHypercubeSample, LatticeRuleSample,
-       RandomSample, LowDiscrepancySample, GoldenSample, KroneckerSample, SectionSample
+       RandomSample, LowDiscrepancySample, GoldenSample, KroneckerSample, SectionSample,
+       LogRandomSample
 
 end # module
