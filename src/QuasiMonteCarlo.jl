@@ -29,7 +29,7 @@ struct UniformSample <: SamplingAlgorithm end
 struct SobolSample <: SamplingAlgorithm end
 ```
 
-Samples using the Sobol sequence.
+Samples using the Sobol sequence using Sobol.jl.
 """
 struct SobolSample <: SamplingAlgorithm end
 
@@ -38,7 +38,7 @@ struct SobolSample <: SamplingAlgorithm end
 struct LatinHypercubeSample <: SamplingAlgorithm end
 ```
 
-Samples using a Latin Hypercube.
+Samples using a Latin Hypercube using LatinHypercubeSampling.jl
 
 ```julia
 LatinHypercubeSample(threading=false)
@@ -57,7 +57,8 @@ end
 struct LatticeRuleSample <: SamplingAlgorithm end
 ```
 
-Samples using a randomly-shifted rank-1 lattice rule.
+Samples using a randomly-shifted rank-1 lattice rule
+using LatticeRules.jl
 """
 struct LatticeRuleSample <: SamplingAlgorithm end
 
