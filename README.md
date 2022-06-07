@@ -5,6 +5,13 @@
 This is a lightweight package for generating Quasi-Monte Carlo (QMC) samples
 using various different methods.
 
+## Tutorials and Documentation
+
+For information on using the package,
+[see the stable documentation](https://quasimontecarlo.sciml.ai/stable/). Use the
+[in-development documentation](https://quasimontecarlo.sciml.ai/dev/) for the version of
+the documentation, which contains the unreleased features.
+
 ## Example
 
 ```julia
