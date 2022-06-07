@@ -104,17 +104,6 @@ end
 
 """
 ```julia
-struct LogRandomSample{T} <: SamplingAlgorithm
-```
-
-`base` is the base of the logarithm to scale by in each dimension.
-"""
-struct LogRandomSample{T} <: SamplingAlgorithm
-    base::T
-end
-
-"""
-```julia
 A = QuasiMonteCarlo.sample(n,lb,ub,sample_method)
 ```
 
@@ -373,20 +362,6 @@ function sample(n,lb,ub,section_sampler::SectionSample)
             end
         end
         return out_as_vec
-    end
-end
-
-"""
-sample(n,lb,ub,B::LogRandomSample)
-Returns a tuple containing log-scaled random numbers where lb and ub contain exponents for the specified base.
-"""
-function sample(n,lb,ub,B::LogRandomSample)
-    if lb isa Number
-        return shuffle!([B.base .^ range(lb,stop=ub,length=n)])
-    # else
-        # d = length(lb)
-        # x = [shuffle!([B.base .^ range(lb[i],stop=ub[i],length=n)]) for i in 1:d]
-        # return x
     end
 end
 
