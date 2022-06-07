@@ -40,7 +40,7 @@ struct LatinHypercubeSample <: SamplingAlgorithm end
 
 Samples using a Latin Hypercube.
 """
-@with_kw struct LatinHypercubeSample{T} <: SamplingAlgorithm 
+Base.@kwdef struct LatinHypercubeSample{T} <: SamplingAlgorithm 
     threading::T = false
 end
 
