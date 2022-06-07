@@ -92,6 +92,10 @@ end
     s = QuasiMonteCarlo.sample(n,lb,ub,LatinHypercubeSample())
     @test isa(s,Matrix{typeof(s[1][1])}) == true
     @test size(s) == (d, n)
+
+    s = QuasiMonteCarlo.sample(n,lb,ub,LatinHypercubeSample(threading=true))
+    @test isa(s,Matrix{typeof(s[1][1])}) == true
+    @test size(s) == (d, n)
 end
 
 @testset "LatticeRuleSample" begin
