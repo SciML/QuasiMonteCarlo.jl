@@ -39,6 +39,14 @@ struct LatinHypercubeSample <: SamplingAlgorithm end
 ```
 
 Samples using a Latin Hypercube.
+
+```julia
+LatinHypercubeSample(threading=false)
+```
+
+Keyword arguments:
+
+- `threading`: whether to use threading. Default is false, i.e. serial.
 """
 Base.@kwdef struct LatinHypercubeSample{T} <: SamplingAlgorithm 
     threading::T = false
