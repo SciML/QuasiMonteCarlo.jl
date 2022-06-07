@@ -420,7 +420,6 @@ function generate_design_matrices(n,lb,ub,sampler,num_mats = 2)
 end
 
 export GridSample, UniformSample, SobolSample, LatinHypercubeSample, LatticeRuleSample,
-       RandomSample, LowDiscrepancySample, GoldenSample, KroneckerSample, SectionSample,
-       LogRandomSample
+       RandomSample, LowDiscrepancySample, GoldenSample, KroneckerSample, SectionSample
 
 end # module
