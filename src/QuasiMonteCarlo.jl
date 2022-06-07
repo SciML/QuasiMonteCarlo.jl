@@ -162,14 +162,14 @@ end
 sample(n,lb,ub,::LatinHypercube)
 Returns a tuple containing LatinHypercube sequences.
 """
-function sample(n,lb,ub,::LatinHypercubeSample)
+function sample(n,lb,ub,::LatinHypercubeSample; threading=false)
     d = length(lb)
     if lb isa Number
-        x = vec(LHCoptim(n,d,1)[1])
+        x = vec(LHCoptim(n,d,1; threading=threading)[1])
         # x∈[0,n], so affine transform
         return @. (ub-lb) * x/(n) + lb
     else
-        lib_out = collect(float(LHCoptim(n,d,1)[1])')
+        lib_out = collect(float(LHCoptim(n,d,1; threading=threading)[1])')
         # x∈[0,n], so affine transform column-wise
         @inbounds for c = 1:d
             lib_out[c, :] = (ub[c]-lb[c])*lib_out[c, :]/n .+ lb[c]
