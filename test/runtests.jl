@@ -128,7 +128,7 @@ end
     
     testsample = []
     for i in 1:1000000 push!(testsample, mean(QuasiMonteCarlo.sample(n, lb, ub, LowDiscrepancySample([2, 3], true)))) end
-    @test mean(testsample) ≈ 0.5 rtol=1e-4
+    @test round(mean(testsample), sigdigits=1) ≈ 0.5 rtol=1e-7
 end
 
 @testset "Distribution 1" begin
