@@ -73,7 +73,7 @@ struct LowDiscrepancySample{T, V} <: SamplingAlgorithm
 It contains the [Cranley-Patterson rotations](https://psychopath.io/post/2014_06_28_low_discrepancy_sequences), which can improve Quasi-Monte Carlo integral
 estimates done with LowDiscrepancy sequences (only Halton, in this case)
 """
-Base.@kwdef struct LowDiscrepancySample{T,V} <: SamplingAlgorithm
+struct LowDiscrepancySample{T,V} <: SamplingAlgorithm
     base::T
     rotation::V
 end
