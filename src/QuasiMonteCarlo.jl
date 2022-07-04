@@ -69,8 +69,9 @@ struct LowDiscrepancySample{T} <: SamplingAlgorithm
 
 `base[i]` is the base in the ith direction.
 """
-struct LowDiscrepancySample{T} <: SamplingAlgorithm
+struct LowDiscrepancySample{T, V} <: SamplingAlgorithm
     base::T
+    cp::V = false
 end
 
 """
@@ -224,7 +225,7 @@ Low-discrepancy sample:
 - Dimension > 1: Halton sequence
 If dimension d > 1, all bases must be coprime with one other.
 """
-function sample(n, lb, ub, S::LowDiscrepancySample, cp==false)
+function sample(n, lb, ub, S::LowDiscrepancySample)
     @assert length(lb) == length(ub)
 
     d = length(lb)
@@ -264,7 +265,7 @@ function sample(n, lb, ub, S::LowDiscrepancySample, cp==false)
         @inbounds for c in 1:d
             x[c, :] = (ub[c] - lb[c]) * x[c, :] .+ lb[c]
         end
-        y = (cp == false) ? x : (x .+ rand(d, 1)) .% 1.0                                                                        
+        y = (S.cp == false) ? x : (x .+ rand(d, 1)) .% 1.0                                                                        
         return y
     end
 end
