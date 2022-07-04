@@ -69,9 +69,9 @@ struct LowDiscrepancySample{T} <: SamplingAlgorithm
 
 `base[i]` is the base in the ith direction.
 """
-struct LowDiscrepancySample{T, V} <: SamplingAlgorithm
+struct LowDiscrepancySample{T} <: SamplingAlgorithm
     base::T
-    cp::V = false
+    cp::Bool = false
 end
 
 """
