@@ -75,7 +75,7 @@ estimates done with LowDiscrepancy sequences (only Halton, in this case)
 """
 Base.@kwdef struct LowDiscrepancySample{T, V} <: SamplingAlgorithm
     base::T
-    rotation::V = false
+    rotation::V
 end
 
 """
@@ -270,8 +270,11 @@ function sample(n, lb, ub, S::LowDiscrepancySample)
             x[c, :] = (ub[c] - lb[c]) * x[c, :] .+ lb[c]
         end
         rotation = S.rotation
-        y = (rotation == false) ? x : (x .+ rand(d, 1)) .% 1.0
-                                                                                        
+        if (rotation == false)                                                                                
+            x
+        else
+            (x .+ rand(d, 1)) .% 1.0
+        end                                                                                  
         return y
     end
 end
