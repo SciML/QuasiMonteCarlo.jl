@@ -69,9 +69,9 @@ struct LowDiscrepancySample{T} <: SamplingAlgorithm
 
 `base[i]` is the base in the ith direction.
 """
-struct LowDiscrepancySample{T} <: SamplingAlgorithm
+Base.@kwdef struct LowDiscrepancySample{T, V} <: SamplingAlgorithm
     base::T
-    cprotation = false
+    rotation::V = false
 end
 
 """
@@ -265,7 +265,7 @@ function sample(n, lb, ub, S::LowDiscrepancySample)
         @inbounds for c in 1:d
             x[c, :] = (ub[c] - lb[c]) * x[c, :] .+ lb[c]
         end
-        y = (S.cprotation == false) ? x : (x .+ rand(d, 1)) .% 1.0                                                                        
+        y = (S.rotation == false) ? x : (x .+ rand(d, 1)) .% 1.0                                                                        
         return y
     end
 end
