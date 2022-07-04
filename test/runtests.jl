@@ -16,17 +16,17 @@ QuasiMonteCarlo.sample(5, d, Normal(0, 4))
 
 @testset "1D" begin
     @testset "LowDiscrepancySample" begin
-        s = QuasiMonteCarlo.sample(n, 0.0, 1.0, LowDiscrepancySample(2))
+        s = QuasiMonteCarlo.sample(n, 0.0, 1.0, LowDiscrepancySample(2, false))
         @test isa(s, Vector{Float64})
         @test size(s) == (n,)
         @test s ≈ [0.5, 0.25, 0.75, 0.125, 0.625]
 
-        s = QuasiMonteCarlo.sample(n, 0, 1, LowDiscrepancySample(2))
+        s = QuasiMonteCarlo.sample(n, 0, 1, LowDiscrepancySample(2, false))
         @test isa(s, Vector{Float64})
         @test size(s) == (n,)
         @test s ≈ [0.5, 0.25, 0.75, 0.125, 0.625]
 
-        s = QuasiMonteCarlo.sample(n, zero(Float32), one(Float32), LowDiscrepancySample(2))
+        s = QuasiMonteCarlo.sample(n, zero(Float32), one(Float32), LowDiscrepancySample(2, false))
         @test isa(s, Vector{Float32})
         @test size(s) == (n,)
         @test s≈[0.5, 0.25, 0.75, 0.125, 0.625] rtol=1e-7
