@@ -224,7 +224,7 @@ Low-discrepancy sample:
 - Dimension > 1: Halton sequence
 If dimension d > 1, all bases must be coprime with one other.
 """
-function sample(n, lb, ub, S::LowDiscrepancySample)
+function sample(n, lb, ub, S::LowDiscrepancySample, cp==false)
     @assert length(lb) == length(ub)
 
     d = length(lb)
@@ -264,7 +264,8 @@ function sample(n, lb, ub, S::LowDiscrepancySample)
         @inbounds for c in 1:d
             x[c, :] = (ub[c] - lb[c]) * x[c, :] .+ lb[c]
         end
-        return x
+        y = (cp == false) ? x: (x .+ rand(d, 1)) .% 1.0                                                                        
+        return y
     end
 end
 
