@@ -264,7 +264,7 @@ function sample(n, lb, ub, S::LowDiscrepancySample, cp==false)
         @inbounds for c in 1:d
             x[c, :] = (ub[c] - lb[c]) * x[c, :] .+ lb[c]
         end
-        y = (cp == false) ? x: (x .+ rand(d, 1)) .% 1.0                                                                        
+        y = (cp == false) ? x : (x .+ rand(d, 1)) .% 1.0                                                                        
         return y
     end
 end
