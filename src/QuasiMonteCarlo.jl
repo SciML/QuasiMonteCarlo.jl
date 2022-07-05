@@ -68,9 +68,16 @@ struct LowDiscrepancySample{T} <: SamplingAlgorithm
 ```
 
 `base[i]` is the base in the ith direction.
+
+Keyword arguments:
+
+- `rotation`: whether to apply Cranley-Patterson rotation. It can improve 
+Quasi-Monte Carlo integral estimates done with LowDiscrepancy sequences 
+(only Halton, in this case)
 """
-struct LowDiscrepancySample{T} <: SamplingAlgorithm
+struct LowDiscrepancySample{T, V} <: SamplingAlgorithm
     base::T
+    rotation::V
 end
 
 """
@@ -264,7 +271,12 @@ function sample(n, lb, ub, S::LowDiscrepancySample)
         @inbounds for c in 1:d
             x[c, :] = (ub[c] - lb[c]) * x[c, :] .+ lb[c]
         end
-        return x
+        rotation = S.rotation
+        if (rotation == false)
+            return x
+        else
+            return (x .+ rand(d, 1)) .% 1.0
+        end
     end
 end
 
