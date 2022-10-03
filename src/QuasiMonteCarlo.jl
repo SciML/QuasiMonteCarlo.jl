@@ -1,8 +1,10 @@
 module QuasiMonteCarlo
 
-using Sobol, LatinHypercubeSampling, LatticeRules, Distributions
+using Sobol, LatinHypercubeSampling, LatticeRules, Distributions, Primes, LinearAlgebra
 
 abstract type SamplingAlgorithm end
+
+include("Faure.jl")
 
 """
 ```julia
@@ -71,8 +73,8 @@ struct LowDiscrepancySample{T} <: SamplingAlgorithm
 
 Keyword arguments:
 
-- `rotation`: whether to apply Cranley-Patterson rotation. It can improve 
-Quasi-Monte Carlo integral estimates done with LowDiscrepancy sequences 
+- `rotation`: whether to apply Cranley-Patterson rotation. It can improve
+Quasi-Monte Carlo integral estimates done with LowDiscrepancy sequences
 (only Halton, in this case)
 """
 struct LowDiscrepancySample{T, V} <: SamplingAlgorithm
@@ -414,6 +416,7 @@ function generate_design_matrices(n, lb, ub, sampler, num_mats = 2)
 end
 
 export GridSample, UniformSample, SobolSample, LatinHypercubeSample, LatticeRuleSample,
-       RandomSample, LowDiscrepancySample, GoldenSample, KroneckerSample, SectionSample
+       RandomSample, LowDiscrepancySample, GoldenSample, KroneckerSample, SectionSample,
+       FaureSample
 
 end # module

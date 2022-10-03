@@ -99,6 +99,18 @@ end
     @test size(s) == (d, n)
 end
 
+@testset "Faure Sample" begin
+    #FaureSample()
+    d = 17
+    n = 3 * 17^2
+    @test_throws ArgumentError QuasiMonteCarlo.sample(d+1, d, FaureSample())
+    @test_throws ArgumentError QuasiMonteCarlo.sample(d^2+1, d, FaureSample())
+    s = QuasiMonteCarlo.sample(n, d, FaureSample())
+    @test isa(s, Matrix{Float64})
+    @test size(s) == (d, n)
+    @test mean(abs2, s - include("rfaure.jl")') ≤ sqrt(eps(Float64))
+end
+
 @testset "LatticeRuleSample" begin
     #LatticeRuleSample()
     s = QuasiMonteCarlo.sample(n, lb, ub, LatticeRuleSample())
