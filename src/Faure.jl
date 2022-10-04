@@ -76,8 +76,7 @@ function sample(n::Integer, dimension::Integer, ::FaureSample; skipchecks=false)
 end
 
 @views @fastmath function _faure_samples(
-    n_samples::Integer, power::Integer, dimension::Integer; F=Float64
-)
+    n_samples::Integer, power::Integer, dimension::Integer; ::Type{F}=Float64) where F
     base = nextprime(dimension)
     n_digits = power + 1
 
