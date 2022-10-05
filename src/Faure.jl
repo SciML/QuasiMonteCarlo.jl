@@ -1,30 +1,20 @@
 import Base.size, Base.getindex, Base.setindex, Base.axes
 
-# Pascal triangle -- implementation needed for Faure sequences
-struct PascalMatrix{I, M<:AbstractMatrix{I}} <: LinearAlgebra.AbstractTriangular{I, M}
-    data::M
-end
-
-function PascalMatrix(dimension::I) where I<:Integer
+function pascal_mat(dimension::I, base=Inf) where I<:Integer
     pascal = UpperTriangular(ones(I, dimension, dimension))
-	for i in 2:dimension
+	@inbounds for i in 2:dimension
         for j in 2:i
-            pascal[j, i] = pascal[j-1, i-1] + pascal[j, i-1]
+            pascal[j, i] = (pascal[j-1, i-1] + pascal[j, i-1]) % base
         end
     end
-    return PascalMatrix(pascal)
+    return pascal
 end
 
-Base.:size(x::PascalMatrix) = size(x.data)
-Base.:getindex(x::PascalMatrix, inds...) = getindex(x.data, inds...)
-Base.:setindex!(A, X::PascalMatrix, inds...) = setindex!(A, X.data, inds...)
-Base.:axes(x::PascalMatrix) = Base.:axes(x.data)
-
-function Base.:^(pascal::PascalMatrix, power::Integer)
-    result = similar(pascal.data)
-    @inbounds for idx in eachindex(pascal.data)
+# raise a Pascal matrix to a given power.
+function pascal_power!(result::UpperTriangular, pascal::UpperTriangular, power::Integer)
+    @inbounds for idx in eachindex(pascal)
         i, j = Tuple(idx)
-        result[i, j] = power^(max(j-i, 0)) * pascal.data[i, j]
+        result[idx] = power^(max(j-i, 0)) * pascal[idx]
     end
     return result
 end
@@ -82,15 +72,19 @@ end
     n_digits = power + 1
 
     # Upper triangular Pascal matrix
-    pascal = PascalMatrix(n_digits)
+    pascal = pascal_mat(n_digits, base)
 
     faure = Matrix{F}(undef, dimension, n_samples)
     @inbounds for sample_idx in 1:n_samples
         # base decomposition
         dgs = digits(sample_idx; base=base, pad=n_digits)
         faure[1, sample_idx] = (evalpoly(inv(base), dgs) / base) % base
-        @simd for dim_idx in 2:dimension
-            digit_vec = pascal^(dim_idx - 1) * dgs .% base
+
+        # permute the points using powers of a Pascal matrix
+        permutation = similar(pascal)
+        @inbounds for dim_idx in 2:dimension
+            pascal_power!(permutation, pascal, dim_idx-1)
+            digit_vec = (permutation * dgs) .% base
             faure[dim_idx, sample_idx] = (evalpoly(inv(base), digit_vec) / base) % base
         end
     end
