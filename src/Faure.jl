@@ -20,6 +20,15 @@ Base.:getindex(x::PascalMatrix, inds...) = getindex(x.data, inds...)
 Base.:setindex!(A, X::PascalMatrix, inds...) = setindex!(A, X.data, inds...)
 Base.:axes(x::PascalMatrix) = Base.:axes(x.data)
 
+function Base.:^(pascal::PascalMatrix, power::Integer)
+    result = similar(pascal.data)
+    @inbounds for idx in eachindex(pascal.data)
+        i, j = Tuple(idx)
+        result[i, j] = power^(max(j-i, 0)) * pascal.data[i, j]
+    end
+    return result
+end
+
 """
     FaureSample()
 
@@ -42,14 +51,6 @@ Owen, A. B. (1997). Monte Carlo variance of scrambled net quadrature. *SIAM Jour
 """
 struct FaureSample end
 
-function Base.:^(pascal::PascalMatrix, power::Integer)
-    result = similar(pascal.data)
-    @inbounds for idx in eachindex(pascal.data)
-        i, j = Tuple(idx)
-        result[i, j] = power^(max(j-i, 0)) * pascal.data[i, j]
-    end
-    return result
-end
 
 function sample(n::Integer, lb, ub, ::FaureSample)
     length(lb) == length(ub) || DimensionMismatch("Lower and upper bounds do not match.")
