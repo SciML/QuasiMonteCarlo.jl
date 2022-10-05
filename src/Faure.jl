@@ -47,8 +47,9 @@ function sample(n::Integer, lb, ub, ::FaureSample)
     dimension = length(lb)
     faure = sample(n, dimension, FaureSample())
     @inbounds for (row_idx, row) in enumerate(eachrow(faure))
-        @. row = (ub[row_idx] - lb[row_idx]) * row - lb
+        @. row = (ub[row_idx] - lb[row_idx]) * row - lb[row_idx]
     end
+    return faure
 end
 
 function sample(n::Integer, dimension::Integer, ::FaureSample; skipchecks=false)

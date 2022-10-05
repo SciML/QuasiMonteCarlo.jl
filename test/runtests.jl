@@ -106,6 +106,7 @@ end
     @test_throws ArgumentError QuasiMonteCarlo.sample(d+1, d, FaureSample())
     @test_throws ArgumentError QuasiMonteCarlo.sample(d^2+1, d, FaureSample())
     s = QuasiMonteCarlo.sample(n, d, FaureSample())
+    s == QuasiMonteCarlo.sample(n, zeros(d), ones(d), FaureSample())
     @test isa(s, Matrix{Float64})
     @test size(s) == (d, n)
     @test mean(abs2, s - include("rfaure.jl")') ≤ sqrt(eps(Float64))
