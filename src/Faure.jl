@@ -1,4 +1,3 @@
-
 function pascal_mat(dimension::I, base=Inf) where I<:Integer
     pascal = UpperTriangular(ones(I, dimension, dimension))
 	@inbounds for i in 2:dimension
