@@ -6,6 +6,7 @@ abstract type SamplingAlgorithm end
 
 include("Faure.jl")
 
+check_bounds(lb,ub) = all((x,y)->x<y,zip(lb,ub)) 
 const UB_LB_MESSAGE = """
                           "lb must be less than ub"
                          """
@@ -150,7 +151,7 @@ sample(n,lb,ub,S::GridSample)
 Returns a tuple containing numbers in a grid.
 """
 function sample(n, lb, ub, S::GridSample)
-     if !all(lb.<ub) 
+     if !check_bounds(lb,ub)
         throw(UbLbWrong())
      end
     dx = S.dx
@@ -168,7 +169,7 @@ sample(n,lb,ub,::UniformRandom)
 Returns a tuple containing uniform random numbers.
 """
 function sample(n, lb, ub, ::UniformSample)
-     if !all(lb.<ub) 
+     if !check_bounds(lb,ub)
         throw(UbLbWrong())
      end
     if lb isa Number
@@ -185,7 +186,7 @@ sample(n,lb,ub,::SobolSampling)
 Returns a tuple containing Sobol sequences.
 """
 function sample(n, lb, ub, ::SobolSample)
-     if !all(lb.<ub) 
+     if !check_bounds(lb,ub)
         throw(UbLbWrong())
      end
     s = SobolSeq(lb, ub)
@@ -202,7 +203,7 @@ sample(n,lb,ub,T::LatinHypercubeSample)
 Returns a tuple containing LatinHypercube sequences.
 """
 function sample(n, lb, ub, T::LatinHypercubeSample)
-     if !all(lb.<ub) 
+     if !check_bounds(lb,ub)
         throw(UbLbWrong())
      end
     threading = T.threading
@@ -226,7 +227,7 @@ sample(n,lb,ub,::LatticeRuleSample)
 Returns a matrix with the `n` rank-1 lattice points in each column if `lb` is a vector, or a vector with the `n` rank-1 lattice points if `lb` is a number.
 """
 function sample(n, lb, ub, ::LatticeRuleSample)
-     if !all(lb.<ub) 
+     if !check_bounds(lb,ub)
         throw(UbLbWrong())
      end
     if lb isa Number
@@ -259,7 +260,7 @@ Low-discrepancy sample:
 If dimension d > 1, all bases must be coprime with one other.
 """
 function sample(n, lb, ub, S::LowDiscrepancySample)
-     if !all(lb.<ub) 
+     if !check_bounds(lb,ub)
         throw(UbLbWrong())
      end
     @assert length(lb) == length(ub)
@@ -316,7 +317,7 @@ sample(n,d,K::KroneckerSample)
 Returns a Tuple containing numbers following the Kronecker sample
 """
 function sample(n, lb, ub, K::KroneckerSample)
-     if !all(lb.<ub) 
+     if !check_bounds(lb,ub)
         throw(UbLbWrong())
      end
     d = length(lb)
@@ -347,7 +348,7 @@ function sample(n, lb, ub, K::KroneckerSample)
 end
 
 function sample(n, lb, ub, G::GoldenSample)
-     if !all(lb.<ub) 
+     if !check_bounds(lb,ub)
         throw(UbLbWrong())
      end
     d = length(lb)
@@ -401,7 +402,7 @@ The sampler is defined as in e.g.
 where the first argument is a Vector{T} in which numbers are fixed coordinates and `NaN`s correspond to free dimensions, and the second argument is a SamplingAlgorithm which is used to sample in the free dimensions.
 """
 function sample(n, lb, ub, section_sampler::SectionSample)
-     if !all(lb.<ub) 
+     if !check_bounds(lb,ub)
         throw(UbLbWrong())
      end
     if lb isa Number
