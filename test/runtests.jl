@@ -103,8 +103,8 @@ end
     #FaureSample()
     d = 17
     n = 3 * 17^2
-    @test_throws ArgumentError QuasiMonteCarlo.sample(d+1, d, FaureSample())
-    @test_throws ArgumentError QuasiMonteCarlo.sample(d^2+1, d, FaureSample())
+    @test_throws ArgumentError QuasiMonteCarlo.sample(d + 1, d, FaureSample())
+    @test_throws ArgumentError QuasiMonteCarlo.sample(d^2 + 1, d, FaureSample())
     s = QuasiMonteCarlo.sample(n, d, FaureSample())
     s == QuasiMonteCarlo.sample(n, zeros(d), ones(d), FaureSample())
     @test isa(s, Matrix{Float64})
