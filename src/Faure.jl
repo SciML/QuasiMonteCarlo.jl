@@ -1,4 +1,3 @@
-import Base.size, Base.getindex, Base.setindex, Base.axes
 
 function pascal_mat(dimension::I, base=Inf) where I<:Integer
     pascal = UpperTriangular(ones(I, dimension, dimension))
