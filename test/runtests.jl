@@ -1,5 +1,6 @@
 using QuasiMonteCarlo, Distributions, StatsBase
 using Test
+using QuasiMonteCarlo:check_bounds
 
 #1D
 lb = 0.0
@@ -218,4 +219,24 @@ end
     @test size(A) == (d, n)
     @test isa(B, Matrix{typeof(B[1][1])}) == true
     @test size(B) == (d, n)
+end
+
+@testset "check_bounds" begin
+    lb1 = ones(3)
+    ub1 = zeros(3)
+    lb2 = 1.0
+    ub2 = 0.0
+    lb3 = [1.0,2.0,1.0]
+    ub3 = [2.0,2.0,3.0]
+    lb4 = [2.0,2.0,1.0]
+    ub4 = [1.0,2.0,2.0]
+    #test for all lbs being greater than ub
+    @test check_bounds(lb1,ub1) === false
+    #test for scalar lb being greater than ub
+    @test check_bounds(lb2,ub2) === false
+    #test for single element in array of lb,ub being same without failing
+    @test check_bounds(lb3,ub3) === true
+    #test for a single element  being incorrect
+    @test check_bounds(lb4,ub4) === false
+
 end
