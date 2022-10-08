@@ -1,6 +1,6 @@
 using QuasiMonteCarlo, Distributions, StatsBase
 using Test
-using QuasiMonteCarlo:check_bounds
+using QuasiMonteCarlo: check_bounds
 
 #1D
 lb = 0.0
