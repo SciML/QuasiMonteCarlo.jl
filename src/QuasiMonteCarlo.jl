@@ -6,7 +6,7 @@ abstract type SamplingAlgorithm end
 
 include("Faure.jl")
 
-check_bounds(lb, ub) = all((x, y) -> x < y, zip(lb, ub))
+check_bounds(lb,ub) = all((x,y)->x<y,zip(lb,ub)) 
 const UB_LB_MESSAGE = """
                           "lb must be less than ub"
                          """
@@ -88,7 +88,7 @@ Keyword arguments:
 Quasi-Monte Carlo integral estimates done with LowDiscrepancy sequences
 (only Halton, in this case)
 """
-struct LowDiscrepancySample{T,V} <: SamplingAlgorithm
+struct LowDiscrepancySample{T, V} <: SamplingAlgorithm
     base::T
     rotation::V
 end
@@ -107,7 +107,7 @@ struct KroneckerSample{A,B} <: SamplingAlgorithm
 
 `KroneckerSample(alpha, s0)` for a Kronecker sequence, where alpha is an length-d vector of irrational numbers (often sqrt(d)) and s0 is a length-d seed vector (often 0).
 """
-struct KroneckerSample{A,B} <: SamplingAlgorithm
+struct KroneckerSample{A, B} <: SamplingAlgorithm
     alpha::A
     s0::B
 end
@@ -151,15 +151,15 @@ sample(n,lb,ub,S::GridSample)
 Returns a tuple containing numbers in a grid.
 """
 function sample(n, lb, ub, S::GridSample)
-    if !check_bounds(lb, ub)
+     if !check_bounds(lb,ub)
         throw(UbLbWrong())
-    end
+     end
     dx = S.dx
     if lb isa Number
         return vec(rand(lb:(S.dx):ub, n))
     else
         d = length(lb)
-        x = [[rand(lb[j]:dx[j]:ub[j]) for j = 1:d] for i = 1:n]
+        x = [[rand(lb[j]:dx[j]:ub[j]) for j in 1:d] for i in 1:n]
         return reduce(hcat, x)
     end
 end
@@ -169,14 +169,14 @@ sample(n,lb,ub,::UniformRandom)
 Returns a tuple containing uniform random numbers.
 """
 function sample(n, lb, ub, ::UniformSample)
-    if !check_bounds(lb, ub)
+     if !check_bounds(lb,ub)
         throw(UbLbWrong())
-    end
+     end
     if lb isa Number
         return rand(Uniform(lb, ub), n)
     else
         d = length(lb)
-        x = [[rand(Uniform(lb[j], ub[j])) for j = 1:d] for i = 1:n]
+        x = [[rand(Uniform(lb[j], ub[j])) for j in 1:d] for i in 1:n]
         return reduce(hcat, x)
     end
 end
@@ -186,15 +186,15 @@ sample(n,lb,ub,::SobolSampling)
 Returns a tuple containing Sobol sequences.
 """
 function sample(n, lb, ub, ::SobolSample)
-    if !check_bounds(lb, ub)
+     if !check_bounds(lb,ub)
         throw(UbLbWrong())
-    end
+     end
     s = SobolSeq(lb, ub)
     skip(s, n)
     if lb isa Number
-        return [next!(s)[1] for i = 1:n]
+        return [next!(s)[1] for i in 1:n]
     else
-        return reduce(hcat, [next!(s) for i = 1:n])
+        return reduce(hcat, [next!(s) for i in 1:n])
     end
 end
 
@@ -203,9 +203,9 @@ sample(n,lb,ub,T::LatinHypercubeSample)
 Returns a tuple containing LatinHypercube sequences.
 """
 function sample(n, lb, ub, T::LatinHypercubeSample)
-    if !check_bounds(lb, ub)
+     if !check_bounds(lb,ub)
         throw(UbLbWrong())
-    end
+     end
     threading = T.threading
     d = length(lb)
     if lb isa Number
@@ -215,7 +215,7 @@ function sample(n, lb, ub, T::LatinHypercubeSample)
     else
         lib_out = collect(float(LHCoptim(n, d, 1; threading = threading)[1])')
         # x∈[0,n], so affine transform column-wise
-        @inbounds for c = 1:d
+        @inbounds for c in 1:d
             lib_out[c, :] = (ub[c] - lb[c]) * lib_out[c, :] / n .+ lb[c]
         end
         return lib_out
@@ -227,14 +227,14 @@ sample(n,lb,ub,::LatticeRuleSample)
 Returns a matrix with the `n` rank-1 lattice points in each column if `lb` is a vector, or a vector with the `n` rank-1 lattice points if `lb` is a number.
 """
 function sample(n, lb, ub, ::LatticeRuleSample)
-    if !check_bounds(lb, ub)
+     if !check_bounds(lb,ub)
         throw(UbLbWrong())
-    end
+     end
     if lb isa Number
         lat = ShiftedLatticeRule(1)
         pts = reduce(vcat, Iterators.take(lat, n))
         # transform from [0, 1] to [lb, ub]
-        @inbounds for i = 1:n
+        @inbounds for i in 1:n
             pts[i] = (ub - lb) * pts[i] + lb
         end
         return pts
@@ -243,8 +243,8 @@ function sample(n, lb, ub, ::LatticeRuleSample)
         lat = ShiftedLatticeRule(d)
         pts = reduce(hcat, Iterators.take(lat, n))
         # transform from [0, 1]^d to [lb, ub]
-        @inbounds for j = 1:n
-            for i = 1:d
+        @inbounds for j in 1:n
+            for i in 1:d
                 pts[i, j] = (ub[i] - lb[i]) * pts[i, j] + lb[i]
             end
         end
@@ -260,9 +260,9 @@ Low-discrepancy sample:
 If dimension d > 1, all bases must be coprime with one other.
 """
 function sample(n, lb, ub, S::LowDiscrepancySample)
-    if !check_bounds(lb, ub)
+     if !check_bounds(lb,ub)
         throw(UbLbWrong())
-    end
+     end
     @assert length(lb) == length(ub)
 
     d = length(lb)
@@ -271,11 +271,11 @@ function sample(n, lb, ub, S::LowDiscrepancySample)
         #Van der Corput
         b = S.base
         x = zeros(t, n)
-        for i = 1:n
+        for i in 1:n
             expansion = digits(i, base = b)
             L = length(expansion)
             val = zero(t)
-            for k = 1:L
+            for k in 1:L
                 val += expansion[k] * float(b)^(-(k - 1) - 1)
             end
             x[i] = val
@@ -285,13 +285,13 @@ function sample(n, lb, ub, S::LowDiscrepancySample)
     else
         #Halton sequence
         x = zeros(t, d, n)
-        for j = 1:d
+        for j in 1:d
             b = S.base[j]
-            for i = 1:n
+            for i in 1:n
                 val = zero(t)
                 expansion = digits(i, base = b)
                 L = length(expansion)
-                for k = 1:L
+                for k in 1:L
                     val += expansion[k] * float(b)^(-(k - 1) - 1)
                 end
                 x[j, i] = val
@@ -299,7 +299,7 @@ function sample(n, lb, ub, S::LowDiscrepancySample)
         end
         #Resizing
         # x∈[0,1], so affine transform column-wise
-        @inbounds for c = 1:d
+        @inbounds for c in 1:d
             x[c, :] = (ub[c] - lb[c]) * x[c, :] .+ lb[c]
         end
         rotation = S.rotation
@@ -317,28 +317,28 @@ sample(n,d,K::KroneckerSample)
 Returns a Tuple containing numbers following the Kronecker sample
 """
 function sample(n, lb, ub, K::KroneckerSample)
-    if !check_bounds(lb, ub)
+     if !check_bounds(lb,ub)
         throw(UbLbWrong())
-    end
+     end
     d = length(lb)
     alpha = K.alpha
     s0 = K.s0
     if d == 1
         x = zeros(n)
-        @inbounds for i = 1:n
+        @inbounds for i in 1:n
             x[i] = (s0 + i * alpha) % 1
         end
         return @. (ub - lb) * x + lb
     else
         x = zeros(n, d)
-        @inbounds for j = 1:d
-            for i = 1:n
+        @inbounds for j in 1:d
+            for i in 1:n
                 x[i, j] = (s0[j] + i * alpha[j]) % i
             end
         end
         #Resizing
         # x∈[0,1], so affine transform column-wise
-        @inbounds for c = 1:d
+        @inbounds for c in 1:d
             x[:, c] = (ub[c] - lb[c]) * x[:, c] .+ lb[c]
         end
 
@@ -348,32 +348,32 @@ function sample(n, lb, ub, K::KroneckerSample)
 end
 
 function sample(n, lb, ub, G::GoldenSample)
-    if !check_bounds(lb, ub)
+     if !check_bounds(lb,ub)
         throw(UbLbWrong())
-    end
+     end
     d = length(lb)
     if d == 1
         x = zeros(n)
         g = (sqrt(5) + 1) / 2
         a = 1.0 / g
-        for i = 1:n
+        for i in 1:n
             x[i] = (0.5 + a * i) % 1
         end
         return @. (ub - lb) * x + lb
     else
         x = zeros(n, d)
-        for j = 1:d
+        for j in 1:d
             #Approximate solution of x^(d+1) = x + 1, a simple newton is good enough
             y = 2.0
-            for s = 1:10
+            for s in 1:10
                 g = (1 + y)^(1 / (j + 1))
             end
             a = 1.0 / g
-            for i = 1:n
+            for i in 1:n
                 x[i, j] = (0.5 + a * i) % 1
             end
         end
-        @inbounds for c = 1:d
+        @inbounds for c in 1:d
             x[:, c] = (ub[c] - lb[c]) * x[:, c] .+ lb[c]
         end
         y = collect(x')
@@ -381,11 +381,11 @@ function sample(n, lb, ub, G::GoldenSample)
     end
 end
 
-fixed_dimensions(section_sampler::SectionSample)::Vector{Int64} =
-    findall(x -> x == false, isnan.(section_sampler.x0))
+fixed_dimensions(section_sampler::SectionSample)::Vector{Int64} = findall(x -> x == false,
+                                                                          isnan.(section_sampler.x0))
 
-free_dimensions(section_sampler::SectionSample)::Vector{Int64} =
-    findall(x -> x == true, isnan.(section_sampler.x0))
+free_dimensions(section_sampler::SectionSample)::Vector{Int64} = findall(x -> x == true,
+                                                                         isnan.(section_sampler.x0))
 
 """
 sample(n,lb,ub,K::SectionSample)
@@ -402,9 +402,9 @@ The sampler is defined as in e.g.
 where the first argument is a Vector{T} in which numbers are fixed coordinates and `NaN`s correspond to free dimensions, and the second argument is a SamplingAlgorithm which is used to sample in the free dimensions.
 """
 function sample(n, lb, ub, section_sampler::SectionSample)
-    if !check_bounds(lb, ub)
+     if !check_bounds(lb,ub)
         throw(UbLbWrong())
-    end
+     end
     if lb isa Number
         if isnan(section_sampler.x0[1])
             return sample(n, lb, ub, section_sampler.sa)
@@ -415,7 +415,7 @@ function sample(n, lb, ub, section_sampler::SectionSample)
         d_free = free_dimensions(section_sampler)
         new_samples = sample(n, lb[d_free], ub[d_free], section_sampler.sa)
         out_as_vec = collect(repeat(section_sampler.x0', n, 1)')
-        for y = 1:size(out_as_vec, 2)
+        for y in 1:size(out_as_vec, 2)
             for (xi, d) in enumerate(d_free)
                 out_as_vec[d, y] = new_samples[xi, y]
             end
@@ -432,7 +432,7 @@ function sample(n, d, D::Distribution)
     if d == 1
         return rand(D, n)
     else
-        x = [[rand(D) for j = 1:d] for i = 1:n]
+        x = [[rand(D) for j in 1:d] for i in 1:n]
         return reduce(hcat, x)
     end
 end
@@ -450,19 +450,11 @@ function generate_design_matrices(n, lb, ub, sampler, num_mats = 2)
     @assert length(lb) == length(ub)
     d = length(lb)
     out = sample(n, repeat(lb, num_mats), repeat(ub, num_mats), sampler)
-    [out[(j*d+1):((j+1)*d), :] for j = 0:(num_mats-1)]
+    [out[(j * d + 1):((j + 1) * d), :] for j in 0:(num_mats - 1)]
 end
 
-export GridSample,
-    UniformSample,
-    SobolSample,
-    LatinHypercubeSample,
-    LatticeRuleSample,
-    RandomSample,
-    LowDiscrepancySample,
-    GoldenSample,
-    KroneckerSample,
-    SectionSample,
-    FaureSample
+export GridSample, UniformSample, SobolSample, LatinHypercubeSample, LatticeRuleSample,
+       RandomSample, LowDiscrepancySample, GoldenSample, KroneckerSample, SectionSample,
+       FaureSample
 
 end # module
