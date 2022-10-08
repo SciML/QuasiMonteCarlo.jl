@@ -6,8 +6,8 @@ abstract type SamplingAlgorithm end
 
 include("Faure.jl")
 
-check_bounds(lb::AbstractArray, ub::AbstractArray) = all(x-> x[1] <x[2], zip(lb,ub)) 
-check_bounds(lb, ub) = lb < ub
+check_bounds(lb::AbstractArray, ub::AbstractArray) = all(x-> x[1] <= x[2], zip(lb,ub)) 
+check_bounds(lb, ub) = lb <= ub
 const UB_LB_MESSAGE = """
                           "lb must be less than ub"
                          """
