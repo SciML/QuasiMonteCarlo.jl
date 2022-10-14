@@ -87,12 +87,12 @@ struct LowDiscrepancySample{T} <: SamplingAlgorithm
 Keyword arguments:
 
 - `rotation`: whether to apply Cranley-Patterson rotation. It can improve
-Quasi-Monte Carlo integral estimates done with LowDiscrepancy sequences
-(only Halton, in this case)
+  Quasi-Monte Carlo integral estimates done with LowDiscrepancy sequences
+  (only Halton, in this case). Defaults to true.
 """
-struct LowDiscrepancySample{T, V} <: SamplingAlgorithm
+Base.@kwdef struct LowDiscrepancySample{T} <: SamplingAlgorithm
     base::T
-    rotation::V
+    rotation::Bool = true
 end
 
 """
