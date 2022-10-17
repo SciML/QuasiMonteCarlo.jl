@@ -95,6 +95,10 @@ Base.@kwdef struct LowDiscrepancySample{T} <: SamplingAlgorithm
     rotation::Bool = true
 end
 
+function LowDiscrepancySample(base::Int)
+  LowDiscrepancySample(;base=base)
+end
+
 """
 ```julia
 struct RandomSample <: SamplingAlgorithm end
