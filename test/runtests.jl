@@ -5,7 +5,7 @@ using Test
 
 struct InertSampler <: Random.AbstractRNG end
 InertSampler(args...; kwargs...) = InertSampler()
-rand(::InertSampler, ::Type{T}) where T = zero(T)
+Random.rand(::InertSampler, ::Type{T}) where T = zero(T)
 Random.shuffle!(::InertSampler, arg::AbstractArray) = arg
 
 
