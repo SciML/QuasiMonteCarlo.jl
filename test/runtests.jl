@@ -122,6 +122,20 @@ end
     @test size(s) == (d, n)
     @test mean(abs2, s - r) ≤ eps(Float32)
     @test s ≈ r
+
+    # check RQMC stratification properties
+    s = QuasiMonteCarlo.sample(n, d, FaureSample(Xoshiro(0)))
+    fallsin(x, args...) = all(@. (args-1) < x ≤ args)
+    @test all(1:d) do dim_idx  # for every dimension, check 1d stratification properties
+        all(isone, [count(x->fallsin(n*x, i), s[dim_idx, :]) for i in 1:n])
+    end
+
+
+    all(1:d) do dim_idx  # for every dimension, check 2d stratification properties
+        all(isone,
+            [count(x->fallsin(d*x, i, j), s[dim_idx, :]) for i in 1:d for j in 1:d]
+        )
+    end
 end
 
 @testset "LatticeRuleSample" begin

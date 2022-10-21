@@ -71,12 +71,12 @@ function sample(n::Integer, dimension::Integer, sampler::FaureSample; skipchecks
     return _faure_samples(sampler.rng, n, power, dimension)
 end
 
-@views @fastmath function _faure_samples(
+@views function _faure_samples(
     rng, n_samples::I, power::I, dimension::I, ::Type{F}=Float64
     ) where {I<:Integer, F}
     base = nextprime(dimension)
     inv_base = inv(base)
-    n_digits = I(power)
+    n_digits = I(power + one(power))
 
     # Upper triangular Pascal matrix
     pascal = pascal_mat(n_digits, base)
@@ -112,7 +112,7 @@ end
     return faure
 end
 
-@fastmath @views function _base_sum!(
+@views function _base_sum!(
     rng, dgs::AbstractVector, base::Integer, idx_maps::AbstractArray
 )
     dgs[1] = one(eltype(dgs)) + dgs[1]
