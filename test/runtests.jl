@@ -1,5 +1,4 @@
 using QuasiMonteCarlo, Distributions, StatsBase, Random
-import
 using Test
 
 # For testing randomized QMC sequences by using the deterministic version
