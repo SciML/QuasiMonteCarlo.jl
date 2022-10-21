@@ -1,8 +1,7 @@
-using QuasiMonteCarlo, Distributions, StatsBase
+using QuasiMonteCarlo, Distributions, StatsBase, Random
 using Test
 
 # For testing randomized QMC sequences by using the deterministic version
-import Random
 
 struct InertSampler <: Random.AbstractRNG end
 InertSampler(args...; kwargs...) = InertSampler()
@@ -129,7 +128,6 @@ end
     @test all(1:d) do dim_idx  # for every dimension, check 1d stratification properties
         all(isone, [count(x->fallsin(n*x, i), s[dim_idx, :]) for i in 1:n])
     end
-
 
     all(1:d) do dim_idx  # for every dimension, check 2d stratification properties
         all(isone,
