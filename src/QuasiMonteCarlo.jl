@@ -6,6 +6,19 @@ abstract type SamplingAlgorithm end
 
 include("Faure.jl")
 
+check_bounds(lb, ub) = all(x -> x[1] <= x[2], zip(lb, ub))
+check_bounds(lb::Number, ub::Number) = lb <= ub
+
+const UB_LB_MESSAGE = """
+                          "lb must be less than ub"
+                         """
+
+struct UbLbWrong <: Exception end
+
+function Base.showerror(io::IO, e::UbLbWrong)
+    print(io, UB_LB_MESSAGE)
+end
+
 """
 ```julia
 GridSample{T}
@@ -74,12 +87,16 @@ struct LowDiscrepancySample{T} <: SamplingAlgorithm
 Keyword arguments:
 
 - `rotation`: whether to apply Cranley-Patterson rotation. It can improve
-Quasi-Monte Carlo integral estimates done with LowDiscrepancy sequences
-(only Halton, in this case)
+  Quasi-Monte Carlo integral estimates done with LowDiscrepancy sequences
+  (only Halton, in this case). Defaults to true.
 """
-struct LowDiscrepancySample{T, V} <: SamplingAlgorithm
+Base.@kwdef struct LowDiscrepancySample{T} <: SamplingAlgorithm
     base::T
-    rotation::V
+    rotation::Bool = true
+end
+
+function LowDiscrepancySample(base::Int)
+  LowDiscrepancySample(;base=base)
 end
 
 """
@@ -140,6 +157,9 @@ sample(n,lb,ub,S::GridSample)
 Returns a tuple containing numbers in a grid.
 """
 function sample(n, lb, ub, S::GridSample)
+    if !check_bounds(lb, ub)
+        throw(UbLbWrong())
+    end
     dx = S.dx
     if lb isa Number
         return vec(rand(lb:(S.dx):ub, n))
@@ -155,6 +175,9 @@ sample(n,lb,ub,::UniformRandom)
 Returns a tuple containing uniform random numbers.
 """
 function sample(n, lb, ub, ::UniformSample)
+    if !check_bounds(lb, ub)
+        throw(UbLbWrong())
+    end
     if lb isa Number
         return rand(Uniform(lb, ub), n)
     else
@@ -169,6 +192,9 @@ sample(n,lb,ub,::SobolSampling)
 Returns a tuple containing Sobol sequences.
 """
 function sample(n, lb, ub, ::SobolSample)
+    if !check_bounds(lb, ub)
+        throw(UbLbWrong())
+    end
     s = SobolSeq(lb, ub)
     skip(s, n)
     if lb isa Number
@@ -183,6 +209,9 @@ sample(n,lb,ub,T::LatinHypercubeSample)
 Returns a tuple containing LatinHypercube sequences.
 """
 function sample(n, lb, ub, T::LatinHypercubeSample)
+    if !check_bounds(lb, ub)
+        throw(UbLbWrong())
+    end
     threading = T.threading
     d = length(lb)
     if lb isa Number
@@ -204,6 +233,9 @@ sample(n,lb,ub,::LatticeRuleSample)
 Returns a matrix with the `n` rank-1 lattice points in each column if `lb` is a vector, or a vector with the `n` rank-1 lattice points if `lb` is a number.
 """
 function sample(n, lb, ub, ::LatticeRuleSample)
+    if !check_bounds(lb, ub)
+        throw(UbLbWrong())
+    end
     if lb isa Number
         lat = ShiftedLatticeRule(1)
         pts = reduce(vcat, Iterators.take(lat, n))
@@ -234,6 +266,9 @@ Low-discrepancy sample:
 If dimension d > 1, all bases must be coprime with one other.
 """
 function sample(n, lb, ub, S::LowDiscrepancySample)
+    if !check_bounds(lb, ub)
+        throw(UbLbWrong())
+    end
     @assert length(lb) == length(ub)
 
     d = length(lb)
@@ -288,6 +323,9 @@ sample(n,d,K::KroneckerSample)
 Returns a Tuple containing numbers following the Kronecker sample
 """
 function sample(n, lb, ub, K::KroneckerSample)
+    if !check_bounds(lb, ub)
+        throw(UbLbWrong())
+    end
     d = length(lb)
     alpha = K.alpha
     s0 = K.s0
@@ -316,6 +354,9 @@ function sample(n, lb, ub, K::KroneckerSample)
 end
 
 function sample(n, lb, ub, G::GoldenSample)
+    if !check_bounds(lb, ub)
+        throw(UbLbWrong())
+    end
     d = length(lb)
     if d == 1
         x = zeros(n)
@@ -367,6 +408,9 @@ The sampler is defined as in e.g.
 where the first argument is a Vector{T} in which numbers are fixed coordinates and `NaN`s correspond to free dimensions, and the second argument is a SamplingAlgorithm which is used to sample in the free dimensions.
 """
 function sample(n, lb, ub, section_sampler::SectionSample)
+    if !check_bounds(lb, ub)
+        throw(UbLbWrong())
+    end
     if lb isa Number
         if isnan(section_sampler.x0[1])
             return sample(n, lb, ub, section_sampler.sa)
@@ -415,8 +459,16 @@ function generate_design_matrices(n, lb, ub, sampler, num_mats = 2)
     [out[(j * d + 1):((j + 1) * d), :] for j in 0:(num_mats - 1)]
 end
 
-export GridSample, UniformSample, SobolSample, LatinHypercubeSample, LatticeRuleSample,
-       RandomSample, LowDiscrepancySample, GoldenSample, KroneckerSample, SectionSample,
+export GridSample,
+       UniformSample,
+       SobolSample,
+       LatinHypercubeSample,
+       LatticeRuleSample,
+       RandomSample,
+       LowDiscrepancySample,
+       GoldenSample,
+       KroneckerSample,
+       SectionSample,
        FaureSample
 
 end # module
