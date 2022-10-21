@@ -1,11 +1,12 @@
 using QuasiMonteCarlo, Distributions, StatsBase, Random
+import
 using Test
 
 # For testing randomized QMC sequences by using the deterministic version
 
 struct InertSampler <: Random.AbstractRNG end
 InertSampler(args...; kwargs...) = InertSampler()
-Random.rand(::InertSampler, ::Type{T}) where T = zero(T)
+rand(::InertSampler, ::Type{T}) where T = zero(T)
 Random.shuffle!(::InertSampler, arg::AbstractArray) = arg
 
 
