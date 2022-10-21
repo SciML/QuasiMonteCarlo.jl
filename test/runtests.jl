@@ -1,6 +1,15 @@
 using QuasiMonteCarlo, Distributions, StatsBase
 using Test
 
+# For testing randomized QMC sequences by using the deterministic version
+import Random
+
+struct InertSampler <: Random.AbstractRNG end
+InertSampler(args...; kwargs...) = InertSampler()
+Random.rand(::InertSampler, ::Type{T}) where T = zero(T)
+Random.shuffle!(::InertSampler, arg::AbstractArray) = arg
+
+
 #1D
 lb = 0.0
 ub = 5.0
@@ -102,14 +111,17 @@ end
 @testset "Faure Sample" begin
     #FaureSample()
     d = 17
-    n = 3 * 17^2
+    n = 17^2
+    rng = InertSampler()
     @test_throws ArgumentError QuasiMonteCarlo.sample(d+1, d, FaureSample())
     @test_throws ArgumentError QuasiMonteCarlo.sample(d^2+1, d, FaureSample())
-    s = QuasiMonteCarlo.sample(n, d, FaureSample())
-    s == QuasiMonteCarlo.sample(n, zeros(d), ones(d), FaureSample())
+    s = sortslices(QuasiMonteCarlo.sample(n, d, FaureSample(rng)); dims=2)
+    s == sortslices(QuasiMonteCarlo.sample(n, zeros(d), ones(d), FaureSample(rng)); dims=2)
+    r = sortslices(include("rfaure.jl")'; dims=2)
     @test isa(s, Matrix{Float64})
     @test size(s) == (d, n)
-    @test mean(abs2, s - include("rfaure.jl")') ≤ sqrt(eps(Float64))
+    @test mean(abs2, s - r) ≤ eps(Float32)
+    @test s ≈ r
 end
 
 @testset "LatticeRuleSample" begin
