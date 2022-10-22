@@ -1,6 +1,13 @@
-using QuasiMonteCarlo, Distributions, StatsBase
+using QuasiMonteCarlo, Distributions, StatsBase, Random
 using Test
-using QuasiMonteCarlo: check_bounds
+
+# For testing randomized QMC sequences by using the deterministic version
+
+struct InertSampler <: Random.AbstractRNG end
+InertSampler(args...; kwargs...) = InertSampler()
+Random.rand(::InertSampler, ::Type{T}) where T = zero(T)
+Random.shuffle!(::InertSampler, arg::AbstractArray) = arg
+
 
 #1D
 lb = 0.0
@@ -103,14 +110,30 @@ end
 @testset "Faure Sample" begin
     #FaureSample()
     d = 17
-    n = 3 * 17^2
-    @test_throws ArgumentError QuasiMonteCarlo.sample(d + 1, d, FaureSample())
-    @test_throws ArgumentError QuasiMonteCarlo.sample(d^2 + 1, d, FaureSample())
-    s = QuasiMonteCarlo.sample(n, d, FaureSample())
-    s == QuasiMonteCarlo.sample(n, zeros(d), ones(d), FaureSample())
+    n = 17^2
+    rng = InertSampler()
+    @test_throws ArgumentError QuasiMonteCarlo.sample(d+1, d, FaureSample())
+    @test_throws ArgumentError QuasiMonteCarlo.sample(d^2+1, d, FaureSample())
+    s = sortslices(QuasiMonteCarlo.sample(n, d, FaureSample(rng)); dims=2)
+    s == sortslices(QuasiMonteCarlo.sample(n, zeros(d), ones(d), FaureSample(rng)); dims=2)
+    r = sortslices(include("rfaure.jl")'; dims=2)
     @test isa(s, Matrix{Float64})
     @test size(s) == (d, n)
-    @test mean(abs2, s - include("rfaure.jl")') ≤ sqrt(eps(Float64))
+    @test mean(abs2, s - r) ≤ eps(Float32)
+    @test s ≈ r
+
+    # check RQMC stratification properties
+    s = QuasiMonteCarlo.sample(n, d, FaureSample(MersenneTwister(0)))
+    fallsin(x, args...) = all(@. (args-1) < x ≤ args)
+    @test all(1:d) do dim_idx  # for every dimension, check 1d stratification properties
+        all(isone, [count(x->fallsin(n*x, i), s[dim_idx, :]) for i in 1:n])
+    end
+
+    all(1:d) do dim_idx  # for every dimension, check 2d stratification properties
+        all(isone,
+            [count(x->fallsin(d*x, i, j), s[dim_idx, :]) for i in 1:d for j in 1:d]
+        )
+    end
 end
 
 @testset "LatticeRuleSample" begin
@@ -219,23 +242,4 @@ end
     @test size(A) == (d, n)
     @test isa(B, Matrix{typeof(B[1][1])}) == true
     @test size(B) == (d, n)
-end
-
-@testset "check_bounds" begin
-    lb1 = ones(3)
-    ub1 = zeros(3)
-    lb2 = 1.0
-    ub2 = 0.0
-    lb3 = [1.0, 2.0, 1.0]
-    ub3 = [2.0, 2.0, 3.0]
-    lb4 = [2.0, 2.0, 1.0]
-    ub4 = [1.0, 2.0, 2.0]
-    #test for all lbs being greater than ub
-    @test check_bounds(lb1, ub1) === false
-    #test for scalar lb being greater than ub
-    @test check_bounds(lb2, ub2) === false
-    #test for single element in array of lb,ub being same without failing
-    @test check_bounds(lb3, ub3) === true
-    #test for a single element  being incorrect
-    @test check_bounds(lb4, ub4) === false
 end
