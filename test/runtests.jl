@@ -123,7 +123,7 @@ end
     @test s ≈ r
 
     # check RQMC stratification properties
-    s = QuasiMonteCarlo.sample(n, d, FaureSample(Xoshiro(0)))
+    s = QuasiMonteCarlo.sample(n, d, FaureSample(MersenneTwister(0)))
     fallsin(x, args...) = all(@. (args-1) < x ≤ args)
     @test all(1:d) do dim_idx  # for every dimension, check 1d stratification properties
         all(isone, [count(x->fallsin(n*x, i), s[dim_idx, :]) for i in 1:n])
