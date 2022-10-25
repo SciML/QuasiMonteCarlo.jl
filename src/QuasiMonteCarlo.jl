@@ -1,7 +1,6 @@
 module QuasiMonteCarlo
 
-using Sobol, LatinHypercubeSampling, LatticeRules, Distributions, Primes, LinearAlgebra,
-      Random
+using Sobol, LatinHypercubeSampling, LatticeRules, Distributions, Primes, LinearAlgebra, Random
 
 abstract type SamplingAlgorithm end
 
