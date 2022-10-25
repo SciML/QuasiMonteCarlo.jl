@@ -6,6 +6,7 @@ using Sobol, LatinHypercubeSampling, LatticeRules, Distributions, Primes, Linear
 abstract type SamplingAlgorithm end
 
 include("Faure.jl")
+include("Kronecker.jl")
 
 check_bounds(lb, ub) = all(x -> x[1] <= x[2], zip(lb, ub))
 check_bounds(lb::Number, ub::Number) = lb <= ub
@@ -106,25 +107,6 @@ struct RandomSample <: SamplingAlgorithm end
 ```
 """
 struct RandomSample <: SamplingAlgorithm end
-
-"""
-```julia
-struct KroneckerSample{A,B} <: SamplingAlgorithm
-```
-
-`KroneckerSample(alpha, s0)` for a Kronecker sequence, where alpha is an length-d vector of irrational numbers (often sqrt(d)) and s0 is a length-d seed vector (often 0).
-"""
-struct KroneckerSample{A, B} <: SamplingAlgorithm
-    alpha::A
-    s0::B
-end
-
-"""
-```julia
-struct GoldenSample <: SamplingAlgorithm end
-```
-"""
-struct GoldenSample <: SamplingAlgorithm end
 
 """
 ```julia
@@ -315,76 +297,6 @@ function sample(n, lb, ub, S::LowDiscrepancySample)
         else
             return (x .+ rand(d, 1)) .% 1.0
         end
-    end
-end
-
-"""
-sample(n,d,K::KroneckerSample)
-
-Returns a Tuple containing numbers following the Kronecker sample
-"""
-function sample(n, lb, ub, K::KroneckerSample)
-    if !check_bounds(lb, ub)
-        throw(UbLbWrong())
-    end
-    d = length(lb)
-    alpha = K.alpha
-    s0 = K.s0
-    if d == 1
-        x = zeros(n)
-        @inbounds for i in 1:n
-            x[i] = (s0 + i * alpha) % 1
-        end
-        return @. (ub - lb) * x + lb
-    else
-        x = zeros(n, d)
-        @inbounds for j in 1:d
-            for i in 1:n
-                x[i, j] = (s0[j] + i * alpha[j]) % i
-            end
-        end
-        #Resizing
-        # x∈[0,1], so affine transform column-wise
-        @inbounds for c in 1:d
-            x[:, c] = (ub[c] - lb[c]) * x[:, c] .+ lb[c]
-        end
-
-        y = collect(x')
-        return y
-    end
-end
-
-function sample(n, lb, ub, G::GoldenSample)
-    if !check_bounds(lb, ub)
-        throw(UbLbWrong())
-    end
-    d = length(lb)
-    if d == 1
-        x = zeros(n)
-        g = (sqrt(5) + 1) / 2
-        a = 1.0 / g
-        for i in 1:n
-            x[i] = (0.5 + a * i) % 1
-        end
-        return @. (ub - lb) * x + lb
-    else
-        x = zeros(n, d)
-        for j in 1:d
-            #Approximate solution of x^(d+1) = x + 1, a simple newton is good enough
-            y = 2.0
-            for s in 1:10
-                g = (1 + y)^(1 / (j + 1))
-            end
-            a = 1.0 / g
-            for i in 1:n
-                x[i, j] = (0.5 + a * i) % 1
-            end
-        end
-        @inbounds for c in 1:d
-            x[:, c] = (ub[c] - lb[c]) * x[:, c] .+ lb[c]
-        end
-        y = collect(x')
-        return y
     end
 end
 
