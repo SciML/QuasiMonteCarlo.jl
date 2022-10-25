@@ -40,16 +40,6 @@ QuasiMonteCarlo.sample(5, d, Normal(0, 4))
         @test s≈[0.5, 0.25, 0.75, 0.125, 0.625] rtol=1e-7
     end
 
-    @testset "KroneckerSample" begin
-        s = QuasiMonteCarlo.sample(n, lb, ub, KroneckerSample(sqrt(2), 0))
-        @test s isa Vector{Float64} && length(s) == n && all(x -> lb ≤ x ≤ ub, s)
-    end
-
-    @testset "GoldenSample" begin
-        s = QuasiMonteCarlo.sample(n, lb, ub, GoldenSample())
-        @test s isa Vector{Float64} && length(s) == n && all(x -> lb ≤ x ≤ ub, s)
-    end
-
     @testset "SectionSample" begin
         constrained_val = 1.0
         sampler = SectionSample([NaN64], UniformSample())
@@ -185,19 +175,17 @@ end
     @test size(s) == (d, n)
 end
 
-@testset "GoldenSample" begin
-    s = QuasiMonteCarlo.sample(n, lb, ub, GoldenSample())
-    @test isa(s, Matrix{Float64})
-    @test size(s) == (d, n)
-    for id in 1:d
-        @test all(lb[id] .≤ s[id, :] .≤ ub[id])
-    end
-end
 
 @testset "Kronecker" begin
-    s = QuasiMonteCarlo.sample(n, lb, ub, KroneckerSample([sqrt(2), 3.1415], [0, 0]))
+    ρ = 0.7548776662466927
+    s = QuasiMonteCarlo.sample(n, 2, KroneckerSample([ρ, ρ^2], [0, 0]))
+    t = QuasiMonteCarlo.sample(n, 2, KroneckerSample([ρ, ρ^2]))
+    s ≈ t
+    t .= QuasiMonteCarlo.sample(n, 2, GoldenSample())
     @test isa(s, Matrix{Float64})
     @test size(s) == (d, n)
+    @test s ≈ t
+    @test all(x->(mod(x, 1) ≈ s[1, 2] - s[1, 1]), diff(s[1, :]))
 end
 
 @testset "Section Sample" begin
