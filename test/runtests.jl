@@ -175,7 +175,6 @@ end
     @test size(s) == (d, n)
 end
 
-
 @testset "Kronecker" begin
     ρ = 0.7548776662466927
     s = QuasiMonteCarlo.sample(n, 2, KroneckerSample([ρ, ρ^2], [0, 0]))
@@ -185,7 +184,7 @@ end
     @test isa(s, Matrix{Float64})
     @test size(s) == (d, n)
     @test s ≈ t
-    @test all(x->(mod(x, 1) ≈ s[1, 2] - s[1, 1]), diff(s[1, :]))
+    @test all(x -> (mod(x, 1) ≈ s[1, 2] - s[1, 1]), diff(s[1, :]))
 end
 
 @testset "Section Sample" begin

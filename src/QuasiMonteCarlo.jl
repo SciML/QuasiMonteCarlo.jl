@@ -108,7 +108,6 @@ struct RandomSample <: SamplingAlgorithm end
 """
 struct RandomSample <: SamplingAlgorithm end
 
-
 """
 ```julia
 struct SectionSample{T} <: SamplingAlgorithm
@@ -300,7 +299,6 @@ function sample(n, lb, ub, S::LowDiscrepancySample)
         end
     end
 end
-
 
 fixed_dimensions(section_sampler::SectionSample)::Vector{Int64} = findall(x -> x == false,
                                                                           isnan.(section_sampler.x0))
