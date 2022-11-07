@@ -1,4 +1,5 @@
-using QuasiMonteCarlo, Distributions, StatsBase, Random
+using QuasiMonteCarlo, StatsBase, Random
+using IntervalArithmetic, Primes, Combinatorics
 using Test
 
 # For testing randomized QMC sequences by using the deterministic version
@@ -6,7 +7,22 @@ using Test
 struct InertSampler <: Random.AbstractRNG end
 InertSampler(args...; kwargs...) = InertSampler()
 Random.rand(::InertSampler, ::Type{T}) where {T} = zero(T)
+Random.rand(::InertSampler) = 0
 Random.shuffle!(::InertSampler, arg::AbstractArray) = arg
+
+function Base.resize!(a::Vector{T}, nl::Integer, pad::T) where T
+    l = length(a)
+    if nl > l
+        Base._growend!(a, nl-l)
+        a[(l+1):end] .= pad
+    elseif nl != l
+        if nl < 0
+            throw(ArgumentError("new length must be ≥ 0"))
+        end
+        Base._deleteend!(a, l-nl)
+    end
+    return a
+end
 
 #1D
 lb = 0.0
@@ -99,13 +115,12 @@ end
 @testset "Faure Sample" begin
     #FaureSample()
     d = 17
-    n = 17^2
+    power = 3
+    n = 17^3
     rng = InertSampler()
     @test_throws ArgumentError QuasiMonteCarlo.sample(d + 1, d, FaureSample())
     @test_throws ArgumentError QuasiMonteCarlo.sample(d^2 + 1, d, FaureSample())
     s = sortslices(QuasiMonteCarlo.sample(n, d, FaureSample(rng)); dims = 2)
-    s ==
-    sortslices(QuasiMonteCarlo.sample(n, zeros(d), ones(d), FaureSample(rng)); dims = 2)
     r = sortslices(include("rfaure.jl")'; dims = 2)
     @test isa(s, Matrix{Float64})
     @test size(s) == (d, n)
@@ -113,15 +128,40 @@ end
     @test s ≈ r
 
     # check RQMC stratification properties
-    s = QuasiMonteCarlo.sample(n, d, FaureSample(MersenneTwister(0)))
-    fallsin(x, args...) = all(@. (args - 1) < x ≤ args)
-    @test all(1:d) do dim_idx  # for every dimension, check 1d stratification properties
-        all(isone, [count(x -> fallsin(n * x, i), s[dim_idx, :]) for i in 1:n])
-    end
+    # Deterministic Faure
+    power = 3
+    for (d, n) in ((i, i^power) for i in nextprimes(3, 5)) # first 5 primes
+        base = nextprime(d)
+        rng = MersenneTwister(hash(d))
+        s = QuasiMonteCarlo.sample(n, d, FaureSample())
 
-    all(1:d) do dim_idx  # for every dimension, check 2d stratification properties
-        all(isone,
-            [count(x -> fallsin(d * x, i, j), s[dim_idx, :]) for i in 1:d for j in 1:d])
+        parts = resize!.(partitions(power), d, 0)
+        perms = Iterators.map(parts) do x
+            multiset_permutations(x, d)
+        end
+        for stepsize in Iterators.flatten(perms)
+            intervals = mince(IntervalBox([interval(0, 1) for i in 1:d]), Tuple(base.^stepsize))
+            @test all(intervals) do intvl
+                count(point -> point ∈ intvl, eachslice(s; dims=2)) == 1
+            end
+        end
+    end
+    power = 5
+    for (d, n) in ((i, i^power) for i in nextprimes(3, 2)) # dims 3 and 5
+        base = nextprime(d)
+        rng = MersenneTwister(hash(d))
+        s = QuasiMonteCarlo.sample(n, d, FaureSample())
+
+        parts = resize!.(partitions(power), d, 0)
+        perms = Iterators.map(parts) do x
+            multiset_permutations(x, d)
+        end
+        for stepsize in Iterators.flatten(perms)
+            intervals = mince(IntervalBox([interval(0, 1) for i in 1:d]), Tuple(base.^stepsize))
+            @test all(intervals) do intvl
+                count(point -> point ∈ intvl, eachslice(s; dims=2)) == 1
+            end
+        end
     end
 end
 
