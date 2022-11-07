@@ -115,13 +115,14 @@ end
 @testset "Faure Sample" begin
     #FaureSample()
     d = 17
+    base = nextprime(d)
     power = 2
     n = 17^2
     @test_throws ArgumentError QuasiMonteCarlo.sample(d + 1, d, FaureSample())
     @test_throws ArgumentError QuasiMonteCarlo.sample(d^2 + 1, d, FaureSample())
     s = sortslices(QuasiMonteCarlo.sample(n, d, FaureSample()); dims = 2)
     # FaureSample() generates centered boxes, unlike DiceDesign
-    r = sortslices(include("rfaure.jl")'; dims = 2) .+ inv(2n)
+    r = sortslices(include("rfaure.jl")'; dims = 2) .+ inv(2base^(power+1))
 
     @test isa(s, Matrix{Float64})
     @test size(s) == (d, n)
@@ -130,39 +131,34 @@ end
 
     # check RQMC stratification properties
     # Deterministic Faure
-    power = 3
-    for (d, n) in ((i, i^power) for i in nextprimes(3, 5)) # first 5 primes
+    function test_tms(d, n, power)
+        pass = true
         base = nextprime(d)
         s = QuasiMonteCarlo.sample(n, d, FaureSample())
-
-        parts = resize!.(partitions(power), d, 0)
+        parts = resize!.(partitions(power, d), d, 0)
         perms = Iterators.map(parts) do x
             multiset_permutations(x, d)
         end
         for stepsize in Iterators.flatten(perms)
             intervals = mince(IntervalBox([interval(0, 1) for i in 1:d]),
-                              Tuple(base .^ stepsize))
-            all(intervals) do intvl
+                            Tuple(base .^ stepsize))
+            pass = pass && all(intervals) do intvl
                 count(point -> point ∈ intvl, eachslice(s; dims = 2)) == 1
             end
+            if !pass
+                println("Errors in dimension $d, interval $stepsize, sample size $n")
+                return pass
+            end
         end
+        return pass
     end
     power = 5
-    for (d, n) in ((i, i^power) for i in nextprimes(3, 2)) # dims 3 and 5
-        base = nextprime(d)
-        s = QuasiMonteCarlo.sample(n, d, FaureSample())
-
-        parts = resize!.(partitions(power), d, 0)
-        perms = Iterators.map(parts) do x
-            multiset_permutations(x, d)
-        end
-        for stepsize in Iterators.flatten(perms)
-            intervals = mince(IntervalBox([interval(0, 1) for i in 1:d]),
-                              Tuple(base .^ stepsize))
-            @test all(intervals) do intvl
-                count(point -> point ∈ intvl, eachslice(s; dims = 2)) == 1
-            end
-        end
+    for d in (3, 5, 7)
+        @test test_tms(d, d^power, power)  # test 5d stratification of first 3 primes
+    end
+    power = 3
+    for d in (11, 13, 17)
+        @test test_tms(d, d^power, power)  # test 3d stratification of next 3 primes
     end
 end
 

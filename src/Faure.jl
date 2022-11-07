@@ -42,7 +42,7 @@ Owen, A. B. (1997). Monte Carlo variance of scrambled net quadrature. *SIAM Jour
 """
 struct FaureSample end
 
-function sample(n::Integer, lb, ub, ::FaureSample)
+@fastmath function sample(n::Integer, lb, ub, ::FaureSample)
     length(lb) == length(ub) || DimensionMismatch("Lower and upper bounds do not match.")
     dimension = length(lb)
     faure = sample(n, dimension, FaureSample())
@@ -52,9 +52,10 @@ function sample(n::Integer, lb, ub, ::FaureSample)
     return faure
 end
 
-function sample(n::Integer, dimension::Integer, sampler::FaureSample; skipchecks = false)
+@fastmath function sample(n::Integer, dimension::Integer, ::FaureSample; skipchecks = false)
     base = nextprime(dimension)
-    power = floor(Int, log(base, n))
+    n_digits = ceil(Int, log(base, n))
+    power = n_digits - 1
 
     if !skipchecks && (n % prevpow(base, n) ≠ 0)
         n -= (n % base^power)
@@ -62,14 +63,13 @@ function sample(n::Integer, dimension::Integer, sampler::FaureSample; skipchecks
                             "Try $n or $(n+base^power) instead."))
     end
 
-    return _faure_samples(n, power, dimension)
+    return _faure_samples(n, n_digits, dimension)
 end
 
-@views function _faure_samples(n_samples::I, power::I, dimension::I,
+@fastmath @views function _faure_samples(n_samples::I, n_digits::I, dimension::I,
                                ::Type{F} = Float64) where {I <: Integer, F}
     base = nextprime(dimension)
     inv_base = inv(base)
-    n_digits = I(power + one(power))
 
     # Upper triangular Pascal matrix
     pascal = pascal_mat(n_digits, base)
@@ -92,13 +92,13 @@ end
             if dim_idx ≠ 1
                 dgs .= (permutation * dgs) .% base
             end
-            vdc[sample_idx] = evalpoly(inv_base, dgs) * inv_base + inv(2n_digits)
+            vdc[sample_idx] = (evalpoly(inv_base, dgs) + inv(2base^n_digits)) * inv_base
         end
     end
     return faure
 end
 
-@views function _base_sum!(dgs::AbstractVector, base::Integer)
+@fastmath @views function _base_sum!(dgs::AbstractVector, base::Integer)
     dgs[1] = one(eltype(dgs)) + dgs[1]
     if dgs[1] == base
         dgs[1] = zero(eltype(dgs))
