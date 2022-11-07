@@ -10,16 +10,16 @@ Random.rand(::InertSampler, ::Type{T}) where {T} = zero(T)
 Random.rand(::InertSampler) = 0
 Random.shuffle!(::InertSampler, arg::AbstractArray) = arg
 
-function Base.resize!(a::Vector{T}, nl::Integer, pad::T) where T
+function Base.resize!(a::Vector{T}, nl::Integer, pad::T) where {T}
     l = length(a)
     if nl > l
-        Base._growend!(a, nl-l)
-        a[(l+1):end] .= pad
+        Base._growend!(a, nl - l)
+        a[(l + 1):end] .= pad
     elseif nl != l
         if nl < 0
             throw(ArgumentError("new length must be ≥ 0"))
         end
-        Base._deleteend!(a, l-nl)
+        Base._deleteend!(a, l - nl)
     end
     return a
 end
@@ -140,9 +140,10 @@ end
             multiset_permutations(x, d)
         end
         for stepsize in Iterators.flatten(perms)
-            intervals = mince(IntervalBox([interval(0, 1) for i in 1:d]), Tuple(base.^stepsize))
+            intervals = mince(IntervalBox([interval(0, 1) for i in 1:d]),
+                              Tuple(base .^ stepsize))
             @test all(intervals) do intvl
-                count(point -> point ∈ intvl, eachslice(s; dims=2)) == 1
+                count(point -> point ∈ intvl, eachslice(s; dims = 2)) == 1
             end
         end
     end
@@ -157,9 +158,10 @@ end
             multiset_permutations(x, d)
         end
         for stepsize in Iterators.flatten(perms)
-            intervals = mince(IntervalBox([interval(0, 1) for i in 1:d]), Tuple(base.^stepsize))
+            intervals = mince(IntervalBox([interval(0, 1) for i in 1:d]),
+                              Tuple(base .^ stepsize))
             @test all(intervals) do intvl
-                count(point -> point ∈ intvl, eachslice(s; dims=2)) == 1
+                count(point -> point ∈ intvl, eachslice(s; dims = 2)) == 1
             end
         end
     end
