@@ -40,9 +40,14 @@ References:
 Faure, H. (1982). Discrepance de suites associees a un systeme de numeration (en dimension s). *Acta Arith.*, 41, 337-351.
 Owen, A. B. (1997). Monte Carlo variance of scrambled net quadrature. *SIAM Journal on Numerical Analysis*, 34(5), 1884-1910.
 """
-struct FaureSample end
+struct FaureSample{T}
+    rng::T
+end
 
 @fastmath function sample(n::Integer, lb, ub, ::FaureSample)
+    if n == 0
+        throw(ZeroSamplesError())
+    end
     length(lb) == length(ub) || DimensionMismatch("Lower and upper bounds do not match.")
     dimension = length(lb)
     faure = sample(n, dimension, FaureSample())
@@ -53,6 +58,9 @@ struct FaureSample end
 end
 
 @fastmath function sample(n::Integer, dimension::Integer, ::FaureSample; skipchecks = false)
+    if n == 0
+        throw(ZeroSamplesError())
+    end
     base = nextprime(dimension)
     n_digits = ceil(Int, log(base, n))
     power = n_digits - 1
