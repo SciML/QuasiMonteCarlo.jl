@@ -1,4 +1,4 @@
-# lower-triangular Pascal matrix--needed to generate Faure points
+# upper-triangular Pascal matrix--needed to generate Faure points
 function pascal_mat(dimension::I, base = Inf) where {I <: Integer}
     pascal = UpperTriangular(ones(I, dimension, dimension))
     @inbounds for i in 2:dimension
@@ -92,7 +92,7 @@ end
             if dim_idx ≠ 1
                 dgs .= (permutation * dgs) .% base
             end
-            vdc[sample_idx] = evalpoly(inv_base, dgs) * inv_base + inv(2n)
+            vdc[sample_idx] = evalpoly(inv_base, dgs) * inv_base + inv(2n_digits)
         end
     end
     return faure
