@@ -28,7 +28,7 @@ struct KroneckerSample{V} <: SamplingAlgorithm
 end
 
 function KroneckerSample(generator::AbstractVector)
-    return KroneckerSample(generator, (similar(generator) .= 0))
+    KroneckerSample(generator, (similar(generator) .= 0))
 end
 
 KroneckerSample(generator, origin) = KroneckerSample(promote(generator, origin)...)

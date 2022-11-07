@@ -1,4 +1,4 @@
-# lower-triangular Pascal matrix--needed to generate Faure points
+# upper-triangular Pascal matrix--needed to generate Faure points
 function pascal_mat(dimension::I, base = Inf) where {I <: Integer}
     pascal = UpperTriangular(ones(I, dimension, dimension))
     @inbounds for i in 2:dimension
@@ -14,7 +14,7 @@ end
                                  power::Integer, base::Integer)
     @inbounds @simd for idx in eachindex(pascal)
         i, j = Tuple(idx)
-        result[idx] = powermod(power, max(j - i, zero(i)), base) * pascal[idx]
+        i ≤ j ? (result[idx] = powermod(power, j - i, base) * pascal[idx]) : result[idx]
     end
     return result
 end
@@ -40,13 +40,9 @@ References:
 Faure, H. (1982). Discrepance de suites associees a un systeme de numeration (en dimension s). *Acta Arith.*, 41, 337-351.
 Owen, A. B. (1997). Monte Carlo variance of scrambled net quadrature. *SIAM Journal on Numerical Analysis*, 34(5), 1884-1910.
 """
-struct FaureSample{T}
-    rng::T
-end
+struct FaureSample end
 
-FaureSample() = FaureSample(Random.GLOBAL_RNG)
-
-function sample(n::Integer, lb, ub, ::FaureSample)
+@fastmath function sample(n::Integer, lb, ub, ::FaureSample)
     length(lb) == length(ub) || DimensionMismatch("Lower and upper bounds do not match.")
     dimension = length(lb)
     faure = sample(n, dimension, FaureSample())
@@ -56,9 +52,10 @@ function sample(n::Integer, lb, ub, ::FaureSample)
     return faure
 end
 
-function sample(n::Integer, dimension::Integer, sampler::FaureSample; skipchecks = false)
+@fastmath function sample(n::Integer, dimension::Integer, ::FaureSample; skipchecks = false)
     base = nextprime(dimension)
-    power = floor(Int, log(base, n))
+    n_digits = ceil(Int, log(base, n))
+    power = n_digits - 1
 
     if !skipchecks && (n % prevpow(base, n) ≠ 0)
         n -= (n % base^power)
@@ -66,14 +63,13 @@ function sample(n::Integer, dimension::Integer, sampler::FaureSample; skipchecks
                             "Try $n or $(n+base^power) instead."))
     end
 
-    return _faure_samples(sampler.rng, n, power, dimension)
+    return _faure_samples(n, n_digits, dimension)
 end
 
-@views function _faure_samples(rng, n_samples::I, power::I, dimension::I,
-                               ::Type{F} = Float64) where {I <: Integer, F}
+@fastmath @views function _faure_samples(n_samples::I, n_digits::I, dimension::I,
+                                         ::Type{F} = Float64) where {I <: Integer, F}
     base = nextprime(dimension)
     inv_base = inv(base)
-    n_digits = I(power + one(power))
 
     # Upper triangular Pascal matrix
     pascal = pascal_mat(n_digits, base)
@@ -83,9 +79,6 @@ end
     faure = zeros(F, dimension, n_samples)
     digit_counter = zeros(I, n_digits)
     dgs = copy(digit_counter)
-    # we use index maps to randomize the points of a Faure sequence
-    idx_maps = [i for (_, i) in Iterators.product(1:n_digits, 0:(base - 1))]
-
     for dim_idx in 1:dimension
         digit_counter .= base - 1
         dim_idx == 1 || pascal_power!(permutation, pascal, dim_idx - 1, base)
@@ -93,29 +86,24 @@ end
         vdc = faure[dim_idx, :]
         for sample_idx in eachindex(vdc)
             # increment digit counter by 1
-            _base_sum!(rng, digit_counter, base, idx_maps)
+            _base_sum!(digit_counter, base)
             dgs .= digit_counter
             # permute later dimensions using powers of a Pascal matrix
             if dim_idx ≠ 1
                 dgs .= (permutation * dgs) .% base
             end
-            # randomly shuffle points
-            for i in eachindex(dgs)
-                dgs[i] = idx_maps[1 + end - i, 1 + dgs[i]]
-            end
-            vdc[sample_idx] = @evalpoly(inv_base, dgs..., rand(rng, F)) * inv_base
+            vdc[sample_idx] = (evalpoly(inv_base, dgs) + inv(2base^n_digits)) * inv_base
         end
     end
     return faure
 end
 
-@views function _base_sum!(rng, dgs::AbstractVector, base::Integer, idx_maps::AbstractArray)
+@fastmath @views function _base_sum!(dgs::AbstractVector, base::Integer)
     dgs[1] = one(eltype(dgs)) + dgs[1]
     if dgs[1] == base
         dgs[1] = zero(eltype(dgs))
-        shuffle!(rng, idx_maps[1, :])
         if length(dgs) ≠ 1  # ignore overflows
-            _base_sum!(rng, dgs[2:end], base, idx_maps[2:end, :])
+            _base_sum!(dgs[2:end], base)
         end
     end
 end
