@@ -122,7 +122,7 @@ end
     @test_throws ArgumentError QuasiMonteCarlo.sample(d^2 + 1, d, FaureSample())
     s = sortslices(QuasiMonteCarlo.sample(n, d, FaureSample()); dims = 2)
     # FaureSample() generates centered boxes, unlike DiceDesign
-    r = sortslices(include("rfaure.jl")'; dims = 2) .+ inv(2base^(power+1))
+    r = sortslices(include("rfaure.jl")'; dims = 2) .+ inv(2base^(power + 1))
 
     @test isa(s, Matrix{Float64})
     @test size(s) == (d, n)
@@ -141,7 +141,7 @@ end
         end
         for stepsize in Iterators.flatten(perms)
             intervals = mince(IntervalBox([interval(0, 1) for i in 1:d]),
-                            Tuple(base .^ stepsize))
+                              Tuple(base .^ stepsize))
             pass = pass && all(intervals) do intvl
                 count(point -> point ∈ intvl, eachslice(s; dims = 2)) == 1
             end

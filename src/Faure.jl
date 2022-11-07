@@ -67,7 +67,7 @@ end
 end
 
 @fastmath @views function _faure_samples(n_samples::I, n_digits::I, dimension::I,
-                               ::Type{F} = Float64) where {I <: Integer, F}
+                                         ::Type{F} = Float64) where {I <: Integer, F}
     base = nextprime(dimension)
     inv_base = inv(base)
 
