@@ -40,7 +40,7 @@ References:
 Faure, H. (1982). Discrepance de suites associees a un systeme de numeration (en dimension s). *Acta Arith.*, 41, 337-351.
 Owen, A. B. (1997). Monte Carlo variance of scrambled net quadrature. *SIAM Journal on Numerical Analysis*, 34(5), 1884-1910.
 """
-struct FaureSample{T} end
+struct FaureSample end
 
 function sample(n::Integer, lb, ub, ::FaureSample)
     length(lb) == length(ub) || DimensionMismatch("Lower and upper bounds do not match.")
@@ -62,10 +62,10 @@ function sample(n::Integer, dimension::Integer, sampler::FaureSample; skipchecks
                             "Try $n or $(n+base^power) instead."))
     end
 
-    return _faure_samples(sampler.rng, n, power, dimension)
+    return _faure_samples(n, power, dimension)
 end
 
-@views function _faure_samples(rng, n_samples::I, power::I, dimension::I,
+@views function _faure_samples(n_samples::I, power::I, dimension::I,
                                ::Type{F} = Float64) where {I <: Integer, F}
     base = nextprime(dimension)
     inv_base = inv(base)
@@ -86,24 +86,24 @@ end
         vdc = faure[dim_idx, :]
         for sample_idx in eachindex(vdc)
             # increment digit counter by 1
-            _base_sum!(rng, digit_counter, base)
+            _base_sum!(digit_counter, base)
             dgs .= digit_counter
             # permute later dimensions using powers of a Pascal matrix
             if dim_idx ≠ 1
                 dgs .= (permutation * dgs) .% base
             end
-            vdc[sample_idx] = evalpoly(inv_base, dgs) * inv_base
+            vdc[sample_idx] = evalpoly(inv_base, dgs) * inv_base + inv(2n)
         end
     end
     return faure
 end
 
-@views function _base_sum!(rng, dgs::AbstractVector, base::Integer)
+@views function _base_sum!(dgs::AbstractVector, base::Integer)
     dgs[1] = one(eltype(dgs)) + dgs[1]
     if dgs[1] == base
         dgs[1] = zero(eltype(dgs))
         if length(dgs) ≠ 1  # ignore overflows
-            _base_sum!(rng, dgs[2:end], base)
+            _base_sum!(dgs[2:end], base)
         end
     end
 end
