@@ -14,7 +14,7 @@ end
                                  power::Integer, base::Integer)
     @inbounds @simd for idx in eachindex(pascal)
         i, j = Tuple(idx)
-        ifelse(i ≤ j, (result[idx] = powermod(power, j - i, base) * pascal[idx]), 1)
+        i ≤ j ? (result[idx] = powermod(power, j - i, base) * pascal[idx]) : result[idx]
     end
     return result
 end
