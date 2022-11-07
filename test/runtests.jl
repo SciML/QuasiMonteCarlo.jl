@@ -5,8 +5,9 @@ using Test
 
 struct InertSampler <: Random.AbstractRNG end
 InertSampler(args...; kwargs...) = InertSampler()
-Random.rand(::InertSampler, ::Type{T}) where {T} = zero(T)
+Random.rand(::InertSampler, ::Type{T}) where T = zero(T)
 Random.shuffle!(::InertSampler, arg::AbstractArray) = arg
+
 
 #1D
 lb = 0.0
@@ -101,12 +102,11 @@ end
     d = 17
     n = 17^2
     rng = InertSampler()
-    @test_throws ArgumentError QuasiMonteCarlo.sample(d + 1, d, FaureSample())
-    @test_throws ArgumentError QuasiMonteCarlo.sample(d^2 + 1, d, FaureSample())
-    s = sortslices(QuasiMonteCarlo.sample(n, d, FaureSample(rng)); dims = 2)
-    s ==
-    sortslices(QuasiMonteCarlo.sample(n, zeros(d), ones(d), FaureSample(rng)); dims = 2)
-    r = sortslices(include("rfaure.jl")'; dims = 2)
+    @test_throws ArgumentError QuasiMonteCarlo.sample(d+1, d, FaureSample())
+    @test_throws ArgumentError QuasiMonteCarlo.sample(d^2+1, d, FaureSample())
+    s = sortslices(QuasiMonteCarlo.sample(n, d, FaureSample(rng)); dims=2)
+    s == sortslices(QuasiMonteCarlo.sample(n, zeros(d), ones(d), FaureSample(rng)); dims=2)
+    r = sortslices(include("rfaure.jl")'; dims=2)
     @test isa(s, Matrix{Float64})
     @test size(s) == (d, n)
     @test mean(abs2, s - r) ≤ eps(Float32)
@@ -114,14 +114,15 @@ end
 
     # check RQMC stratification properties
     s = QuasiMonteCarlo.sample(n, d, FaureSample(MersenneTwister(0)))
-    fallsin(x, args...) = all(@. (args - 1) < x ≤ args)
+    fallsin(x, args...) = all(@. (args-1) < x ≤ args)
     @test all(1:d) do dim_idx  # for every dimension, check 1d stratification properties
-        all(isone, [count(x -> fallsin(n * x, i), s[dim_idx, :]) for i in 1:n])
+        all(isone, [count(x->fallsin(n*x, i), s[dim_idx, :]) for i in 1:n])
     end
 
     all(1:d) do dim_idx  # for every dimension, check 2d stratification properties
         all(isone,
-            [count(x -> fallsin(d * x, i, j), s[dim_idx, :]) for i in 1:d for j in 1:d])
+            [count(x->fallsin(d*x, i, j), s[dim_idx, :]) for i in 1:d for j in 1:d]
+        )
     end
 end
 
@@ -175,6 +176,7 @@ end
     @test size(s) == (d, n)
 end
 
+
 @testset "Kronecker" begin
     ρ = 0.7548776662466927
     s = QuasiMonteCarlo.sample(n, 2, KroneckerSample([ρ, ρ^2], [0, 0]))
@@ -184,7 +186,7 @@ end
     @test isa(s, Matrix{Float64})
     @test size(s) == (d, n)
     @test s ≈ t
-    @test all(x -> (mod(x, 1) ≈ s[1, 2] - s[1, 1]), diff(s[1, :]))
+    @test all(x->(mod(x, 1) ≈ s[1, 2] - s[1, 1]), diff(s[1, :]))
 end
 
 @testset "Section Sample" begin

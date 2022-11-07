@@ -1,7 +1,6 @@
 module QuasiMonteCarlo
 
-using Sobol, LatinHypercubeSampling, LatticeRules, Distributions, Primes, LinearAlgebra,
-      Random
+using Sobol, LatinHypercubeSampling, LatticeRules, Distributions, Primes, LinearAlgebra, Random
 
 abstract type SamplingAlgorithm end
 
@@ -107,6 +106,7 @@ struct RandomSample <: SamplingAlgorithm end
 ```
 """
 struct RandomSample <: SamplingAlgorithm end
+
 
 """
 ```julia
@@ -299,6 +299,7 @@ function sample(n, lb, ub, S::LowDiscrepancySample)
         end
     end
 end
+
 
 fixed_dimensions(section_sampler::SectionSample)::Vector{Int64} = findall(x -> x == false,
                                                                           isnan.(section_sampler.x0))
