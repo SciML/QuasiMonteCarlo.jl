@@ -1,19 +1,20 @@
 # lower-triangular Pascal matrix--needed to generate Faure points
-function pascal_mat(dimension::I, base=Inf) where I<:Integer
+function pascal_mat(dimension::I, base = Inf) where {I <: Integer}
     pascal = UpperTriangular(ones(I, dimension, dimension))
-	@inbounds for i in 2:dimension
+    @inbounds for i in 2:dimension
         for j in 2:i
-            pascal[j, i] = (pascal[j-1, i-1] + pascal[j, i-1]) % base
+            pascal[j, i] = (pascal[j - 1, i - 1] + pascal[j, i - 1]) % base
         end
     end
     return pascal
 end
 
 # raise a Pascal matrix to a given power.
-@fastmath function pascal_power!(result::UpperTriangular, pascal::UpperTriangular, power::Integer, base::Integer)
+@fastmath function pascal_power!(result::UpperTriangular, pascal::UpperTriangular,
+                                 power::Integer, base::Integer)
     @inbounds @simd for idx in eachindex(pascal)
         i, j = Tuple(idx)
-        result[idx] = powermod(power, max(j-i, zero(i)), base) * pascal[idx]
+        result[idx] = powermod(power, max(j - i, zero(i)), base) * pascal[idx]
     end
     return result
 end
@@ -45,7 +46,6 @@ end
 
 FaureSample() = FaureSample(Random.GLOBAL_RNG)
 
-
 function sample(n::Integer, lb, ub, ::FaureSample)
     length(lb) == length(ub) || DimensionMismatch("Lower and upper bounds do not match.")
     dimension = length(lb)
@@ -56,24 +56,21 @@ function sample(n::Integer, lb, ub, ::FaureSample)
     return faure
 end
 
-function sample(n::Integer, dimension::Integer, sampler::FaureSample; skipchecks=false)
+function sample(n::Integer, dimension::Integer, sampler::FaureSample; skipchecks = false)
     base = nextprime(dimension)
     power = floor(Int, log(base, n))
 
     if !skipchecks && (n % prevpow(base, n) ≠ 0)
         n -= (n % base^power)
-        throw(ArgumentError(
-            "Invalid sample size: Faure sequences must be multiples of `base^power`. " *
-            "Try $n or $(n+base^power) instead."
-        ))
+        throw(ArgumentError("Invalid sample size: Faure sequences must be multiples of `base^power`. " *
+                            "Try $n or $(n+base^power) instead."))
     end
 
     return _faure_samples(sampler.rng, n, power, dimension)
 end
 
-@views function _faure_samples(
-    rng, n_samples::I, power::I, dimension::I, ::Type{F}=Float64
-    ) where {I<:Integer, F}
+@views function _faure_samples(rng, n_samples::I, power::I, dimension::I,
+                               ::Type{F} = Float64) where {I <: Integer, F}
     base = nextprime(dimension)
     inv_base = inv(base)
     n_digits = I(power + one(power))
@@ -87,11 +84,11 @@ end
     digit_counter = zeros(I, n_digits)
     dgs = copy(digit_counter)
     # we use index maps to randomize the points of a Faure sequence
-    idx_maps = [i for (_, i) in Iterators.product(1:n_digits, 0:(base-1))]
+    idx_maps = [i for (_, i) in Iterators.product(1:n_digits, 0:(base - 1))]
 
     for dim_idx in 1:dimension
-        digit_counter .= base-1
-        dim_idx == 1 || pascal_power!(permutation, pascal, dim_idx-1, base)
+        digit_counter .= base - 1
+        dim_idx == 1 || pascal_power!(permutation, pascal, dim_idx - 1, base)
         # each dimension of a Faure sequence is a permuted van der Corput (vdc) sequence
         vdc = faure[dim_idx, :]
         for sample_idx in eachindex(vdc)
@@ -104,7 +101,7 @@ end
             end
             # randomly shuffle points
             for i in eachindex(dgs)
-                dgs[i] = idx_maps[1+end-i, 1+dgs[i]]
+                dgs[i] = idx_maps[1 + end - i, 1 + dgs[i]]
             end
             vdc[sample_idx] = @evalpoly(inv_base, dgs..., rand(rng, F)) * inv_base
         end
@@ -112,9 +109,7 @@ end
     return faure
 end
 
-@views function _base_sum!(
-    rng, dgs::AbstractVector, base::Integer, idx_maps::AbstractArray
-)
+@views function _base_sum!(rng, dgs::AbstractVector, base::Integer, idx_maps::AbstractArray)
     dgs[1] = one(eltype(dgs)) + dgs[1]
     if dgs[1] == base
         dgs[1] = zero(eltype(dgs))

@@ -27,16 +27,15 @@ struct KroneckerSample{V} <: SamplingAlgorithm
     origin::V
 end
 
-KroneckerSample(generator::AbstractVector) =
+function KroneckerSample(generator::AbstractVector)
     KroneckerSample(generator, (similar(generator) .= 0))
+end
 
-KroneckerSample(generator, origin) =
-    KroneckerSample(promote(generator, origin)...)
+KroneckerSample(generator, origin) = KroneckerSample(promote(generator, origin)...)
 
 KroneckerSample() = KroneckerSample(missing, missing)
 
-
-@fastmath function radiant(d::Integer, tol::T=eps(float(d))) where T
+@fastmath function radiant(d::Integer, tol::T = eps(float(d))) where {T}
     y_old = one(T)
     # Approximate solution of x^(d+1) = x + 1 (nested radical)
     y = (one(T) + y_old)^-inv(d)
@@ -49,10 +48,8 @@ end
 
 function sample(n::Integer, d::Integer, k::KroneckerSample)
     @assert d == length(k.generator)
-    return @. mod(k.generator * (0:(n-1))' + k.origin, 1)
+    return @. mod(k.generator * (0:(n - 1))' + k.origin, 1)
 end
-
-
 
 """
     GoldenSample(origin)
@@ -79,21 +76,20 @@ struct GoldenSample{T} <: SamplingAlgorithm
 end
 GoldenSample() = GoldenSample(zero(Float64))
 
-function sample(n::Integer, d::Integer, g::GoldenSample{T}) where T
+function sample(n::Integer, d::Integer, g::GoldenSample{T}) where {T}
     ratio = harmonious(d, eps(eltype(T)))
     generator = [ratio^-i for i in 1:d]
-    return @. mod(generator * (0:(n-1))' + g.origin, 1)
+    return @. mod(generator * (0:(n - 1))' + g.origin, 1)
 end
 
-
 # generate (inverse) harmonious numbers
-@fastmath function harmonious(d::Integer, tol::T=2eps(float(d))) where T
+@fastmath function harmonious(d::Integer, tol::T = 2eps(float(d))) where {T}
     y_old = one(T)
     # Approximate solution of x^(d+1) = x + 1 (nested radical)
-    y = (one(T) + y_old)^inv(d+1)
+    y = (one(T) + y_old)^inv(d + 1)
     while abs(y - y_old) > tol  # continue until precise enough
         y_old = y
-        y = (one(T) + y)^inv(d+1)
+        y = (one(T) + y)^inv(d + 1)
     end
     return y
 end
