@@ -54,6 +54,11 @@ QuasiMonteCarlo.sample(5, d, Normal(0, 4))
         @test isa(s, Vector{Float32})
         @test size(s) == (n,)
         @test s≈[0.5, 0.25, 0.75, 0.125, 0.625] rtol=1e-7
+
+        #n = 0
+        @test_throws QuasiMonteCarlo.ZeroSamplesError QuasiMonteCarlo.sample(0, 0.0, 1.0,
+                                                                             LowDiscrepancySample(2,
+                                                                                                  false))
     end
 
     @testset "SectionSample" begin
@@ -71,6 +76,10 @@ QuasiMonteCarlo.sample(5, d, Normal(0, 4))
         @test all(==(constrained_val), s)
         @test QuasiMonteCarlo.free_dimensions(sampler) == Int[]
         @test QuasiMonteCarlo.fixed_dimensions(sampler) == [1]
+
+        #n = 0
+        @test_throws QuasiMonteCarlo.ZeroSamplesError QuasiMonteCarlo.sample(0, lb, ub,
+                                                                             sampler)
     end
 end
 
@@ -85,6 +94,13 @@ d = 2
     s = QuasiMonteCarlo.sample(n, lb, ub, GridSample([0.1, 0.5]))
     @test isa(s, Matrix{typeof(s[1][1])}) == true
     @test size(s) == (d, n)
+
+    #n = 0
+    @test_throws QuasiMonteCarlo.ZeroSamplesError QuasiMonteCarlo.sample(0, lb, ub,
+                                                                         GridSample([
+                                                                                        0.1,
+                                                                                        0.5,
+                                                                                    ]))
 end
 
 @testset "UniformSample" begin
@@ -92,6 +108,10 @@ end
     s = QuasiMonteCarlo.sample(n, lb, ub, UniformSample())
     @test isa(s, Matrix{typeof(s[1][1])}) == true
     @test size(s) == (d, n)
+
+    #n = 0
+    @test_throws QuasiMonteCarlo.ZeroSamplesError QuasiMonteCarlo.sample(0, lb, ub,
+                                                                         UniformSample())
 end
 
 @testset "SobolSample" begin
@@ -99,6 +119,10 @@ end
     s = QuasiMonteCarlo.sample(n, lb, ub, SobolSample())
     @test isa(s, Matrix{typeof(s[1][1])}) == true
     @test size(s) == (d, n)
+
+    #n = 0
+    @test_throws QuasiMonteCarlo.ZeroSamplesError QuasiMonteCarlo.sample(0, lb, ub,
+                                                                         SobolSample())
 end
 
 @testset "LHS" begin
@@ -110,6 +134,10 @@ end
     s = QuasiMonteCarlo.sample(n, lb, ub, LatinHypercubeSample(threading = true))
     @test isa(s, Matrix{typeof(s[1][1])}) == true
     @test size(s) == (d, n)
+
+    #n = 0
+    @test_throws QuasiMonteCarlo.ZeroSamplesError QuasiMonteCarlo.sample(0, lb, ub,
+                                                                         LatinHypercubeSample())
 end
 
 @testset "Faure Sample" begin
@@ -160,6 +188,10 @@ end
     for d in (11, 13, 17)
         @test test_tms(d, d^power, power)  # test 3d stratification of next 3 primes
     end
+
+    #n = 0
+    @test_throws QuasiMonteCarlo.ZeroSamplesError QuasiMonteCarlo.sample(0, lb, ub,
+                                                                         FaureSample())
 end
 
 @testset "LatticeRuleSample" begin
@@ -167,6 +199,10 @@ end
     s = QuasiMonteCarlo.sample(n, lb, ub, LatticeRuleSample())
     @test isa(s, Matrix{typeof(s[1][1])}) == true
     @test size(s) == (d, n)
+
+    #n = 0
+    @test_throws QuasiMonteCarlo.ZeroSamplesError QuasiMonteCarlo.sample(0, lb, ub,
+                                                                         LatticeRuleSample())
 end
 
 @testset "LDS" begin
@@ -196,6 +232,14 @@ end
               mean(QuasiMonteCarlo.sample(n, lb, ub, LowDiscrepancySample([2, 3], true))))
     end
     @test round(mean(testsample), sigdigits = 1)≈0.5 rtol=1e-7
+
+    #n = 0
+    @test_throws QuasiMonteCarlo.ZeroSamplesError QuasiMonteCarlo.sample(0, lb, ub,
+                                                                         LowDiscrepancySample([
+                                                                                                  2,
+                                                                                                  3,
+                                                                                              ],
+                                                                                              false))
 end
 
 @testset "Distribution 1" begin
@@ -203,6 +247,9 @@ end
     s = QuasiMonteCarlo.sample(n, d, Cauchy())
     @test isa(s, Matrix{typeof(s[1][1])}) == true
     @test size(s) == (d, n)
+
+    #n = 0
+    @test_throws QuasiMonteCarlo.ZeroSamplesError QuasiMonteCarlo.sample(0, d, Cauchy())
 end
 
 @testset "Distribution 2" begin
@@ -210,6 +257,9 @@ end
     s = QuasiMonteCarlo.sample(n, d, Normal(3, 5))
     @test isa(s, Matrix{typeof(s[1][1])}) == true
     @test size(s) == (d, n)
+
+    #n = 0
+    @test_throws QuasiMonteCarlo.ZeroSamplesError QuasiMonteCarlo.sample(0, d, Normal(3, 5))
 end
 
 @testset "Kronecker" begin
@@ -222,6 +272,19 @@ end
     @test size(s) == (d, n)
     @test s ≈ t
     @test all(x -> (mod(x, 1) ≈ s[1, 2] - s[1, 1]), diff(s[1, :]))
+
+    #n = 0
+    @test_throws QuasiMonteCarlo.ZeroSamplesError QuasiMonteCarlo.sample(0, 2,
+                                                                         GoldenSample())
+    @test_throws QuasiMonteCarlo.ZeroSamplesError QuasiMonteCarlo.sample(0, 2,
+                                                                         KroneckerSample([
+                                                                                             ρ,
+                                                                                             ρ^2,
+                                                                                         ],
+                                                                                         [
+                                                                                             0,
+                                                                                             0,
+                                                                                         ]))
 end
 
 @testset "Section Sample" begin
@@ -253,6 +316,14 @@ end
     @test all(s[2, :] .== constrained_val)
     @test isa(s, Matrix{Float64})
     @test size(s) == (d, n)
+
+    #n = 0
+    @test_throws QuasiMonteCarlo.ZeroSamplesError QuasiMonteCarlo.sample(0, lb, ub,
+                                                                         SectionSample([
+                                                                                           NaN64,
+                                                                                           constrained_val,
+                                                                                       ],
+                                                                                       UniformSample()))
 end
 
 @testset "generate_design_matrices" begin
@@ -265,4 +336,11 @@ end
     @test size(A) == (d, n)
     @test isa(B, Matrix{typeof(B[1][1])}) == true
     @test size(B) == (d, n)
+
+    #n = 0
+    @test_throws QuasiMonteCarlo.ZeroSamplesError QuasiMonteCarlo.generate_design_matrices(0,
+                                                                                           lb,
+                                                                                           ub,
+                                                                                           UniformSample(),
+                                                                                           num_mat)
 end

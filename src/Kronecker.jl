@@ -47,6 +47,9 @@ KroneckerSample() = KroneckerSample(missing, missing)
 end
 
 function sample(n::Integer, d::Integer, k::KroneckerSample)
+    if n <= 0
+        throw(ZeroSamplesError())
+    end
     @assert d == length(k.generator)
     return @. mod(k.generator * (0:(n - 1))' + k.origin, 1)
 end
@@ -77,6 +80,9 @@ end
 GoldenSample() = GoldenSample(zero(Float64))
 
 function sample(n::Integer, d::Integer, g::GoldenSample{T}) where {T}
+    if n <= 0
+        throw(ZeroSamplesError())
+    end
     ratio = harmonious(d, eps(eltype(T)))
     generator = [ratio^-i for i in 1:d]
     return @. mod(generator * (0:(n - 1))' + g.origin, 1)
