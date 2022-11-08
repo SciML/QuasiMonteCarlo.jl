@@ -148,7 +148,7 @@ sample(n,lb,ub,S::GridSample)
 Returns a tuple containing numbers in a grid.
 """
 function sample(n, lb, ub, S::GridSample)
-    if n == 0
+    if n <= 0
         throw(ZeroSamplesError())
     end
     if !check_bounds(lb, ub)
@@ -169,7 +169,7 @@ sample(n,lb,ub,::UniformRandom)
 Returns a tuple containing uniform random numbers.
 """
 function sample(n, lb, ub, ::UniformSample)
-    if n == 0
+    if n <= 0
         throw(ZeroSamplesError())
     end
     if !check_bounds(lb, ub)
@@ -189,7 +189,7 @@ sample(n,lb,ub,::SobolSampling)
 Returns a tuple containing Sobol sequences.
 """
 function sample(n, lb, ub, ::SobolSample)
-    if n == 0
+    if n <= 0
         throw(ZeroSamplesError())
     end
     if !check_bounds(lb, ub)
@@ -209,7 +209,7 @@ sample(n,lb,ub,T::LatinHypercubeSample)
 Returns a tuple containing LatinHypercube sequences.
 """
 function sample(n, lb, ub, T::LatinHypercubeSample)
-    if n == 0
+    if n <= 0
         throw(ZeroSamplesError())
     end
     if !check_bounds(lb, ub)
@@ -236,7 +236,7 @@ sample(n,lb,ub,::LatticeRuleSample)
 Returns a matrix with the `n` rank-1 lattice points in each column if `lb` is a vector, or a vector with the `n` rank-1 lattice points if `lb` is a number.
 """
 function sample(n, lb, ub, ::LatticeRuleSample)
-    if n == 0
+    if n <= 0
         throw(ZeroSamplesError())
     end
     if !check_bounds(lb, ub)
@@ -272,7 +272,7 @@ Low-discrepancy sample:
 If dimension d > 1, all bases must be coprime with one other.
 """
 function sample(n, lb, ub, S::LowDiscrepancySample)
-    if n == 0
+    if n <= 0
         throw(ZeroSamplesError())
     end
     if !check_bounds(lb, ub)
@@ -347,7 +347,7 @@ The sampler is defined as in e.g.
 where the first argument is a Vector{T} in which numbers are fixed coordinates and `NaN`s correspond to free dimensions, and the second argument is a SamplingAlgorithm which is used to sample in the free dimensions.
 """
 function sample(n, lb, ub, section_sampler::SectionSample)
-    if n == 0
+    if n <= 0
         throw(ZeroSamplesError())
     end
     if !check_bounds(lb, ub)
@@ -377,7 +377,7 @@ sample(n,d,D::Distribution)
 Returns a tuple containing numbers distributed as D.
 """
 function sample(n, d, D::Distribution)
-    if n == 0
+    if n <= 0
         throw(ZeroSamplesError())
     end
     if d == 1
@@ -398,7 +398,7 @@ which returns `As` which is an array of `k` design matrices `A[i]` that are
 all sampled from the same low-discrepancy sequence.
 """
 function generate_design_matrices(n, lb, ub, sampler, num_mats = 2)
-    if n == 0
+    if n <= 0
         throw(ZeroSamplesError())
     end
     @assert length(lb) == length(ub)
