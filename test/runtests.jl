@@ -191,7 +191,7 @@ end
 
     #n = 0
     @test_throws QuasiMonteCarlo.ZeroSamplesError QuasiMonteCarlo.sample(0, lb, ub,
-                                                                         FaureSample(rng))
+                                                                         FaureSample())
 end
 
 @testset "LatticeRuleSample" begin
