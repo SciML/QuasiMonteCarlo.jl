@@ -40,9 +40,7 @@ References:
 Faure, H. (1982). Discrepance de suites associees a un systeme de numeration (en dimension s). *Acta Arith.*, 41, 337-351.
 Owen, A. B. (1997). Monte Carlo variance of scrambled net quadrature. *SIAM Journal on Numerical Analysis*, 34(5), 1884-1910.
 """
-struct FaureSample{T}
-    rng::T
-end
+struct FaureSample end
 
 @fastmath function sample(n::Integer, lb, ub, ::FaureSample)
     if n == 0
