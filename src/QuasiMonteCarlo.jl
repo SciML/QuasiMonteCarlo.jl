@@ -7,6 +7,9 @@ abstract type SamplingAlgorithm end
 
 include("Faure.jl")
 include("Kronecker.jl")
+include("RandomizedQuasiMonteCarlo/conversion.jl")
+include("RandomizedQuasiMonteCarlo/shifting.jl")
+include("RandomizedQuasiMonteCarlo/scrambling_base_b.jl")
 
 check_bounds(lb, ub) = all(x -> x[1] <= x[2], zip(lb, ub))
 check_bounds(lb::Number, ub::Number) = lb <= ub
@@ -407,6 +410,13 @@ function generate_design_matrices(n, lb, ub, sampler, num_mats = 2)
     [out[(j * d + 1):((j + 1) * d), :] for j in 0:(num_mats - 1)]
 end
 
+# See https://discourse.julialang.org/t/is-there-a-dedicated-function-computing-m-int-log-b-b-m/89776/10
+function logi(b::Int, n::Int)
+    m = round(Int, log(b, n))
+    b^m == n || throw(ArgumentError("$n is not a power of $b"))
+    return m
+end
+
 export GridSample,
        UniformSample,
        SobolSample,
@@ -417,6 +427,10 @@ export GridSample,
        GoldenSample,
        KroneckerSample,
        SectionSample,
-       FaureSample
+       FaureSample,
+       nested_uniform_scramble,
+       linear_matrix_scramble,
+       shift,
+       digital_shift
 
 end # module
