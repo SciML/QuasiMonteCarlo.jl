@@ -345,6 +345,20 @@ end
                                                                                            num_mat)
 end
 
+@testset "Randomized Quasi Monte Carlo: conversion functions" begin
+    b = 2
+    x = (0 // 16):(1 // 16):(15 // 16)
+    bits = QuasiMonteCarlo.unif2bits(x, b)
+    y = [QuasiMonteCarlo.bits2unif(s, b) for s in eachcol(bits)]
+    @test x == y
+
+    b = 3
+    x = (0 // 27):(1 // 27):(26 // 27)
+    bits = QuasiMonteCarlo.unif2bits(x, b, M = 8)
+    y = [QuasiMonteCarlo.bits2unif(Rational, s, b) for s in eachcol(bits)]
+    @test x == y
+end
+
 @testset "Randomized Quasi Monte Carlo" begin
     m = 8
     d = 5
@@ -363,17 +377,17 @@ end
 end
 
 @testset "Randomized Quasi Monte Carlo Rational Scrambling" begin
-    m = 4
+    m = 5
     d = 2
     b = QuasiMonteCarlo.nextprime(d)
     N = b^m # Number of points
     M = m
 
     # Unrandomized low discrepency sequence
-    u_faure = Rational.(permutedims(QuasiMonteCarlo.sample(N, d, FaureSample())))
-
+    u_sobol = Rational.(permutedims(QuasiMonteCarlo.sample(N, zeros(d), ones(d),
+                                                           SobolSample())))
     # Randomized version
-    u_nus = nested_uniform_scramble(u_faure, b; M = M)
-    u_lms = linear_matrix_scramble(u_faure, b; M = M)
-    u_digital_shift = digital_shift(u_faure, b; M = M)
+    u_nus = nested_uniform_scramble(u_sobol, b; M = M)
+    u_lms = linear_matrix_scramble(u_sobol, b; M = M)
+    u_digital_shift = digital_shift(u_sobol, b; M = M)
 end
