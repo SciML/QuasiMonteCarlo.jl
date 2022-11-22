@@ -344,3 +344,36 @@ end
                                                                                            UniformSample(),
                                                                                            num_mat)
 end
+
+@testset "Randomized Quasi Monte Carlo" begin
+    m = 8
+    d = 5
+    b = QuasiMonteCarlo.nextprime(d)
+    N = b^m # Number of points
+    M = 2m
+
+    # Unrandomized low discrepency sequence
+    u_faure = permutedims(QuasiMonteCarlo.sample(N, d, FaureSample()))
+
+    # Randomized version
+    u_nus = nested_uniform_scramble(u_faure, b; M = M)
+    u_lms = linear_matrix_scramble(u_faure, b; M = M)
+    u_digital_shift = digital_shift(u_faure, b; M = M)
+    u_shift = shift(u_faure)
+end
+
+@testset "Randomized Quasi Monte Carlo Rational Scrambling" begin
+    m = 4
+    d = 2
+    b = QuasiMonteCarlo.nextprime(d)
+    N = b^m # Number of points
+    M = m
+
+    # Unrandomized low discrepency sequence
+    u_faure = Rational.(permutedims(QuasiMonteCarlo.sample(N, d, FaureSample())))
+
+    # Randomized version
+    u_nus = nested_uniform_scramble(u_faure, b; M = M)
+    u_lms = linear_matrix_scramble(u_faure, b; M = M)
+    u_digital_shift = digital_shift(u_faure, b; M = M)
+end
