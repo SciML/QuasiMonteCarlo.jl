@@ -1,32 +1,4 @@
 """
-    bits2unif(bits::BitArray)
-Convert a vector of M bits in base 2 into a number y∈[0,1[.
-"""
-function bits2unif(bits::BitArray)
-    # Turn sequence of bits into a point in [0,1)
-    # First bits are highest order
-    y = 0 // 1
-    for j in lastindex(bits):-1:1
-        y = (y + bits[j]) // 2
-    end
-    y
-end
-
-"""
-    bits2unif(bits::AbstractArray{<:Integer}, b::Integer)
-Convert a vector of M "bits" in base b into a number y∈[0,1[.
-"""
-function bits2unif(bits::AbstractArray{<:Integer}, b::Integer)
-    # Turn sequence of bits into a point in [0,1)
-    # First bits are highest order
-    y = 0 // 1
-    for j in length(bits):-1:1
-        y = (y + bits[j]) // b
-    end
-    y
-end
-
-"""
     unif2bits(x<:AbstractMatrix, b::Integer; M=32)
 Return the b-adic decomposition of all element y of an array y = ∑ₖ yₖ/bᵏ a number yₖ∈[0,1[ -> [y₁, ⋯, yₘ] 
 """
@@ -72,19 +44,47 @@ check_zero(a::Rational; kwargs...) = a == 0
 check_zero(a::AbstractFloat; atol = 3e-16) = isapprox(a, 0, atol = atol)
 
 function unif2bits!(bits::AbstractVector{<:Integer}, y, b::Integer; kwargs...)
+    bits .= 0
     for j in eachindex(bits), bb in (b - 1):-1:1
         a = y - bb // b^j
         if check_zero(a; kwargs...)
             bits[j] = bb
-            bits[(j + 1):end] .= 0
             break # it breaks from the nested loop (see here)[https://stackoverflow.com/questions/39796234/how-to-break-out-of-nested-for-loops-in-julia]
         elseif a > 0
             bits[j] = bb
             y = a
-        else
-            bits[j] = 0
         end
     end
+end
+
+"""
+    bits2unif(bits::AbstractVector{<:Integer}, b::Integer)
+Convert a vector of M "bits" in base b into a number y∈[0,1[.
+"""
+function bits2unif(::Type{T}, bits::AbstractVector{<:Integer},
+                   b::Integer) where {T <: Rational}
+    # Turn sequence of bits into a point in [0,1)
+    # First bits are highest order
+    y = zero(T)
+    for j in lastindex(bits):-1:1
+        y = (y + bits[j]) // b
+    end
+    return y
+end
+
+function bits2unif(::Type{T}, bits::AbstractVector{<:Integer},
+                   b::Integer) where {T <: AbstractFloat}
+    # Turn sequence of bits into a point in [0,1)
+    # First bits are highest order
+    y = zero(T)
+    for j in lastindex(bits):-1:1
+        y = (y + bits[j]) / b
+    end
+    return y
+end
+
+function bits2unif(bits::AbstractVector{<:Integer}, b::Integer)
+    bits2unif(Float64, bits::AbstractVector{<:Integer}, b::Integer)
 end
 
 #? This seems faster than @evalpoly(b, $bit...)
