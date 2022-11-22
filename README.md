@@ -107,3 +107,73 @@ function sample(n,lb,ub,::NewAmazingSamplingAlgorithm)
     end
 end
 ```
+
+## Randomization
+
+API is meant to evolve.
+```julia
+    m = 4
+    d = 3
+    b = QuasiMonteCarlo.nextprime(d)
+    N = b^m # Number of points
+    M = m
+
+    # Unrandomized low discrepency sequence
+    u_faure = permutedims(QuasiMonteCarlo.sample(N, d, FaureSample()))
+
+    # Randomized version
+    u_nus = nested_uniform_scramble(u_faure, b; M = M)
+    u_lms = linear_matrix_scramble(u_faure, b; M = M)
+    u_digital_shift = digital_shift(u_faure, b; M = M)
+    u_shift = shift(u_faure)
+    u_uniform = rand(N, d) # plain i.i.d. uniform
+```
+
+```julia
+using Plots
+# Nice setting for plotting
+default(fontfamily="Computer Modern", linewidth=1, label=nothing, grid=true, framestyle=:default)
+begin
+    d1 = 1
+    d2 = 3
+    sequences = [u_uniform, u_faure, u_shift, u_digital_shift, u_lms, u_nus]
+    names = ["Uniform", "Faure (unrandomized)", "Shift", "Digital Shift", "Linear Matrix Scrambling", "Nested Uniform Scrambling"]
+    p = [plot(thickness_scaling=1.5, aspect_ratio=:equal) for i in sequences]
+    for (i, x) in enumerate(sequences)
+        scatter!(p[i], x[:, d1], x[:, d2], ms=0.9, c=1, grid=false)
+        title!(names[i])
+        xlims!(p[i], (0, 1))
+        ylims!(p[i], (0, 1))
+        yticks!(p[i], [0, 1])
+        xticks!(p[i], [0, 1])
+        hline!(p[i], range(0, 1, step=1 / 4), c=:gray, alpha=0.2)
+        vline!(p[i], range(0, 1, step=1 / 4), c=:gray, alpha=0.2)
+        hline!(p[i], range(0, 1, step=1 / 2), c=:gray, alpha=0.8)
+        vline!(p[i], range(0, 1, step=1 / 2), c=:gray, alpha=0.8)
+    end
+    plot(p..., size=(1500, 900))
+end
+```
+
+This plot checks (visually) that you are dealing with $(t,d,m)$ sequence i.e. you must see one point per rectangle.
+
+```julia
+begin
+    d1 = 1 
+    d2 = 3
+    x = u_nus
+    p = [plot(thickness_scaling=2, aspect_ratio=:equal) for i in 0:m]
+    for i in 0:m
+        j = m - i
+        xᵢ = range(0, 1, step=1 / b^(i))
+        xⱼ = range(0, 1, step=1 / b^(j))
+        scatter!(p[i+1], x[:, d1], x[:, d2], ms=2, c=1, grid=false)
+        xlims!(p[i+1], (0, 1.01))
+        ylims!(p[i+1], (0, 1.01))
+        yticks!(p[i+1], [0, 1])
+        xticks!(p[i+1], [0, 1])
+        hline!(p[i+1], xᵢ, c=:gray, alpha=0.2)
+        vline!(p[i+1], xⱼ, c=:gray, alpha=0.2)
+    end
+    plot(p..., size=(1500, 900))
+end
