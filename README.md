@@ -175,7 +175,7 @@ end
 
 ![Different randomization methods of the same initial set of points](img/various_randomization.svg)
 
-Faure nets and scrambled versions of Faure nets are digital $(t,d,m)$-net ([see this nice reference by A. Owen](https://statweb.stanford.edu/~owen/mc/)). It basically means that they have strong equipartition properties.
+Faure nets and scrambled versions of Faure nets are digital $(t,d,m)$-net ([see this nice reference by A. Owen](https://artowen.su.domains/mc/qmcstuff.pdf)). It basically means that they have strong equipartition properties.
 Here we can (visually) verify that with Nested Uniform Scrambling (it also works with Linear Matrix Scrambling and Digital Shift).
 You must see one point per rectangle of volume $1/b^m$.
 
