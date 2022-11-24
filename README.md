@@ -111,6 +111,19 @@ end
 ## Randomization
 
 API is meant to evolve.
+
+Given a matrix `x` of size `n×d` and `xᵢₛ∈[0,1]ᵈ` one obtain a randomized version `y` using one the following methods
+* `nested_uniform_scramble(x, b; M = M)` where `b` is the base used to scramble and `M` the number of bits in base `b` used to represent digits.
+* `linear_matrix_scramble(x, base; M = M)`.
+* `digital_shift(x, base; M = M)`.
+* `shift(x)`.
+
+All these functions guarantee that the resulting array will have its components uniformly distributed `yᵢₛ∼𝐔([0,1]ᵈ)` (but not independent).
+
+### Example 
+
+Randomization of a Faure sequence with various methods.
+
 ```julia
     m = 4
     d = 3
@@ -119,24 +132,29 @@ API is meant to evolve.
     M = m
 
     # Unrandomized low discrepency sequence
-    u_faure = permutedims(QuasiMonteCarlo.sample(N, d, FaureSample()))
+    x_faure = permutedims(QuasiMonteCarlo.sample(N, d, FaureSample()))
 
     # Randomized version
-    u_nus = nested_uniform_scramble(u_faure, b; M = M)
-    u_lms = linear_matrix_scramble(u_faure, b; M = M)
-    u_digital_shift = digital_shift(u_faure, b; M = M)
-    u_shift = shift(u_faure)
-    u_uniform = rand(N, d) # plain i.i.d. uniform
+    x_nus = nested_uniform_scramble(x_faure, b; M = M)
+    x_lms = linear_matrix_scramble(x_faure, b; M = M)
+    x_digital_shift = digital_shift(x_faure, b; M = M)
+    x_shift = shift(x_faure)
+    x_uniform = rand(N, d) # plain i.i.d. uniform
 ```
 
 ```julia
 using Plots
-# Nice setting for plotting
+# Setting I like for plotting
 default(fontfamily="Computer Modern", linewidth=1, label=nothing, grid=true, framestyle=:default)
+```
+
+Plot the resulting sequences along dimensions `1` and `3`.
+
+```julia
 begin
     d1 = 1
     d2 = 3
-    sequences = [u_uniform, u_faure, u_shift, u_digital_shift, u_lms, u_nus]
+    sequences = [x_uniform, x_faure, x_shift, x_digital_shift, x_lms, x_nus]
     names = ["Uniform", "Faure (unrandomized)", "Shift", "Digital Shift", "Linear Matrix Scrambling", "Nested Uniform Scrambling"]
     p = [plot(thickness_scaling=1.5, aspect_ratio=:equal) for i in sequences]
     for (i, x) in enumerate(sequences)
@@ -155,14 +173,18 @@ begin
 end
 ```
 
-This plot checks (visually) that you are dealing with $(t,d,m)$ sequence i.e. you must see one point per rectangle.
+![Different randomization methods of the same initial set of points](img/various_randomization.svg)
+
+Faure nets and scrambled versions of Faure nets are digital $(t,d,m)$-net ([see this nice reference by A. Owen](https://statweb.stanford.edu/~owen/mc/)). It basically means that they have strong equipartition properties.
+Here we can (visually) verify that with Nested Uniform Scrambling (it also works with Linear Matrix Scrambling and Digital Shift).
+You must see one point per rectangle of volume $1/b^m$.
 
 ```julia
 begin
     d1 = 1 
     d2 = 3
-    x = u_nus
-    p = [plot(thickness_scaling=2, aspect_ratio=:equal) for i in 0:m]
+    x = x_nus
+    p = [plot(thickness_scaling=1.5, aspect_ratio=:equal) for i in 0:m]
     for i in 0:m
         j = m - i
         xᵢ = range(0, 1, step=1 / b^(i))
@@ -177,3 +199,6 @@ begin
     end
     plot(p..., size=(1500, 900))
 end
+```
+
+![All the different elementary rectangle contain only one points](img/equidistribution.svg)

@@ -6,11 +6,11 @@ The scrambling method is Nested Uniform Scrambling which was introduced in Owen 
 """
 function nested_uniform_scramble(rng::AbstractRNG, points::AbstractArray{T, N}, b::Integer;
                                  M = 32) where {T, N}
+    random_points = similar(points)
     unrandomized_bits = unif2bits(points, b, M = M)
     indices = which_permutation(unrandomized_bits, b)
     random_bits = similar(unrandomized_bits)
     nested_uniform_scramble_bit!(rng, random_bits, unrandomized_bits, indices, b)
-    random_points = similar(points)
     for i in CartesianIndices(random_points)
         random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
     end
