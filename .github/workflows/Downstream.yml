@@ -19,6 +19,8 @@ jobs:
         os: [ubuntu-latest]
         package:
           - {user: SciML, repo: Surrogates.jl, group: All}
+          - {user: SciML, repo: NeuralPDE.jl, group: NNPDE1}
+          - {user: SciML, repo: NeuralPDE.jl, group: NNPDE2}
     steps:
       - uses: actions/checkout@v2
       - uses: julia-actions/setup-julia@v1
