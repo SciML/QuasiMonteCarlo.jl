@@ -110,7 +110,8 @@ end
 
 ## Randomization
 
-API is meant to evolve.
+Note that this feature is currently experimental and is thus subject to interface changes in
+non-breaking (minor) releases.
 
 Given a matrix `x` of size `n×d` and `xᵢₛ∈[0,1]ᵈ` one obtain a randomized version `y` using one the following methods
 * `nested_uniform_scramble(x, b; M = M)` where `b` is the base used to scramble and `M` the number of bits in base `b` used to represent digits.
