@@ -36,6 +36,7 @@ QuasiMonteCarlo.sample(n, lb, ub, LatinHypercubeSample())
 QuasiMonteCarlo.sample(n, lb, ub, LatticeRuleSample())
 QuasiMonteCarlo.sample(5, d, Cauchy())
 QuasiMonteCarlo.sample(5, d, Normal(0, 4))
+QuasiMonteCarlo.sample(5, d, GoldenSample())
 
 @testset "1D" begin
     @testset "LowDiscrepancySample" begin

@@ -143,6 +143,17 @@ where:
 """
 function sample end
 
+function sample(n::Int, lb::AbstractVector, ub::AbstractVector, S::SamplingAlgorithm)
+    if n <= 0
+        throw(ZeroSamplesError())
+    end
+    length(lb) == length(ub) || DimensionMismatch("Lower and upper bounds do not match.")
+
+    # note: `sample` does not allow for passing `eltype(lb)`!!
+    out = sample(n, length(lb), S)
+    return (ub .- lb) .* out .- lb
+end
+
 """
 sample(n,lb,ub,S::GridSample)
 Returns a tuple containing numbers in a grid.
