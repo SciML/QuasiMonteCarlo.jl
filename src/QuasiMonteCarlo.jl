@@ -152,7 +152,7 @@ function sample(n::Integer, lb::Union{Number, Tuple, AbstractVector},
 
     # note: `sample` does not allow for passing `eltype(lb)`!!
     out = sample(n, length(lb), S)
-    return (ub .- lb) .* out .- lb
+    return (ub .- lb) .* out .+ lb
 end
 
 """
@@ -395,7 +395,7 @@ end
 sample(n,d,D::Distribution)
 Returns a tuple containing numbers distributed as D.
 """
-function sample(n, d, D::Distribution)
+function sample(n::Integer, d::Integer, D::Distributions.Sampleable)
     if n <= 0
         throw(ZeroSamplesError())
     end
