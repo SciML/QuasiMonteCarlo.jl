@@ -42,7 +42,8 @@ Owen, A. B. (1997). Monte Carlo variance of scrambled net quadrature. *SIAM Jour
 """
 struct FaureSample end
 
-@fastmath function sample(n::Integer, lb::Union{Number,AbstractVector}, ub::Union{Number,AbstractVector}, ::FaureSample)
+@fastmath function sample(n::Integer, lb::Union{Number, AbstractVector},
+                          ub::Union{Number, AbstractVector}, ::FaureSample)
     if n <= 0
         throw(ZeroSamplesError())
     end
