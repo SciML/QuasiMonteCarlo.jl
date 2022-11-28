@@ -357,7 +357,7 @@ The sampler is defined as in e.g.
 
 where the first argument is a Vector{T} in which numbers are fixed coordinates and `NaN`s correspond to free dimensions, and the second argument is a SamplingAlgorithm which is used to sample in the free dimensions.
 """
-function sample(n::Integer, lb::Union{Number,AbstractVector}, ub::Union{Number,AbstractVector}, Section_sampler::SectionSample)
+function sample(n::Integer, lb::Union{Number,AbstractVector}, ub::Union{Number,AbstractVector}, section_sampler::SectionSample)
     if n <= 0
         throw(ZeroSamplesError())
     end
@@ -366,7 +366,7 @@ function sample(n::Integer, lb::Union{Number,AbstractVector}, ub::Union{Number,A
     end
     if lb isa Number
         if isnan(section_sampler.x0[1])
-            return sample(n, lb, ub, Section_sampler.sa)
+            return sample(n, lb, ub, section_sampler.sa)
         else
             return fill(section_sampler.x0[1], n)
         end
