@@ -152,7 +152,7 @@ function sample(n::Integer, lb::Union{Number, Tuple, AbstractVector},
 
     # note: `sample` does not allow for passing `eltype(lb)`!!
     out = sample(n, length(lb), S)
-    return (ub .- lb) .* out .- lb
+    return (ub .- lb) .* out .+ lb
 end
 
 """
