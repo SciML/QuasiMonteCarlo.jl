@@ -395,7 +395,7 @@ end
 sample(n,d,D::Distribution)
 Returns a tuple containing numbers distributed as D.
 """
-function sample(n, d, D::Distribution)
+function sample(n::Integer, d::Integer, D::Distributions.Sampleable)
     if n <= 0
         throw(ZeroSamplesError())
     end

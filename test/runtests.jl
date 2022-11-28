@@ -30,9 +30,16 @@ ub = 5.0
 n = 5
 d = 1
 
-for sampler in [GridSample(0.1), UniformSample(), SobolSample(), LatinHypercubeSample(), LatticeRuleSample(), Cauchy(), Normal(0, 4), GoldenSample()]
+for sampler in [GridSample(0.1), UniformSample(), SobolSample(), LatinHypercubeSample(), LatticeRuleSample(), GoldenSample()]
     @show sampler
     A = QuasiMonteCarlo.sample(n, lb, ub, sampler)
+    @test all(all(x .<= ub) for x in eachcol(A))
+    @test all(all(x .>= lb) for x in eachcol(A))
+end
+
+for sampler in [Cauchy(), Normal(0, 4)]
+    @show sampler
+    A = QuasiMonteCarlo.sample(n, 2, sampler)
     @test all(all(x .<= ub) for x in eachcol(A))
     @test all(all(x .>= lb) for x in eachcol(A))
 end
