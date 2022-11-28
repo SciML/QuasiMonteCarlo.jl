@@ -32,8 +32,8 @@ d = 1
 
 for sampler in [GridSample(0.1), UniformSample(), SobolSample(), LatinHypercubeSample(), LatticeRuleSample(), Cauchy(), Normal(0, 4), GoldenSample()]
     A = QuasiMonteCarlo.sample(n, lb, ub, sampler)
-    @test all(maximum(A for eachcol(A)) .< ub)
-    @test all(minimum(A for eachcol(A)) .< lb)
+    @test all(all(x .< ub) for x in eachcol(A))
+    @test all(all(x .> lb) for x in eachcol(A))
 end
 
 @testset "1D" begin
