@@ -30,7 +30,14 @@ ub = 5.0
 n = 5
 d = 1
 
-for sampler in [GridSample(0.1), UniformSample(), SobolSample(), LatinHypercubeSample(), LatticeRuleSample(), GoldenSample()]
+for sampler in [
+    GridSample(0.1),
+    UniformSample(),
+    SobolSample(),
+    LatinHypercubeSample(),
+    LatticeRuleSample(),
+    GoldenSample(),
+]
     @show sampler
     A = QuasiMonteCarlo.sample(n, lb, ub, sampler)
     @test all(all(x .<= ub) for x in eachcol(A))
