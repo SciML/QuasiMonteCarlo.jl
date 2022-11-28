@@ -40,8 +40,6 @@ end
 for sampler in [Cauchy(), Normal(0, 4)]
     @show sampler
     A = QuasiMonteCarlo.sample(n, 2, sampler)
-    @test all(all(x .<= ub) for x in eachcol(A))
-    @test all(all(x .>= lb) for x in eachcol(A))
 end
 
 @testset "1D" begin
