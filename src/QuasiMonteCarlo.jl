@@ -158,7 +158,7 @@ end
 sample(n,lb,ub,S::GridSample)
 Returns a tuple containing numbers in a grid.
 """
-function sample(n, lb, ub, S::GridSample)
+function sample(n::Int, lb::AbstractVector, ub::AbstractVector, S::GridSample)
     if n <= 0
         throw(ZeroSamplesError())
     end
@@ -282,7 +282,7 @@ Low-discrepancy sample:
 - Dimension > 1: Halton sequence
 If dimension d > 1, all bases must be coprime with one other.
 """
-function sample(n, lb, ub, S::LowDiscrepancySample)
+function sample(n::Int, lb::AbstractVector, ub::AbstractVector, S::LowDiscrepancySample)
     if n <= 0
         throw(ZeroSamplesError())
     end
@@ -357,7 +357,7 @@ The sampler is defined as in e.g.
 
 where the first argument is a Vector{T} in which numbers are fixed coordinates and `NaN`s correspond to free dimensions, and the second argument is a SamplingAlgorithm which is used to sample in the free dimensions.
 """
-function sample(n, lb, ub, section_sampler::SectionSample)
+function sample(n::Int, lb::AbstractVector, ub::AbstractVector, Section_sampler::SectionSample)
     if n <= 0
         throw(ZeroSamplesError())
     end
@@ -366,7 +366,7 @@ function sample(n, lb, ub, section_sampler::SectionSample)
     end
     if lb isa Number
         if isnan(section_sampler.x0[1])
-            return sample(n, lb, ub, section_sampler.sa)
+            return sample(n::Int, lb::AbstractVector, ub::AbstractVector, Section_sampler.sa)
         else
             return fill(section_sampler.x0[1], n)
         end
