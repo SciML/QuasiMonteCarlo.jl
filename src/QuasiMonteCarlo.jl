@@ -105,7 +105,7 @@ Base.@kwdef struct LowDiscrepancySample{T} <: SamplingAlgorithm
     rotation::Bool = true
 end
 
-function LowDiscrepancySample(base::Int)
+function LowDiscrepancySample(base::Integer)
     LowDiscrepancySample(; base = base)
 end
 
@@ -143,7 +143,7 @@ where:
 """
 function sample end
 
-function sample(n::Int, lb::AbstractVector, ub::AbstractVector, S::SamplingAlgorithm)
+function sample(n::Integer, lb::Union{Number,AbstractVector}, ub::Union{Number,AbstractVector}, S::SamplingAlgorithm)
     if n <= 0
         throw(ZeroSamplesError())
     end
@@ -158,7 +158,7 @@ end
 sample(n,lb,ub,S::GridSample)
 Returns a tuple containing numbers in a grid.
 """
-function sample(n::Int, lb::AbstractVector, ub::AbstractVector, S::GridSample)
+function sample(n::Integer, lb::Union{Number,AbstractVector}, ub::Union{Number,AbstractVector}, S::GridSample)
     if n <= 0
         throw(ZeroSamplesError())
     end
@@ -179,7 +179,7 @@ end
 sample(n,lb,ub,::UniformRandom)
 Returns a tuple containing uniform random numbers.
 """
-function sample(n, lb, ub, ::UniformSample)
+function sample(n::Integer, lb::Union{Number,AbstractVector}, ub::Union{Number,AbstractVector}, ::UniformSample)
     if n <= 0
         throw(ZeroSamplesError())
     end
@@ -199,7 +199,7 @@ end
 sample(n,lb,ub,::SobolSampling)
 Returns a tuple containing Sobol sequences.
 """
-function sample(n, lb, ub, ::SobolSample)
+function sample(n::Integer, lb::Union{Number,AbstractVector}, ub::Union{Number,AbstractVector}, ::SobolSample)
     if n <= 0
         throw(ZeroSamplesError())
     end
@@ -219,7 +219,7 @@ end
 sample(n,lb,ub,T::LatinHypercubeSample)
 Returns a tuple containing LatinHypercube sequences.
 """
-function sample(n, lb, ub, T::LatinHypercubeSample)
+function sample(n::Integer, lb::Union{Number,AbstractVector}, ub::Union{Number,AbstractVector}, T::LatinHypercubeSample)
     if n <= 0
         throw(ZeroSamplesError())
     end
@@ -246,7 +246,7 @@ end
 sample(n,lb,ub,::LatticeRuleSample)
 Returns a matrix with the `n` rank-1 lattice points in each column if `lb` is a vector, or a vector with the `n` rank-1 lattice points if `lb` is a number.
 """
-function sample(n, lb, ub, ::LatticeRuleSample)
+function sample(n::Integer, lb::Union{Number,AbstractVector}, ub::Union{Number,AbstractVector}, ::LatticeRuleSample)
     if n <= 0
         throw(ZeroSamplesError())
     end
@@ -282,7 +282,7 @@ Low-discrepancy sample:
 - Dimension > 1: Halton sequence
 If dimension d > 1, all bases must be coprime with one other.
 """
-function sample(n::Int, lb::AbstractVector, ub::AbstractVector, S::LowDiscrepancySample)
+function sample(n::Integer, lb::Union{Number,AbstractVector}, ub::Union{Number,AbstractVector}, S::LowDiscrepancySample)
     if n <= 0
         throw(ZeroSamplesError())
     end
@@ -357,7 +357,7 @@ The sampler is defined as in e.g.
 
 where the first argument is a Vector{T} in which numbers are fixed coordinates and `NaN`s correspond to free dimensions, and the second argument is a SamplingAlgorithm which is used to sample in the free dimensions.
 """
-function sample(n::Int, lb::AbstractVector, ub::AbstractVector, Section_sampler::SectionSample)
+function sample(n::Integer, lb::Union{Number,AbstractVector}, ub::Union{Number,AbstractVector}, Section_sampler::SectionSample)
     if n <= 0
         throw(ZeroSamplesError())
     end
@@ -366,7 +366,7 @@ function sample(n::Int, lb::AbstractVector, ub::AbstractVector, Section_sampler:
     end
     if lb isa Number
         if isnan(section_sampler.x0[1])
-            return sample(n::Int, lb::AbstractVector, ub::AbstractVector, Section_sampler.sa)
+            return sample(n, lb, ub, Section_sampler.sa)
         else
             return fill(section_sampler.x0[1], n)
         end
