@@ -330,17 +330,16 @@ function sample(n::Integer, lb::Union{Number, Tuple, AbstractVector},
                 x[j, i] = val
             end
         end
+        rotation = S.rotation
+        if (rotation == true)
+           x[:] = (x .+ rand(d, 1)) .% 1.0
+        end
         #Resizing
         # x∈[0,1], so affine transform column-wise
         @inbounds for c in 1:d
             x[c, :] = (ub[c] - lb[c]) * x[c, :] .+ lb[c]
         end
-        rotation = S.rotation
-        if (rotation == false)
-            return x
-        else
-            return (x .+ rand(d, 1)) .% 1.0
-        end
+        return x
     end
 end
 
