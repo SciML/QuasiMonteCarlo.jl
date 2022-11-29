@@ -29,13 +29,25 @@ lb = 0.0
 ub = 5.0
 n = 5
 d = 1
-QuasiMonteCarlo.sample(n, lb, ub, GridSample(0.1))
-QuasiMonteCarlo.sample(n, lb, ub, UniformSample())
-QuasiMonteCarlo.sample(n, lb, ub, SobolSample())
-QuasiMonteCarlo.sample(n, lb, ub, LatinHypercubeSample())
-QuasiMonteCarlo.sample(n, lb, ub, LatticeRuleSample())
-QuasiMonteCarlo.sample(5, d, Cauchy())
-QuasiMonteCarlo.sample(5, d, Normal(0, 4))
+
+for sampler in [
+    GridSample(0.1),
+    UniformSample(),
+    SobolSample(),
+    LatinHypercubeSample(),
+    LatticeRuleSample(),
+    GoldenSample(),
+]
+    @show sampler
+    A = QuasiMonteCarlo.sample(n, lb, ub, sampler)
+    @test all(all(x .<= ub) for x in eachcol(A))
+    @test all(all(x .>= lb) for x in eachcol(A))
+end
+
+for sampler in [Cauchy(), Normal(0, 4)]
+    @show sampler
+    A = QuasiMonteCarlo.sample(n, 2, sampler)
+end
 
 @testset "1D" begin
     @testset "LowDiscrepancySample" begin

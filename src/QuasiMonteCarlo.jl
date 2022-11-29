@@ -108,7 +108,7 @@ Base.@kwdef struct LowDiscrepancySample{T} <: SamplingAlgorithm
     rotation::Bool = true
 end
 
-function LowDiscrepancySample(base::Int)
+function LowDiscrepancySample(base::Integer)
     LowDiscrepancySample(; base = base)
 end
 
@@ -146,11 +146,24 @@ where:
 """
 function sample end
 
+function sample(n::Integer, lb::Union{Number, Tuple, AbstractVector},
+                ub::Union{Number, Tuple, AbstractVector}, S::SamplingAlgorithm)
+    if n <= 0
+        throw(ZeroSamplesError())
+    end
+    length(lb) == length(ub) || DimensionMismatch("Lower and upper bounds do not match.")
+
+    # note: `sample` does not allow for passing `eltype(lb)`!!
+    out = sample(n, length(lb), S)
+    return (ub .- lb) .* out .+ lb
+end
+
 """
 sample(n,lb,ub,S::GridSample)
 Returns a tuple containing numbers in a grid.
 """
-function sample(n, lb, ub, S::GridSample)
+function sample(n::Integer, lb::Union{Number, Tuple, AbstractVector},
+                ub::Union{Number, Tuple, AbstractVector}, S::GridSample)
     if n <= 0
         throw(ZeroSamplesError())
     end
@@ -171,7 +184,8 @@ end
 sample(n,lb,ub,::UniformRandom)
 Returns a tuple containing uniform random numbers.
 """
-function sample(n, lb, ub, ::UniformSample)
+function sample(n::Integer, lb::Union{Number, Tuple, AbstractVector},
+                ub::Union{Number, Tuple, AbstractVector}, ::UniformSample)
     if n <= 0
         throw(ZeroSamplesError())
     end
@@ -191,7 +205,8 @@ end
 sample(n,lb,ub,::SobolSampling)
 Returns a tuple containing Sobol sequences.
 """
-function sample(n, lb, ub, ::SobolSample)
+function sample(n::Integer, lb::Union{Number, Tuple, AbstractVector},
+                ub::Union{Number, Tuple, AbstractVector}, ::SobolSample)
     if n <= 0
         throw(ZeroSamplesError())
     end
@@ -211,7 +226,8 @@ end
 sample(n,lb,ub,T::LatinHypercubeSample)
 Returns a tuple containing LatinHypercube sequences.
 """
-function sample(n, lb, ub, T::LatinHypercubeSample)
+function sample(n::Integer, lb::Union{Number, Tuple, AbstractVector},
+                ub::Union{Number, Tuple, AbstractVector}, T::LatinHypercubeSample)
     if n <= 0
         throw(ZeroSamplesError())
     end
@@ -238,7 +254,8 @@ end
 sample(n,lb,ub,::LatticeRuleSample)
 Returns a matrix with the `n` rank-1 lattice points in each column if `lb` is a vector, or a vector with the `n` rank-1 lattice points if `lb` is a number.
 """
-function sample(n, lb, ub, ::LatticeRuleSample)
+function sample(n::Integer, lb::Union{Number, Tuple, AbstractVector},
+                ub::Union{Number, Tuple, AbstractVector}, ::LatticeRuleSample)
     if n <= 0
         throw(ZeroSamplesError())
     end
@@ -274,7 +291,8 @@ Low-discrepancy sample:
 - Dimension > 1: Halton sequence
 If dimension d > 1, all bases must be coprime with one other.
 """
-function sample(n, lb, ub, S::LowDiscrepancySample)
+function sample(n::Integer, lb::Union{Number, Tuple, AbstractVector},
+                ub::Union{Number, Tuple, AbstractVector}, S::LowDiscrepancySample)
     if n <= 0
         throw(ZeroSamplesError())
     end
@@ -315,17 +333,16 @@ function sample(n, lb, ub, S::LowDiscrepancySample)
                 x[j, i] = val
             end
         end
+        rotation = S.rotation
+        if (rotation == true)
+            x[:] = (x .+ rand(d, 1)) .% 1.0
+        end
         #Resizing
         # x∈[0,1], so affine transform column-wise
         @inbounds for c in 1:d
             x[c, :] = (ub[c] - lb[c]) * x[c, :] .+ lb[c]
         end
-        rotation = S.rotation
-        if (rotation == false)
-            return x
-        else
-            return (x .+ rand(d, 1)) .% 1.0
-        end
+        return x
     end
 end
 
@@ -349,7 +366,8 @@ The sampler is defined as in e.g.
 
 where the first argument is a Vector{T} in which numbers are fixed coordinates and `NaN`s correspond to free dimensions, and the second argument is a SamplingAlgorithm which is used to sample in the free dimensions.
 """
-function sample(n, lb, ub, section_sampler::SectionSample)
+function sample(n::Integer, lb::Union{Number, Tuple, AbstractVector},
+                ub::Union{Number, Tuple, AbstractVector}, section_sampler::SectionSample)
     if n <= 0
         throw(ZeroSamplesError())
     end
@@ -379,7 +397,7 @@ end
 sample(n,d,D::Distribution)
 Returns a tuple containing numbers distributed as D.
 """
-function sample(n, d, D::Distribution)
+function sample(n::Integer, d::Integer, D::Distributions.Sampleable)
     if n <= 0
         throw(ZeroSamplesError())
     end
