@@ -57,6 +57,9 @@ function unif2bits!(bits::AbstractVector{<:Integer}, y, b::Integer; kwargs...)
     end
 end
 
+#? Apparently this is not ideal to explicitly state the Type. 
+#? See https://github.com/SciML/QuasiMonteCarlo.jl/issues/44#issuecomment-1328156825
+#? Not sure how to do otherwise in this case though. 
 """
     bits2unif(bits::AbstractVector{<:Integer}, b::Integer)
 Convert a vector of M "bits" in base b into a number y∈[0,1[.
