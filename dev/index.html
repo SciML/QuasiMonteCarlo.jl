@@ -15,7 +15,7 @@ s = QuasiMonteCarlo.sample(n,lb,ub,UniformSample())
 s = QuasiMonteCarlo.sample(n,lb,ub,SobolSample())
 s = QuasiMonteCarlo.sample(n,lb,ub,LatinHypercubeSample())
 s = QuasiMonteCarlo.sample(n,lb,ub,LatticeRuleSample())
-s = QuasiMonteCarlo.sample(n,lb,ub,LowDiscrepancySample([10,3]))</code></pre><p>The output <code>s</code> is a matrix, so one can use things like <code>@uview</code> from <a href="https://github.com/oschulz/UnsafeArrays.jl">UnsafeArrays.jl</a> for a stack-allocated view of the <code>i</code>th point:</p><pre><code class="language-julia hljs">using UnsafeArrays
+s = QuasiMonteCarlo.sample(n,lb,ub,HaltonSample([10,3]))</code></pre><p>The output <code>s</code> is a matrix, so one can use things like <code>@uview</code> from <a href="https://github.com/oschulz/UnsafeArrays.jl">UnsafeArrays.jl</a> for a stack-allocated view of the <code>i</code>th point:</p><pre><code class="language-julia hljs">using UnsafeArrays
 @uview s[:,i]</code></pre><h2 id="Adding-a-new-sampling-method"><a class="docs-heading-anchor" href="#Adding-a-new-sampling-method">Adding a new sampling method</a><a id="Adding-a-new-sampling-method-1"></a><a class="docs-heading-anchor-permalink" href="#Adding-a-new-sampling-method" title="Permalink"></a></h2><p>Adding a new sampling method is a two-step process:</p><ol><li>Add a new SamplingAlgorithm type.</li><li>Overload the sample function with the new type.</li></ol><p>All sampling methods are expected to return a matrix with dimension <code>d</code> by <code>n</code>, where <code>d</code> is the dimension of the sample space and <code>n</code> is the number of samples.</p><p><strong>Example</strong></p><pre><code class="language-julia hljs">struct NewAmazingSamplingAlgorithm{OPTIONAL} &lt;: SamplingAlgorithm end
 
 function sample(n,lb,ub,::NewAmazingSamplingAlgorithm)
@@ -32,24 +32,25 @@ end</code></pre><h2 id="Contributing"><a class="docs-heading-anchor" href="#Cont
 Commit 0434deb161e (2022-11-14 20:14 UTC)
 Platform Info:
   OS: Linux (x86_64-linux-gnu)
-  CPU: 2 × Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz
+  CPU: 2 × Intel(R) Xeon(R) Platinum 8272CL CPU @ 2.60GHz
   WORD_SIZE: 64
   LIBM: libopenlibm
-  LLVM: libLLVM-13.0.1 (ORCJIT, icelake-server)
+  LLVM: libLLVM-13.0.1 (ORCJIT, skylake-avx512)
   Threads: 1 on 2 virtual cores</code></pre></details><details><summary>A more complete overview of all dependencies and their versions is also provided.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Status `~/work/QuasiMonteCarlo.jl/QuasiMonteCarlo.jl/docs/Manifest.toml`
   [a4c015fc] ANSIColoredPrinters v0.0.1
   [49dc2e85] Calculus v0.5.1
   [d360d2e6] ChainRulesCore v1.15.6
   [9e997f8a] ChangesOfVariables v0.1.4
   [34da2185] Compat v4.5.0
+  [2569d6c7] ConcreteStructs v0.2.3
   [9a962f9c] DataAPI v1.13.0
   [864edb3b] DataStructures v0.18.13
   [b429d917] DensityInterface v0.4.0
   [31c24e10] Distributions v0.25.79
-  [ffbed154] DocStringExtensions v0.9.2
+  [ffbed154] DocStringExtensions v0.9.3
   [e30172f5] Documenter v0.27.23
   [fa6b7ba4] DualNumbers v0.6.8
-  [1a297f60] FillArrays v0.13.5
+  [1a297f60] FillArrays v0.13.6
   [34004b35] HypergeometricFunctions v0.3.11
   [b5f81e59] IOCapture v0.2.2
   [18e54dd8] IntegerMathUtils v0.1.0
@@ -57,7 +58,6 @@ Platform Info:
   [92d709cd] IrrationalConstants v0.1.1
   [692b3bcd] JLLWrappers v1.4.1
   [682c06a0] JSON v0.21.3
-  [a5e1c1ea] LatinHypercubeSampling v1.8.0
   [73f95e8e] LatticeRules v0.0.1
   [2ab3a3ac] LogExpFunctions v0.3.19
   [e1d29d7a] Missings v1.0.2
@@ -75,10 +75,9 @@ Platform Info:
   [ed01d8cd] Sobol v1.5.0
   [a2af1166] SortingAlgorithms v1.1.0
   [276daf66] SpecialFunctions v2.1.7
-  [860ef19b] StableRNGs v1.0.0
   [82ae8749] StatsAPI v1.5.0
   [2913bbd2] StatsBase v0.33.21
-  [4c63d2b9] StatsFuns v1.0.1
+  [4c63d2b9] StatsFuns v1.1.1
   [efe28fd5] OpenSpecFun_jll v0.5.5+0
   [f50d1b31] Rmath_jll v0.3.0+0
   [0dad84c5] ArgTools v1.1.1
@@ -122,6 +121,6 @@ Platform Info:
   [83775a58] Zlib_jll v1.2.12+3
   [8e850b90] libblastrampoline_jll v5.1.1+0
   [8e850ede] nghttp2_jll v1.48.0+0
-  [3f19e933] p7zip_jll v17.4.0+0</code></pre></details>You can also download the 
+  [3f19e933] p7zip_jll v17.4.0+0</code></pre></details>You can also download the
 <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.2.19/assets/Manifest.toml">manifest</a> file and the
-<a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.2.19/assets/Project.toml">project</a> file.</article><nav class="docs-footer"><a class="docs-footer-nextpage" href="samplers/">Sampler APIs »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Tuesday 29 November 2022 17:01">Tuesday 29 November 2022</span>. Using Julia version 1.8.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+<a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.2.19/assets/Project.toml">project</a> file.</article><nav class="docs-footer"><a class="docs-footer-nextpage" href="samplers/">Sampler APIs »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.23 on <span class="colophon-date" title="Wednesday 14 December 2022 04:00">Wednesday 14 December 2022</span>. Using Julia version 1.8.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
