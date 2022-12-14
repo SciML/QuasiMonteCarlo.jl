@@ -92,7 +92,7 @@ end
 
     s = QuasiMonteCarlo.sample(n, lb, ub, GridSample())
     s = sortslices(s; dims=2)
-    @test allequal(diff(s; dims=2))
+    @test all(≈, diff(s; dims=2))
     μ = mean(s; dims=2)
     variance = var(s; dims=2)
     for i in eachindex(μ)

@@ -34,14 +34,15 @@ Generate a Van der Corput sequence of length `n=λ*base^n_digits` in the given b
 
 Note that `λ` must be smaller than `base` for the sequence to be well-stratified.
 """
-_vdc(n::I, base::I, F=Float64) where I<:Integer = _vdc(one(n), I(log(base, n)), base, F; n)
+function _vdc(n::I, base::I, F=Float64) where {I <: Integer}
+    return _vdc(one(n), I(log(base, n)), base, F; n)
+end
 @fastmath @views function _vdc(
-    λ::I, n_digits::I, base::I, F=Float64;
-    n = λ * base^n_digits
-) where I <: Integer
+    λ::I, n_digits::I, base::I, F=Float64; n=λ * base^n_digits
+) where {I <: Integer}
     sequence = zeros(F, n)
     inv_base = convert(F, inv(base))
-    dgs = fill(base-1, n_digits)
+    dgs = fill(base - 1, n_digits)
     # offset required to place samples in center of interval
     offset = convert(F, inv(2n))
     for sample_idx in eachindex(sequence)
