@@ -33,7 +33,7 @@ s = QuasiMonteCarlo.sample(n,lb,ub,UniformSample())
 s = QuasiMonteCarlo.sample(n,lb,ub,SobolSample())
 s = QuasiMonteCarlo.sample(n,lb,ub,LatinHypercubeSample())
 s = QuasiMonteCarlo.sample(n,lb,ub,LatticeRuleSample())
-s = QuasiMonteCarlo.sample(n,lb,ub,LowDiscrepancySample([10,3], false))
+s = QuasiMonteCarlo.sample(n,lb,ub,HaltonSample([10,3], false))
 ```
 
 The output `s` is a matrix, so one can use things like `@uview` from
@@ -77,7 +77,7 @@ all sampled from the same low-discrepancy sequence.
 * `SobolSample` for the Sobol sequence.
 * `LatinHypercubeSample` for a Latin Hypercube.
 * `LatticeRuleSample` for a randomly-shifted rank-1 lattice rule.
-* `LowDiscrepancySample(base)` where `base[i]` is the base in the ith direction.
+* `HaltonSample(base)` where `base[i]` is the base in the ith direction.
 * `GoldenSample` for a Golden Ratio sequence.
 * `KroneckerSample(alpha, s0)` for a Kronecker sequence, where alpha is an length-d vector of irrational numbers (often sqrt(d)) and s0 is a length-d seed vector (often 0).
 * `SectionSample(x0, sampler)` where `sampler` is any sampler above and `x0` is a vector of either `NaN` for a free dimension or some scalar for a constrained dimension.

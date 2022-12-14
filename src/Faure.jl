@@ -40,26 +40,8 @@ References:
 Faure, H. (1982). Discrepance de suites associees a un systeme de numeration (en dimension s). *Acta Arith.*, 41, 337-351.
 Owen, A. B. (1997). Monte Carlo variance of scrambled net quadrature. *SIAM Journal on Numerical Analysis*, 34(5), 1884-1910.
 """
-struct FaureSample end
-
-@fastmath function sample(n::Integer, lb::Union{Number, Tuple, AbstractVector},
-                          ub::Union{Number, Tuple, AbstractVector}, ::FaureSample)
-    if n <= 0
-        throw(ZeroSamplesError())
-    end
-    length(lb) == length(ub) || DimensionMismatch("Lower and upper bounds do not match.")
-    dimension = length(lb)
-    faure = sample(n, dimension, FaureSample())
-    @inbounds for (row_idx, row) in enumerate(eachrow(faure))
-        @. row = (ub[row_idx] - lb[row_idx]) * row + lb[row_idx]
-    end
-    return faure
-end
-
-@fastmath function sample(n::Integer, dimension::Integer, ::FaureSample; skipchecks = false)
-    if n <= 0
-        throw(ZeroSamplesError())
-    end
+struct FaureSample <: SamplingAlgorithm end
+@fastmath function sample(n::Integer, dimension::Integer, ::FaureSample, T=Float64; skipchecks = false)
     base = nextprime(dimension)
     n_digits = ceil(Int, log(base, n))
     power = n_digits - 1
@@ -70,7 +52,7 @@ end
                             "Try $n or $(n+base^power) instead."))
     end
 
-    return _faure_samples(n, n_digits, dimension)
+    return _faure_samples(n, n_digits, dimension, T)
 end
 
 @fastmath @views function _faure_samples(n_samples::I, n_digits::I, dimension::I,
@@ -105,12 +87,12 @@ end
     return faure
 end
 
-@fastmath @views function _base_sum!(dgs::AbstractVector, base::Integer)
-    dgs[1] = one(eltype(dgs)) + dgs[1]
-    if dgs[1] == base
-        dgs[1] = zero(eltype(dgs))
-        if length(dgs) ≠ 1  # ignore overflows
-            _base_sum!(dgs[2:end], base)
-        end
-    end
-end
+# @fastmath @views function _base_sum!(dgs::AbstractVector, base::Integer)
+#     dgs[1] = one(eltype(dgs)) + dgs[1]
+#     if dgs[1] == base
+#         dgs[1] = zero(eltype(dgs))
+#         if length(dgs) ≠ 1  # ignore overflows
+#             _base_sum!(dgs[2:end], base)
+#         end
+#     end
+# end
