@@ -26,7 +26,7 @@ s = QuasiMonteCarlo.sample(n,lb,ub,UniformSample())
 s = QuasiMonteCarlo.sample(n,lb,ub,SobolSample())
 s = QuasiMonteCarlo.sample(n,lb,ub,LatinHypercubeSample())
 s = QuasiMonteCarlo.sample(n,lb,ub,LatticeRuleSample())
-s = QuasiMonteCarlo.sample(n,lb,ub,HaltonSample([10,3]))
+s = QuasiMonteCarlo.sample(n,lb,ub,LowDiscrepancySample([10,3]))
 ```
 
 The output `s` is a matrix, so one can use things like `@uview` from
@@ -105,7 +105,7 @@ Pkg.status(;mode = PKGMODE_MANIFEST) # hide
 </details>
 ```
 ```@raw html
-You can also download the
+You can also download the 
 <a href="
 ```
 ```@eval
