@@ -25,7 +25,7 @@ function Base.resize!(a::Vector{T}, nl::Integer, pad::T) where {T}
     end
     return a
 end
-rng = Xoshiro(1776)
+rng = MersenneTwister(1776)
 
 #1D
 lb = 0.0
