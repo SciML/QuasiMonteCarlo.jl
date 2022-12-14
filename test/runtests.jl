@@ -25,8 +25,7 @@ function Base.resize!(a::Vector{T}, nl::Integer, pad::T) where {T}
     end
     return a
 end
-Random.set_global_seed!(1776)
-rng = Random.GLOBAL_RNG
+rng = Xoshiro(1776)
 
 #1D
 lb = 0.0
