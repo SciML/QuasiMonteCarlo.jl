@@ -1,4 +1,5 @@
 using QuasiMonteCarlo
+using Compat
 using Statistics, LinearAlgebra, StatsBase, Random
 using IntervalArithmetic, Primes, Combinatorics, Distributions, InvertedIndices
 using HypothesisTests
