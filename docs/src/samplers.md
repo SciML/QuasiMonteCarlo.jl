@@ -14,7 +14,7 @@ UniformSample
 SobolSample
 LatinHypercubeSample
 LatticeRuleSample
-LowDiscrepancySample
+HaltonSample
 GoldenSample
 KroneckerSample
 SectionSample
