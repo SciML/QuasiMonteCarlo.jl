@@ -14,18 +14,17 @@ include("LatinHypercube.jl")
 include("Lattices.jl")
 include("Section.jl")
 
-
 const UB_LB_MESSAGE = "Lower bound exceeds upper bound (lb > ub)"
 const ZERO_SAMPLES_MESSAGE = "Number of samples must be greater than zero"
 const DIM_MISMATCH_MESSAGE = "Dimensionality of lb and ub must match"
 
 function _check_sequence(lb, ub, n::Integer)
-    @assert length(lb) == length(ub) DIM_MISMATCH_MESSAGE
-    @assert all(x-> x[1] ≤ x[2], zip(lb, ub)) UB_LB_MESSAGE
-    @assert n > 0 ZERO_SAMPLES_MESSAGE
+    @assert length(lb)==length(ub) DIM_MISMATCH_MESSAGE
+    @assert all(x -> x[1] ≤ x[2], zip(lb, ub)) UB_LB_MESSAGE
+    @assert n>0 ZERO_SAMPLES_MESSAGE
 end
 
-_check_sequence(n::Integer) = @assert n > 0 ZERO_SAMPLES_MESSAGE
+_check_sequence(n::Integer) = @assert n>0 ZERO_SAMPLES_MESSAGE
 
 """
     RandomSample <: SamplingAlgorithm
@@ -33,10 +32,10 @@ _check_sequence(n::Integer) = @assert n > 0 ZERO_SAMPLES_MESSAGE
 Randomly distributed random numbers.
 """
 Base.@kwdef @concrete struct RandomSample <: SamplingAlgorithm
-    rng::AbstractRNG=Random.GLOBAL_RNG
+    rng::AbstractRNG = Random.GLOBAL_RNG
 end
 
-function sample(n::Integer, d::Integer, S::RandomSample, T=Float64)
+function sample(n::Integer, d::Integer, S::RandomSample, T = Float64)
     _check_sequence(n)
     return rand(S.rng, T, d, n)
 end
@@ -53,7 +52,8 @@ Create a QMC point set, where:
 - `sample_method` is the quasi-Monte Carlo sampling strategy. Note that any Distributions.jl
   distribution can be used in addition to any `SamplingAlgorithm`.
 """
-function sample(n::Integer, lb::T, ub::T, S::SamplingAlgorithm) where T <: Union{Base.AbstractVecOrTuple, Number}
+function sample(n::Integer, lb::T, ub::T,
+                S::SamplingAlgorithm) where {T <: Union{Base.AbstractVecOrTuple, Number}}
     _check_sequence(lb, ub, n)
     lb = float.(lb)
     ub = float.(ub)
@@ -67,7 +67,7 @@ end
 Returns a tuple containing independent random samples from distribution `D`.
 """
 function sample(n::Integer, d::Integer, D::Distributions.Sampleable)
-    @assert n > 0 ZERO_SAMPLES_MESSAGE
+    @assert n>0 ZERO_SAMPLES_MESSAGE
     x = [[rand(D) for j in 1:d] for i in 1:n]
     return reduce(hcat, x)
 end

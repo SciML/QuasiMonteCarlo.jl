@@ -10,13 +10,13 @@ interval in the first pass (the first 2 samples); then one sample in each quarte
 eighth, and so on. This creates a well-stratified sample, so long as the number of samples
 is a multiple of a power of the base.
 """
-struct VanDerCorputSample{I<:Integer} <: SamplingAlgorithm
+struct VanDerCorputSample{I <: Integer} <: SamplingAlgorithm
     base::I
 end
 
-function sample(n::Integer, d::Integer, S::VanDerCorputSample, T::Type=Float64)
-    @assert d == 1 "Van der Corput sequence only supports 1D sampling"
-    @assert n > 0 ZERO_SAMPLES_MESSAGE
+function sample(n::Integer, d::Integer, S::VanDerCorputSample, T::Type = Float64)
+    @assert d==1 "Van der Corput sequence only supports 1D sampling"
+    @assert n>0 ZERO_SAMPLES_MESSAGE
     base = S.base
     log_n = log(base, n)
     t = floor(Int, log_n)
@@ -34,12 +34,11 @@ Generate a Van der Corput sequence of length `n=λ*base^n_digits` in the given b
 
 Note that `λ` must be smaller than `base` for the sequence to be well-stratified.
 """
-function _vdc(n::I, base::I, F=Float64) where {I <: Integer}
+function _vdc(n::I, base::I, F = Float64) where {I <: Integer}
     return _vdc(one(n), I(log(base, n)), base, F; n)
 end
-@fastmath @views function _vdc(
-    λ::I, n_digits::I, base::I, F=Float64; n=λ * base^n_digits
-) where {I <: Integer}
+@fastmath @views function _vdc(λ::I, n_digits::I, base::I, F = Float64;
+                               n = λ * base^n_digits) where {I <: Integer}
     sequence = zeros(F, n)
     inv_base = convert(F, inv(base))
     dgs = fill(base - 1, n_digits)

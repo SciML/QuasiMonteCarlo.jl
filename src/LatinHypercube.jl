@@ -7,7 +7,7 @@ Base.@kwdef @concrete struct LatinHypercubeSample <: SamplingAlgorithm
     rng::AbstractRNG = Random.GLOBAL_RNG
 end
 
-function sample(n::Integer, d::Integer, S::LatinHypercubeSample, T=Float64)
+function sample(n::Integer, d::Integer, S::LatinHypercubeSample, T = Float64)
     _check_sequence(n)
     rng = S.rng
     seq = ((1:n) .- convert(T, 0.5)) / n

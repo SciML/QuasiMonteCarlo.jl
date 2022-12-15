@@ -5,10 +5,10 @@ Create a Halton sequence.
 """
 struct HaltonSample <: SamplingAlgorithm end
 
-@views function sample(n::I, d::I, ::HaltonSample, T::Type=Float64) where I<:Integer
+@views function sample(n::I, d::I, ::HaltonSample, T::Type = Float64) where {I <: Integer}
     bases = nextprimes(one(n), d)
     n_digits = ceil.(I, log.(bases, n))
-    λ = n .÷ bases.^n_digits
+    λ = n .÷ bases .^ n_digits
     halton_seq = Matrix{T}(undef, d, n)
     for i in axes(halton_seq, 1)
         halton_seq[i, :] .= _vdc(λ[i], n_digits[i], bases[i], T; n)

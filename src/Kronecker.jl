@@ -19,28 +19,29 @@ References:
 Leobacher, G., & Pillichshammer, F. (2014). *Introduction to quasi-Monte Carlo integration and applications.* Switzerland: Springer International Publishing.
 https://link.springer.com/content/pdf/10.1007/978-3-319-03425-6.pdf
 """
-struct KroneckerSample{V<:Union{AbstractVector, Missing}} <: SamplingAlgorithm
+struct KroneckerSample{V <: Union{AbstractVector, Missing}} <: SamplingAlgorithm
     generator::V
 end
 
 KroneckerSample() = KroneckerSample(missing)
-function KroneckerSample(d::Integer, T=Float64)
+function KroneckerSample(d::Integer, T = Float64)
     ratio = harmonious(d, 2eps(T))
     generator = [ratio^i for i in 1:d]
     return KroneckerSample(generator)
 end
 
-function sample(n::Integer, d::Integer, ::KroneckerSample{Missing}, T=Float64)
+function sample(n::Integer, d::Integer, ::KroneckerSample{Missing}, T = Float64)
     return sample(n, d, KroneckerSample(d, T))
 end
 
-function sample(n::Integer, d::Integer, k::KroneckerSample{V}, T) where V<:AbstractVector
-    @assert eltype(V) == T "Sample type must match generator type."
+function sample(n::Integer, d::Integer, k::KroneckerSample{V},
+                T) where {V <: AbstractVector}
+    @assert eltype(V)==T "Sample type must match generator type."
     return sample(n, d, k)
 end
 
-function sample(n::Integer, d::Integer, k::KroneckerSample{V}) where V<:AbstractVector
-    @assert d == length(k.generator) "Dimensions of generator and sample must match."
+function sample(n::Integer, d::Integer, k::KroneckerSample{V}) where {V <: AbstractVector}
+    @assert d==length(k.generator) "Dimensions of generator and sample must match."
     return @. mod(k.generator * (1:n)', 1)
 end
 
@@ -67,7 +68,7 @@ http://extremelearning.com.au/unreasonable-effectiveness-of-quasirandom-sequence
 GoldenSample(args...; kwargs...) = KroneckerSample(args...; kwargs...)
 
 # generate (inverse) harmonious numbers
-@fastmath function harmonious(d::Integer, tol::T = 2eps(float(d))) where T
+@fastmath function harmonious(d::Integer, tol::T = 2eps(float(d))) where {T}
     y_old = one(T)
     # Approximate solution of x^(d+1) = x + 1 (nested radical)
     y = (one(T) + y_old)^inv(d + 1)

@@ -9,9 +9,9 @@ a starting point for other algorithms.
 """
 struct GridSample <: SamplingAlgorithm end
 
-function sample(n::Integer, d::Integer, ::GridSample, T=Float64)
+function sample(n::Integer, d::Integer, ::GridSample, T = Float64)
     n = convert(T, n)
-    return [(i - convert(T, .5)) / n for _ in 1:d, i in 1:n]
+    return [(i - convert(T, 0.5)) / n for _ in 1:d, i in 1:n]
 end
 
 """
@@ -20,11 +20,11 @@ end
 Generate a point set using a lattice rule.
 """
 Base.@kwdef @concrete struct LatticeRuleSample <: SamplingAlgorithm
-    rng::AbstractRNG=Random.GLOBAL_RNG
+    rng::AbstractRNG = Random.GLOBAL_RNG
 end
 
-function sample(n::Integer, d::Integer, S::LatticeRuleSample, T=Float64)
+function sample(n::Integer, d::Integer, S::LatticeRuleSample, T = Float64)
     rng = S.rng
     lat = LatticeRules.LatticeRule(d)
-    return reduce(hcat, lat[0:(n-1)])
+    return reduce(hcat, lat[0:(n - 1)])
 end
