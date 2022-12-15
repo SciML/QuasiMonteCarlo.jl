@@ -147,7 +147,7 @@ end
 
 # check RQMC stratification properties
 # net must be an iterator of points in [0,1]^d
-Base.@constprop :aggressive function test_tms(
+function test_tms(
     net; λ::I, t::I, power::I, d::I, base::I
 ) where {I <: Integer}
     pass = true
