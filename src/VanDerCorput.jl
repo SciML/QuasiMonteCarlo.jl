@@ -63,4 +63,5 @@ end
             @goto start  # recursive call
         end
     end
+    return parent(dgs)
 end

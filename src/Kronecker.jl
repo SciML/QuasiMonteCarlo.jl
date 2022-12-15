@@ -34,7 +34,7 @@ function sample(n::Integer, d::Integer, ::KroneckerSample{Missing}, T=Float64)
     return sample(n, d, KroneckerSample(d, T))
 end
 
-function sample(n::Integer, d::Integer, k::KroneckerSample{V}, T=Float64) where V<:AbstractVector
+function sample(n::Integer, d::Integer, k::KroneckerSample{V}, T) where V<:AbstractVector
     @assert eltype(V) == T "Sample type must match generator type."
     return sample(n, d, k)
 end

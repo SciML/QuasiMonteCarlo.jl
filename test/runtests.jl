@@ -1,11 +1,12 @@
 using QuasiMonteCarlo
+using Aqua, Test
+# Aqua.test_all(QuasiMonteCarlo)
+
 using Compat
 using Statistics, LinearAlgebra, StatsBase, Random
 using IntervalArithmetic, Primes, Combinatorics, Distributions, InvertedIndices
 using HypothesisTests
-using Test
 
-# For testing randomized QMC sequences by using the deterministic version
 
 # struct InertSampler <: Random.AbstractRNG end
 # InertSampler(args...; kwargs...) = InertSampler()
@@ -13,20 +14,21 @@ using Test
 # Random.rand(::InertSampler) = 0
 # Random.shuffle!(::InertSampler, arg::AbstractArray) = arg
 
-function Base.resize!(a::Vector{T}, nl::Integer, pad::T) where {T}
-    l = length(a)
-    if nl > l
-        Base._growend!(a, nl - l)
-        a[(l + 1):end] .= pad
-    elseif nl != l
-        if nl < 0
-            throw(ArgumentError("new length must be ≥ 0"))
-        end
-        Base._deleteend!(a, l - nl)
+@views function embiggen!(a::Vector{T}, new_len::Integer, pad::T) where {T}
+    old_len = length(a)
+    @assert new_len ≥ old_len  "Can't embiggen something smaller"
+    if new_len == old_len
+        return a
+    elseif new_len == old_len + 1
+        push!(a, pad)
+        return a
+    else
+        append!(a, fill(pad, new_len - old_len))
+        return a
     end
-    return a
 end
-rng = MersenneTwister(1776)
+
+rng = Xoshiro(1776)
 
 #1D
 lb = 0.0
@@ -89,13 +91,14 @@ end
     lb = [0.0, 0.0]
     ub = [1.0, 1.0]
     n = 16
-    d = 2
+    d = 4
 
     s = QuasiMonteCarlo.sample(n, lb, ub, GridSample())
     s = sortslices(s; dims=2)
-    @test all(≈, diff(s; dims=2))
+    differences = diff(s; dims=2)
+    @test all(≈(differences[1]), differences)
     μ = mean(s; dims=2)
-    variance = var(s; dims=2)
+    variance = var(s; corrected=false, dims=2)
     for i in eachindex(μ)
         @test μ[i] ≈ 0.5 atol = 2/sqrt(n)
         @test variance[i] ≈ 1/12 rtol = 2/sqrt(n)
@@ -138,6 +141,38 @@ end
     @test pvalue(SignedRankTest(eachrow(s)...)) > .0001
 end
 
+####################
+### T, M, S NETS ###
+####################
+
+# check RQMC stratification properties
+# net must be an iterator of points in [0,1]^d
+Base.@constprop :aggressive function test_tms(
+    net; λ::I, t::I, power::I, d::I, base::I
+) where {I <: Integer}
+    pass = true
+    n = λ * (base^power)
+    # How can our stratification "budget" of power-t be split up/spent across dimensions?
+    parts = Iterators.map(Iterators.flatten((partitions(power-t, i) for i in 1:d))) do x
+        vcat(x, zeros(typeof(d), d - length(x)))::Vector{I}
+    end
+    perms = Iterators.map(parts) do x
+        multiset_permutations(x, d)
+    end |> Iterators.flatten
+    for stepsize in perms
+        intervals = mince(IntervalBox([interval(0, 1) for i in 1:d]),
+                            NTuple{d, Int}(base .^ stepsize))
+        pass &= all(intervals) do intvl
+            λ * base^t == count(point->point ∈ intvl, net)
+        end
+        if !pass
+            println("Errors in dimension $d, interval $stepsize, sample size $n")
+            return pass
+        end
+    end
+    return pass
+end
+
 @testset "Van der Corput Sequence" begin
     lb = 0
     ub = 1
@@ -155,17 +190,22 @@ end
 end
 
 @testset "SobolSample" begin
-    lb = [0.0, 0.0]
-    ub = [1.0, 1.0]
+    lb = [0.0, 0.0, 0.0]
+    ub = [1.0, 1.0, 1.0]
     d = length(lb)
+    power = 6
     base = 2
-    n = base^d
+    n = base^power
 
     s = QuasiMonteCarlo.sample(n, lb, ub, SobolSample())
     @test s isa Matrix
     @test size(s) == (d, n)
     vdc = QuasiMonteCarlo.sample(n, 1, VanDerCorputSample(base))
     sort!(vdc)
+    for (i, j) in combinations(1:d, 2)
+        @test pvalue(SignedRankTest(s[i, :], s[j, :])) > .0001
+    end
+    @test test_tms(collect(eachcol(s)); λ=1, t=power-d, power, d, base)
     for dim in sort.(eachrow(s))
         # all dimensions should be base-2 van der Corput
         @test dim ≈ vdc
@@ -184,15 +224,16 @@ end
     base = nextprime(d)
     power = 2
     n = 17^2
-    @test_throws ArgumentError QuasiMonteCarlo.sample(d + 1, d, FaureSample())
-    @test_throws ArgumentError QuasiMonteCarlo.sample(d^2 + 1, d, FaureSample())
-    s = sortslices(QuasiMonteCarlo.sample(n, d, FaureSample()); dims = 2)
+    sampler = FaureSample()
+    @test_throws ArgumentError QuasiMonteCarlo.sample(d + 1, d, sampler)
+    @test_throws ArgumentError QuasiMonteCarlo.sample(d^2 + 1, d, sampler)
+    s = sortslices(QuasiMonteCarlo.sample(n, d, sampler); dims = 2)
     # FaureSample() generates centered boxes, unlike DiceDesign
     r = sortslices(include("rfaure.jl")'; dims = 2) .+ inv(2base^(power + 1))
 
-    @test s isa Matrix{Float64}
+    @test s isa Matrix
     @test size(s) == (d, n)
-    @test mean(abs2, s - r) ≤ inv(2n)
+    @test mean(abs, s - r) ≤ 2 / n
     @test s ≈ r
 
     μ = mean(s; dims=2)
@@ -201,40 +242,27 @@ end
         @test μ[i] ≈ 0.5 atol = 2/n
         @test variance[i] ≈ 1/12 rtol = 2/n
     end
-    for i in 1:(d-1)
-        @test pvalue(SignedRankTest(s[i, :], s[i+1, :])) > .0001
+    for (i, j) in combinations(1:d, 2)
+        @test pvalue(SignedRankTest(s[i, :], s[j, :])) > .0001
     end
-
-    # check RQMC stratification properties
-    # Deterministic Faure
-    function test_tms(d, n, power)
-        pass = true
-        base = nextprime(d)
-        s = QuasiMonteCarlo.sample(n, d, FaureSample())
-        parts = resize!.(partitions(power, d), d, 0)
-        perms = Iterators.map(parts) do x
-            multiset_permutations(x, d)
-        end
-        for stepsize in Iterators.flatten(perms)
-            intervals = mince(IntervalBox([interval(0, 1) for i in 1:d]),
-                              Tuple(base .^ stepsize))
-            pass = pass && all(intervals) do intvl
-                count(point -> point ∈ intvl, eachslice(s; dims = 2)) == 1
-            end
-            if !pass
-                println("Errors in dimension $d, interval $stepsize, sample size $n")
-                return pass
-            end
-        end
-        return pass
-    end
+    # test 5d stratification of first 3 primes
     power = 5
-    for d in (3, 5, 7)
-        @test test_tms(d, d^power, power)  # test 5d stratification of first 3 primes
+    for d in (2, 3, 5)
+        base = nextprime(d)
+        n = base^power
+        s = QuasiMonteCarlo.sample(n, d, sampler)
+        points = collect(eachcol(s))
+        @test test_tms(points; λ=1, t=0, power, d, base)
     end
-    power = 3
-    for d in (11, 13, 17)
-        @test test_tms(d, d^power, power)  # test 3d stratification of next 3 primes
+    # test 2d stratification of next 3 primes
+    power = 2
+    for d in (7, 11, 13)
+        base = nextprime(d)
+        λ = 2
+        n = λ * base^power
+        s = QuasiMonteCarlo.sample(n, d, sampler)
+        points = collect(eachcol(s))
+        @test test_tms(points; λ, t=0, power, d, base)  # test 3d stratification of next 3 primes
     end
 end
 
