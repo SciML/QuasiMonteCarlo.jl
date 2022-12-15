@@ -28,7 +28,7 @@ using HypothesisTests
     end
 end
 
-rng = Xoshiro(1776)
+rng = MersenneTwister(1776)
 
 #1D
 lb = 0.0
