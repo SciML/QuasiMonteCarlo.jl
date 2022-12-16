@@ -61,28 +61,28 @@ for (sampler, d) in Iterators.product([Cauchy(), Normal(0, 4)], 1:3)
 end
 
 @testset "1D" begin
-    # @testset "SectionSample" begin
-    #     constrained_val = 1.0
-    #     point_constructor = SectionSample([NaN64], RandomSample())
-    #     s = QuasiMonteCarlo.sample(n, lb, ub, point_constructor)
-    #     @test s isa Vector{Float64}
-    #     @test length(s) == n
-    #     @test all(x -> lb ≤ x ≤ ub, s)
-    #     @test !all(==(constrained_val), s)
-    #     @test QuasiMonteCarlo.free_dimensions(point_constructor) == [1]
-    #     @test QuasiMonteCarlo.fixed_dimensions(point_constructor) == Int[]
+    @testset "SectionSample" begin
+        constrained_val = 1.0
+        point_constructor = SectionSample([NaN64], RandomSample())
+        s = QuasiMonteCarlo.sample(n, lb, ub, point_constructor)
+        @show typeof(s)
+        @test s isa Vector{Float64}
+        @test length(s) == n
+        @test all(x -> lb ≤ x ≤ ub, s)
+        @test !all(==(constrained_val), s)
+        @test QuasiMonteCarlo.free_dimensions(point_constructor) == [1]
+        @test QuasiMonteCarlo.fixed_dimensions(point_constructor) == Int[]
 
-    #     point_constructor = SectionSample([constrained_val], RandomSample())
-    #     s = QuasiMonteCarlo.sample(n, lb, ub, point_constructor)
-    #     @test s isa Vector{Float64} && length(s) == n && all(x -> lb ≤ x ≤ ub, s)
-    #     @test all(==(constrained_val), s)
-    #     @test QuasiMonteCarlo.free_dimensions(point_constructor) == Int[]
-    #     @test QuasiMonteCarlo.fixed_dimensions(point_constructor) == [1]
+        point_constructor = SectionSample([constrained_val], RandomSample())
+        s = QuasiMonteCarlo.sample(n, lb, ub, point_constructor)
+        @test s isa Vector{Float64} && length(s) == n && all(x -> lb ≤ x ≤ ub, s)
+        @test all(==(constrained_val), s)
+        @test QuasiMonteCarlo.free_dimensions(point_constructor) == Int[]
+        @test QuasiMonteCarlo.fixed_dimensions(point_constructor) == [1]
 
-    #     #n = 0
-    #     @test_throws QuasiMonteCarlo.ZeroSamplesError QuasiMonteCarlo.sample(0, lb, ub,
-    #                                                                          point_constructor)
-    # end
+        #n = 0
+        @test_throws Any QuasiMonteCarlo.sample(0, lb, ub, point_constructor)
+    end
 end
 
 #ND
