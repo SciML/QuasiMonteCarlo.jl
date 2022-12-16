@@ -14,6 +14,7 @@ Sobol = "ed01d8cd-4d21-5b2a-85b4-cc3bdc58bad4"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
+ConcreteStructs = "0.2"
 Distributions = "0.21, 0.22, 0.23, 0.24, 0.25"
 LatticeRules = "0.0.1"
 Primes = "0.5"
