@@ -297,7 +297,7 @@ version = "2.6.0"
 deps = ["ConcreteStructs", "Distributions", "LatticeRules", "LinearAlgebra", "Primes", "Random", "Sobol", "StatsBase"]
 path = "/home/runner/work/QuasiMonteCarlo.jl/QuasiMonteCarlo.jl"
 uuid = "8a4e6c94-4038-4cdc-81c3-7e6ffdb2a71b"
-version = "0.3.1"
+version = "0.3.0"
 
 [[deps.REPL]]
 deps = ["InteractiveUtils", "Markdown", "Sockets", "Unicode"]
