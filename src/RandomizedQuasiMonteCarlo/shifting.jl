@@ -1,4 +1,22 @@
 """
+```julia
+Shifting
+```
+
+Cranley-Patterson rotation aka Shifting
+"""
+struct Shifting <: RandMethod end
+
+"""
+```julia
+DigitalShifting
+```
+
+Digital Shift
+"""
+struct DigitalShifting <: RandMethod end
+
+"""
     shift(points::AbstractArray) 
 Cranley Patterson Rotation i.e. `y = (points .+ U) mod 1` where `U ∼ 𝕌([0,1]ᵈ)` and `points` is a `n×d` matrix
 """

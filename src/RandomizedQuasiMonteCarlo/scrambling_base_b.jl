@@ -1,3 +1,30 @@
+"""
+```julia
+NoRand
+```
+
+No Randomization is done on the sampled sequence.
+"""
+struct NoRand <: RandMethod end
+
+"""
+```julia
+OwenScrambling
+```
+
+Nested Uniform Scrambling aka Owen' scrambling
+"""
+struct OwenScrambling <: RandMethod end
+
+"""
+```julia
+MatousekScrambling
+```
+
+Linear Matrix Scrambling aka Matousek' scrambling
+"""
+struct MatousekScrambling <: RandMethod end
+
 """ 
     nested_uniform_scramble(points::AbstractArray; M=32)
 Return a scrambled version of the `points`. 
