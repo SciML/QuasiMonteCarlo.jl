@@ -1,5 +1,5 @@
 """
-    unif2bits(x<:AbstractMatrix, b::Integer; M=32)
+    unif2bits(x<:AbstractArray, b::Integer; M=32)
 Return the b-adic decomposition of all element y of an array y = ∑ₖ yₖ/bᵏ a number yₖ∈[0,1[ -> [y₁, ⋯, yₘ] 
 """
 function unif2bits(x::AbstractArray, b::Integer; M = 32)
@@ -61,7 +61,8 @@ end
 #? See https://github.com/SciML/QuasiMonteCarlo.jl/issues/44#issuecomment-1328156825
 #? Not sure how to do otherwise in this case though. 
 """
-    bits2unif(bits::AbstractVector{<:Integer}, b::Integer)
+    bits2unif(::Type{T}, bits::AbstractVector{<:Integer},
+                   b::Integer)
 Convert a vector of M "bits" in base b into a number y∈[0,1[.
 """
 function bits2unif(::Type{T}, bits::AbstractVector{<:Integer},
