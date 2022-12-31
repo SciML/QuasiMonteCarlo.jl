@@ -31,16 +31,10 @@ Return a scrambled version of the `points`.
 The scrambling method is Nested Uniform Scrambling which was introduced in Owen (1995).
 `M` is the number of bits used for each points. One needs `M ≥ log(base, n)`. 
 """
-function nested_uniform_scramble(rng::AbstractRNG, points::AbstractArray{T, N}, b::Integer;
-                                 M = 32) where {T, N}
+function nested_uniform_scramble(rng::AbstractRNG, points::AbstractArray, b::Integer;
+                                 M = 32)
     random_points = similar(points)
-    unrandomized_bits = unif2bits(points, b, M = M)
-    indices = which_permutation(unrandomized_bits, b)
-    random_bits = similar(unrandomized_bits)
-    nested_uniform_scramble_bit!(rng, random_bits, unrandomized_bits, indices, b)
-    for i in CartesianIndices(random_points)
-        random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
-    end
+    nested_uniform_scramble!(rng, random_points, points, b; M = M)
     return random_points
 end
 
@@ -48,8 +42,25 @@ function nested_uniform_scramble(points::AbstractArray, b::Integer; M = 32)
     nested_uniform_scramble(Random.default_rng(), points, b; M = M)
 end
 
+function nested_uniform_scramble!(rng::AbstractRNG, random_points::AbstractArray{T, N},
+                                  points, b::Integer;
+                                  M = 32) where {T, N}
+    @assert size(points) == size(random_points)
+    unrandomized_bits = unif2bits(points, b, M = M)
+    indices = which_permutation(unrandomized_bits, b)
+    random_bits = similar(unrandomized_bits)
+    nested_uniform_scramble_bit!(rng, random_bits, unrandomized_bits, indices, b)
+    for i in CartesianIndices(random_points)
+        random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
+    end
+end
+
+function nested_uniform_scramble!(random_points::AbstractArray, points::AbstractArray,
+                                  b::Integer; M = 32)
+    nested_uniform_scramble!(Random.default_rng(), random_points, points, b; M = M)
+end
 """ 
-    nested_uniform_scramble_bit!(rng::AbstractRNG, random_bits::AbstractArray{<:Integer, 3}, origin_bits::AbstractArray{<:Integer, 3}, indices::AbstractArray{T, 3} where {T <: Integer}, b::Integer)
+nested_uniform_scramble_bit!(rng::AbstractRNG, random_bits::AbstractArray{<:Integer, 3}, origin_bits::AbstractArray{<:Integer, 3}, indices::AbstractArray{T, 3} where {T <: Integer}, b::Integer)
 In place version of Nested Uniform Scrambling (for the bit array). This is faster to use this functions for multiple scrambling of the same array.
 """
 function nested_uniform_scramble_bit!(rng::AbstractRNG,
@@ -66,8 +77,7 @@ function nested_uniform_scramble_bit!(rng::AbstractRNG,
     for s in 1:d
         theperms = getpermset(rng, m, b)         # Permutations to apply to bits 1:m
         for k in 1:m                             # Here is where we want m > 0 so the loop works ok
-            random_bits[k, :, s] = (origin_bits[k, :, s] + theperms[k, indices[k, :, s]]) .%
-                                   b   # permutation by adding a bit modulo b
+            random_bits[k, :, s] = (origin_bits[k, :, s] + theperms[k, indices[k, :, s]]) .% b   # permutation by adding a bit modulo b
         end
     end
     if M > m     # Paste in random entries for bits after m'th one
@@ -128,18 +138,30 @@ The scrambling method is Linear Matrix Scrambling which was introduced in Matous
 """
 function linear_matrix_scramble(rng::AbstractRNG, points::AbstractArray{T, N}, b::Integer;
                                 M = 32) where {T, N}
-    unrandomized_bits = unif2bits(points, b, M = M)
-    random_bits = similar(unrandomized_bits)
-    linear_matrix_scramble_bit!(rng, random_bits, unrandomized_bits, b)
     random_points = similar(points)
-    for i in CartesianIndices(random_points)
-        random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
-    end
+    linear_matrix_scramble!(rng, random_points, points, b; M = M)
     return random_points
 end
 
 function linear_matrix_scramble(points::AbstractArray, b::Integer; M = 32)
     linear_matrix_scramble(Random.default_rng(), points, b; M = M)
+end
+
+function linear_matrix_scramble!(rng::AbstractRNG, random_points::AbstractArray{T, N},
+                                 points, b::Integer;
+                                 M = 32) where {T, N}
+    @assert size(points) == size(random_points)
+    unrandomized_bits = unif2bits(points, b, M = M)
+    random_bits = similar(unrandomized_bits)
+    linear_matrix_scramble_bit!(rng, random_bits, unrandomized_bits, b)
+    for i in CartesianIndices(random_points)
+        random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
+    end
+end
+
+function linear_matrix_scramble!(random_points::AbstractArray, points::AbstractArray,
+                                  b::Integer; M = 32)
+    linear_matrix_scramble!(Random.default_rng(), random_points, points, b; M = M)
 end
 
 #? Weird it should be faster than nested uniform Scrambling but here it is not at all.-> look for other implementation and paper
