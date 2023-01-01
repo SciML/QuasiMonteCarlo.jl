@@ -5,16 +5,21 @@ Shifting
 
 Cranley-Patterson rotation aka Shifting
 """
-struct Shifting <: RandMethod end
+Base.@kwdef struct Shifting <: RandomizationMethod
+    rng::AbstractRNG = Random.GLOBAL
+end
 
 """
 ```julia
-DigitalShifting
+DigitalShifting in base b
 ```
 
 Digital Shift
 """
-struct DigitalShifting <: RandMethod end
+Base.@kwdef struct DigitalShifting <: ScramblingMethod
+    rng::AbstractRNG = Random.GLOBAL
+    b::Integer
+end
 
 """
     shift(points::AbstractArray) 
@@ -32,7 +37,7 @@ shift!(points::AbstractMatrix, U::AbstractVector) = shift!(Random.default_rng(),
 
 function shift!(rng::AbstractRNG, points::AbstractMatrix)
     d = size(points, 1)
-    U = zeros(T, d)
+    U = zeros(d)
     shift!(rng, points, U)
 end
 

@@ -114,8 +114,8 @@ Note that this feature is currently experimental and is thus subject to interfac
 non-breaking (minor) releases.
 
 Given a matrix `x` of size `d×n` and `xᵢₛ∈[0,1]ᵈ` one obtain a randomized version `y` using one the following methods
-* `nested_uniform_scramble(x, b; M = M)` where `b` is the base used to scramble and `M` the number of bits in base `b` used to represent digits.
-* `linear_matrix_scramble(x, base; M = M)`.
+* `owen_scramble(x, b; M = M)` where `b` is the base used to scramble and `M` the number of bits in base `b` used to represent digits.
+* `matousek_scramble(x, base; M = M)`.
 * `digital_shift(x, base; M = M)`.
 * `shift(x)`.
 
@@ -136,8 +136,8 @@ Randomization of a Faure sequence with various methods.
     x_faure = QuasiMonteCarlo.sample(N, d, FaureSample())
 
     # Randomized version
-    x_nus = nested_uniform_scramble(x_faure, b; M = M)
-    x_lms = linear_matrix_scramble(x_faure, b; M = M)
+    x_nus = owen_scramble(x_faure, b; M = M)
+    x_lms = matousek_scramble(x_faure, b; M = M)
     x_digital_shift = digital_shift(x_faure, b; M = M)
     x_shift = shift(x_faure)
     x_uniform = rand(d, N) # plain i.i.d. uniform

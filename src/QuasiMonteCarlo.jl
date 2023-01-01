@@ -13,9 +13,6 @@ include("Sobol.jl")
 include("LatinHypercube.jl")
 include("Lattices.jl")
 include("Section.jl")
-include("RandomizedQuasiMonteCarlo/conversion.jl")
-include("RandomizedQuasiMonteCarlo/shifting.jl")
-include("RandomizedQuasiMonteCarlo/scrambling_base_b.jl")
 
 const UB_LB_MESSAGE = "Lower bound exceeds upper bound (lb > ub)"
 const ZERO_SAMPLES_MESSAGE = "Number of samples must be greater than zero"
@@ -92,6 +89,21 @@ function logi(b::Int, n::Int)
     return m
 end
 
+abstract type RandomizationMethod end
+"""
+```julia
+NoRand
+```
+
+No Randomization is performed on the sampled sequence.
+"""
+struct NoRand <: RandomizationMethod end
+abstract type ScramblingMethod <: RandomizationMethod end
+
+include("RandomizedQuasiMonteCarlo/conversion.jl")
+include("RandomizedQuasiMonteCarlo/shifting.jl")
+include("RandomizedQuasiMonteCarlo/scrambling_base_b.jl")
+
 export GridSample,
        UniformSample,
        SobolSample,
@@ -104,9 +116,9 @@ export GridSample,
        KroneckerSample,
        SectionSample,
        FaureSample,
-       nested_uniform_scramble,
-       linear_matrix_scramble,
+       owen_scramble,
+       matousek_scramble,
        shift,
        digital_shift
-       SamplingAlgorithm
+SamplingAlgorithm
 end # module

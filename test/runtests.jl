@@ -402,8 +402,8 @@ end
     u_faure = QuasiMonteCarlo.sample(N, d, FaureSample())
 
     # Randomized version
-    u_nus = nested_uniform_scramble(u_faure, b; M = M)
-    u_lms = linear_matrix_scramble(u_faure, b; M = M)
+    u_nus = owen_scramble(u_faure, b; M = M)
+    u_lms = matousek_scramble(u_faure, b; M = M)
     u_digital_shift = digital_shift(u_faure, b; M = M)
     u_shift = shift(u_faure)
 end
@@ -418,8 +418,8 @@ end
     # Unrandomized low discrepency sequence
     u_sobol = Rational.(QuasiMonteCarlo.sample(N, d, SobolSample()))
     # Randomized version
-    u_nus = nested_uniform_scramble(u_sobol, b; M = M)
-    u_lms = linear_matrix_scramble(u_sobol, b; M = M)
+    u_nus = owen_scramble(u_sobol, b; M = M)
+    u_lms = matousek_scramble(u_sobol, b; M = M)
     u_digital_shift = digital_shift(u_sobol, b; M = M)
     @test eltype(u_nus) <: Rational
     @test eltype(u_lms) <: Rational
