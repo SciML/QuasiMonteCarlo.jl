@@ -113,7 +113,7 @@ end
 Note that this feature is currently experimental and is thus subject to interface changes in
 non-breaking (minor) releases.
 
-Given a matrix `x` of size `n×d` and `xᵢₛ∈[0,1]ᵈ` one obtain a randomized version `y` using one the following methods
+Given a matrix `x` of size `d×n` and `xᵢₛ∈[0,1]ᵈ` one obtain a randomized version `y` using one the following methods
 * `nested_uniform_scramble(x, b; M = M)` where `b` is the base used to scramble and `M` the number of bits in base `b` used to represent digits.
 * `linear_matrix_scramble(x, base; M = M)`.
 * `digital_shift(x, base; M = M)`.
@@ -133,14 +133,14 @@ Randomization of a Faure sequence with various methods.
     M = m
 
     # Unrandomized low discrepency sequence
-    x_faure = permutedims(QuasiMonteCarlo.sample(N, d, FaureSample()))
+    x_faure = QuasiMonteCarlo.sample(N, d, FaureSample())
 
     # Randomized version
     x_nus = nested_uniform_scramble(x_faure, b; M = M)
     x_lms = linear_matrix_scramble(x_faure, b; M = M)
     x_digital_shift = digital_shift(x_faure, b; M = M)
     x_shift = shift(x_faure)
-    x_uniform = rand(N, d) # plain i.i.d. uniform
+    x_uniform = rand(d, N) # plain i.i.d. uniform
 ```
 
 ```julia
@@ -159,7 +159,7 @@ begin
     names = ["Uniform", "Faure (unrandomized)", "Shift", "Digital Shift", "Linear Matrix Scrambling", "Nested Uniform Scrambling"]
     p = [plot(thickness_scaling=1.5, aspect_ratio=:equal) for i in sequences]
     for (i, x) in enumerate(sequences)
-        scatter!(p[i], x[:, d1], x[:, d2], ms=0.9, c=1, grid=false)
+        scatter!(p[i], x[d1, :], x[d2, :], ms=0.9, c=1, grid=false)
         title!(names[i])
         xlims!(p[i], (0, 1))
         ylims!(p[i], (0, 1))
@@ -176,7 +176,7 @@ end
 
 ![Different randomization methods of the same initial set of points](img/various_randomization.svg)
 
-Faure nets and scrambled versions of Faure nets are digital $(t,d,m)$-net ([see this nice reference by A. Owen](https://artowen.su.domains/mc/qmcstuff.pdf)). It basically means that they have strong equipartition properties.
+Faure nets and scrambled versions of Faure nets are digital $(t,d,m)$-net ([see this nice book by A. Owen](https://artowen.su.domains/mc/qmcstuff.pdf)). It basically means that they have strong equipartition properties.
 Here we can (visually) verify that with Nested Uniform Scrambling (it also works with Linear Matrix Scrambling and Digital Shift).
 You must see one point per rectangle of volume $1/b^m$.
 
@@ -190,7 +190,7 @@ begin
         j = m - i
         xᵢ = range(0, 1, step=1 / b^(i))
         xⱼ = range(0, 1, step=1 / b^(j))
-        scatter!(p[i+1], x[:, d1], x[:, d2], ms=2, c=1, grid=false)
+        scatter!(p[i+1], x[d1, :], x[d2, :], ms=2, c=1, grid=false)
         xlims!(p[i+1], (0, 1.01))
         ylims!(p[i+1], (0, 1.01))
         yticks!(p[i+1], [0, 1])

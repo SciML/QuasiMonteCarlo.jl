@@ -399,7 +399,7 @@ end
     M = 2m
 
     # Unrandomized low discrepency sequence
-    u_faure = permutedims(QuasiMonteCarlo.sample(N, d, FaureSample()))
+    u_faure = QuasiMonteCarlo.sample(N, d, FaureSample())
 
     # Randomized version
     u_nus = nested_uniform_scramble(u_faure, b; M = M)
@@ -416,10 +416,12 @@ end
     M = m
 
     # Unrandomized low discrepency sequence
-    u_sobol = Rational.(permutedims(QuasiMonteCarlo.sample(N, zeros(d), ones(d),
-                                                           SobolSample())))
+    u_sobol = Rational.(QuasiMonteCarlo.sample(N, d, SobolSample()))
     # Randomized version
     u_nus = nested_uniform_scramble(u_sobol, b; M = M)
     u_lms = linear_matrix_scramble(u_sobol, b; M = M)
     u_digital_shift = digital_shift(u_sobol, b; M = M)
+    @test eltype(u_nus) <: Rational
+    @test eltype(u_lms) <: Rational
+    @test eltype(u_digital_shift) <: Rational
 end

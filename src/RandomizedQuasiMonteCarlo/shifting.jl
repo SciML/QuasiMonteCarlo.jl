@@ -27,46 +27,51 @@ function shift(points::AbstractArray)
 end
 
 function shift!(points::AbstractMatrix{<:Real})
-    d = size(points, 2)
+    d = size(points, 1)
     s = zeros(d)
     shift!(points, s)
 end
 
 function shift!(points::AbstractMatrix{<:Real}, s::AbstractVector{<:Real})
     rand!(s)
-    for i in axes(points, 1)
-        points[i, :] += s
+    for i in axes(points, 2)
+        points[:, i] += s
     end
-    frac!(points)
+    points[:] = frac.(points)
 end
 
-function frac!(points::AbstractArray)
-    for i in eachindex(points)
-        points[i] -= floor(points[i])
-    end
-end
+frac(y) = y - floor(y)
 
 """
     digital_shift(points::AbstractArray) 
 Digital shift each corrdinate in base `b` is shifted as `yₖ = (xₖ + Uₖ) mod b` where `Uₖ ∼ 𝕌({0:b-1})`. `U` is the same for every point `points` but i.i.d along every dimensions.
 """
-function digital_shift(rng::AbstractRNG, points::AbstractArray{T, N}, b::Integer;
-                       M = 32) where {T, N}
+function digital_shift(rng::AbstractRNG, points::AbstractArray, b::Integer;
+                       M = 32)
+    random_points = permutedims(similar(points))
+    digital_shift!(rng, random_points, permutedims(points), b; M = M)
+    return permutedims(random_points)
+end
+
+function digital_shift(points::AbstractArray, b::Integer; M = 32)
+    digital_shift(Random.default_rng(), points, b; M = M)
+end
+
+function digital_shift!(rng::AbstractRNG, random_points::AbstractArray{T, N}, points,
+                        b::Integer; M = 32) where {T, N}
     bits = unif2bits(points, b, M = M)
-    random_points = copy(points)
-    for s in axes(points, 3)
+    for s in axes(random_points, 3)
         digital_shift_bits!(rng, @view(bits[:, :, s]), b)
     end
 
     for i in CartesianIndices(random_points)
         random_points[i] = bits2unif(T, @view(bits[:, i]), b)
     end
-
-    return random_points
 end
 
-function digital_shift(points::AbstractArray, b::Integer; M = 32)
-    digital_shift(Random.default_rng(), points, b; M = M)
+function digital_shift!(random_points::AbstractArray, points::AbstractArray, b::Integer;
+                        M = 32)
+    digital_shift!(Random.default_rng(), random_points, points, b; M = M)
 end
 
 function digital_shift_bits!(rng::AbstractRNG, random_bits::AbstractMatrix{<:Integer},

@@ -33,9 +33,9 @@ The scrambling method is Nested Uniform Scrambling which was introduced in Owen 
 """
 function nested_uniform_scramble(rng::AbstractRNG, points::AbstractArray, b::Integer;
                                  M = 32)
-    random_points = similar(points)
-    nested_uniform_scramble!(rng, random_points, points, b; M = M)
-    return random_points
+    random_points = permutedims(similar(points))
+    nested_uniform_scramble!(rng, random_points, permutedims(points), b; M = M)
+    return permutedims(random_points)
 end
 
 function nested_uniform_scramble(points::AbstractArray, b::Integer; M = 32)
@@ -77,7 +77,8 @@ function nested_uniform_scramble_bit!(rng::AbstractRNG,
     for s in 1:d
         theperms = getpermset(rng, m, b)         # Permutations to apply to bits 1:m
         for k in 1:m                             # Here is where we want m > 0 so the loop works ok
-            random_bits[k, :, s] = (origin_bits[k, :, s] + theperms[k, indices[k, :, s]]) .% b   # permutation by adding a bit modulo b
+            random_bits[k, :, s] = (origin_bits[k, :, s] + theperms[k, indices[k, :, s]]) .%
+                                   b   # permutation by adding a bit modulo b
         end
     end
     if M > m     # Paste in random entries for bits after m'th one
@@ -138,9 +139,9 @@ The scrambling method is Linear Matrix Scrambling which was introduced in Matous
 """
 function linear_matrix_scramble(rng::AbstractRNG, points::AbstractArray{T, N}, b::Integer;
                                 M = 32) where {T, N}
-    random_points = similar(points)
-    linear_matrix_scramble!(rng, random_points, points, b; M = M)
-    return random_points
+    random_points = permutedims(similar(points))
+    linear_matrix_scramble!(rng, random_points, permutedims(points), b; M = M)
+    return permutedims(random_points)
 end
 
 function linear_matrix_scramble(points::AbstractArray, b::Integer; M = 32)
@@ -160,7 +161,7 @@ function linear_matrix_scramble!(rng::AbstractRNG, random_points::AbstractArray{
 end
 
 function linear_matrix_scramble!(random_points::AbstractArray, points::AbstractArray,
-                                  b::Integer; M = 32)
+                                 b::Integer; M = 32)
     linear_matrix_scramble!(Random.default_rng(), random_points, points, b; M = M)
 end
 
