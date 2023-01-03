@@ -119,6 +119,6 @@ export GridSample,
        owen_scramble,
        matousek_scramble,
        shift,
-       digital_shift
-SamplingAlgorithm
+       digital_shift,
+       SamplingAlgorithm
 end # module
