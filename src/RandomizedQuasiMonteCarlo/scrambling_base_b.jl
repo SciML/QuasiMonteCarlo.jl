@@ -27,7 +27,7 @@ The scrambling method is Nested Uniform Scrambling which was introduced in Owen 
 `M` is the number of bits used for each points. One needs `M ≥ log(base, n)`. 
 """
 function owen_scramble(rng::AbstractRNG, points::AbstractArray, b::Integer;
-                                 M = 32)
+                       M = 32)
     random_points = permutedims(similar(points))
     owen_scramble!(rng, random_points, permutedims(points), b; M = M)
     return permutedims(random_points)
@@ -38,8 +38,8 @@ function owen_scramble(points::AbstractArray, b::Integer; M = 32)
 end
 
 function owen_scramble!(rng::AbstractRNG, random_points::AbstractArray{T, N},
-                                  points, b::Integer;
-                                  M = 32) where {T, N}
+                        points, b::Integer;
+                        M = 32) where {T, N}
     @assert size(points) == size(random_points)
     unrandomized_bits = unif2bits(points, b, M = M)
     indices = which_permutation(unrandomized_bits, b)
@@ -51,7 +51,7 @@ function owen_scramble!(rng::AbstractRNG, random_points::AbstractArray{T, N},
 end
 
 function owen_scramble!(random_points::AbstractArray, points::AbstractArray,
-                                  b::Integer; M = 32)
+                        b::Integer; M = 32)
     owen_scramble!(Random.default_rng(), random_points, points, b; M = M)
 end
 """ 
@@ -59,10 +59,10 @@ owen_scramble_bit!(rng::AbstractRNG, random_bits::AbstractArray{<:Integer, 3}, o
 In place version of Nested Uniform Scrambling (for the bit array). This is faster to use this functions for multiple scrambling of the same array.
 """
 function owen_scramble_bit!(rng::AbstractRNG,
-                                      random_bits::AbstractArray{<:Integer, 3},
-                                      origin_bits::AbstractArray{<:Integer, 3},
-                                      indices::AbstractArray{T, 3} where {T <: Integer},
-                                      b::Integer)
+                            random_bits::AbstractArray{<:Integer, 3},
+                            origin_bits::AbstractArray{<:Integer, 3},
+                            indices::AbstractArray{T, 3} where {T <: Integer},
+                            b::Integer)
     # in place nested uniform Scramble.
     #
     m, n, d = size(indices)
@@ -127,13 +127,13 @@ function which_permutation!(indices::AbstractMatrix{<:Integer},
 end
 
 """ 
-    owen_scramble(points::AbstractArray, b::Integer; M=32)
+    matousek_scramble(points::AbstractArray, b::Integer; M=32)
 Return a scrambled version of the `points`. 
 The scrambling method is Linear Matrix Scrambling which was introduced in Matousek (1998).
 `M` is the number of bits used for each points. One need `M ≥ log(base, n)`. 
 """
 function matousek_scramble(rng::AbstractRNG, points::AbstractArray{T, N}, b::Integer;
-                                M = 32) where {T, N}
+                           M = 32) where {T, N}
     random_points = permutedims(similar(points))
     matousek_scramble!(rng, random_points, permutedims(points), b; M = M)
     return permutedims(random_points)
@@ -144,8 +144,8 @@ function matousek_scramble(points::AbstractArray, b::Integer; M = 32)
 end
 
 function matousek_scramble!(rng::AbstractRNG, random_points::AbstractArray{T, N},
-                                 points, b::Integer;
-                                 M = 32) where {T, N}
+                            points, b::Integer;
+                            M = 32) where {T, N}
     @assert size(points) == size(random_points)
     unrandomized_bits = unif2bits(points, b, M = M)
     random_bits = similar(unrandomized_bits)
@@ -156,7 +156,7 @@ function matousek_scramble!(rng::AbstractRNG, random_points::AbstractArray{T, N}
 end
 
 function matousek_scramble!(random_points::AbstractArray, points::AbstractArray,
-                                 b::Integer; M = 32)
+                            b::Integer; M = 32)
     matousek_scramble!(Random.default_rng(), random_points, points, b; M = M)
 end
 
@@ -166,8 +166,8 @@ end
 In place version of Linear Matrix Scrambling (for the bit array). This is faster to use this functions for multiple scrambling of the same array.
 """
 function matousek_scramble_bit!(rng::AbstractRNG,
-                                     random_bits::AbstractArray{<:Integer, 3},
-                                     origin_bits::AbstractArray{<:Integer, 3}, b::Integer)
+                                random_bits::AbstractArray{<:Integer, 3},
+                                origin_bits::AbstractArray{<:Integer, 3}, b::Integer)
     # https://statweb.stanford.edu/~owen/mc/ Chapter 17.6 around equation (17.15).
     #
     M, n, d = size(origin_bits)
