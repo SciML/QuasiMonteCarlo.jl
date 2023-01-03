@@ -23,7 +23,7 @@ end
 
 """
     shift(points::AbstractArray) 
-Cranley Patterson Rotation i.e. `y = (points .+ U) mod 1` where `U ∼ 𝕌([0,1]ᵈ)` and `points` is a `n×d` matrix
+Cranley Patterson Rotation i.e. `y = (points .+ U) mod 1` where `U ∼ 𝕌([0,1]ᵈ)` and `points` is a `d×n` matrix
 """
 function shift(rng::AbstractRNG, points::AbstractArray)
     y = copy(points)
