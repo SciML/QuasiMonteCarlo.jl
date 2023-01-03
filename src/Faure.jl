@@ -20,7 +20,7 @@ end
 end
 
 """
-    FaureSample()
+    FaureSample(S::RandomizationMethod)
 
 A Faure low-discrepancy sequence.
 
@@ -56,7 +56,7 @@ end
                             "Try $n or $(n+base^power) instead."))
     end
 
-    return randomize(_faure_samples(n, n_digits, dimension, T), F.S) 
+    return randomize(_faure_samples(n, n_digits, dimension, T), F.S)
 end
 
 @fastmath @views function _faure_samples(n_samples::I, n_digits::I, dimension::I,
