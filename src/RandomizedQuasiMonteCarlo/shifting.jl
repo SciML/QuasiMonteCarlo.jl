@@ -10,10 +10,10 @@ Base.@kwdef @concrete struct Shift <: RandomizationMethod
 end
 
 """
-    randomization(x, S::Shift)
+    randomize(x, S::Shift)
 Cranley Patterson Rotation i.e. `y = (points .+ U) mod 1` where `U ∼ 𝕌([0,1]ᵈ)` and `points` is a `d×n` matrix
 """
-randomization(x, S::Shift) = shift(S.rng, x)
+randomize(x, S::Shift) = shift(S.rng, x)
 
 """
     shift(points::AbstractArray) 

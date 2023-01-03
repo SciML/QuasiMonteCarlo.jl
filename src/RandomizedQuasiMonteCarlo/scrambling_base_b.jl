@@ -11,14 +11,14 @@ The scramble methods implementer are
 abstract type ScrambleMethod <: RandomizationMethod end
 
 """ 
-    randomization(x, S::ScrambleMethod)
+    randomize(x, S::ScrambleMethod)
 Return a scrambled version of `x`. 
 The scramble methods implemented are 
 - `DigitalShift`.
 - `OwenScramble`: Nested Uniform Scramble which was introduced in Owen (1995).
 - `MatousekScramble`: Linear Matrix Scramble which was introduced in Matousek (1998).
 """
-function randomization(x::AbstractArray, S::ScrambleMethod)
+function randomize(x, S::ScrambleMethod)
     random_x = permutedims(similar(x))
     randomize!(random_x, permutedims(x), S)
     return permutedims(random_x)
@@ -31,12 +31,12 @@ OwenScramble
 
 Nested Uniform Scramble aka Owen' scramble.
 
-`randomization(x, S::OwenScramble)` returns a scrambled version of `x`. 
+`randomize(x, S::OwenScramble)` returns a scrambled version of `x`. 
 The scramble method is Nested Uniform Scramble which was introduced in Owen (1995).
 `M` is the number of bits used for each points. One needs `M ≥ log(base, n)`. 
 """
 Base.@kwdef struct OwenScramble <: ScrambleMethod
-    base::Integer
+    base
     M::Integer = 32
     rng::AbstractRNG = Random.GLOBAL_RNG
 end
@@ -133,7 +133,7 @@ MatousekScramble
 
 Linear Matrix Scramble aka Matousek' scramble.
 
-`randomization(x, S::MatousekScramble)` returns a scrambled version of `x`. 
+`randomize(x, S::MatousekScramble)` returns a scrambled version of `x`. 
 The scramble method is Linear Matrix Scramble which was introduced in Matousek (1998).
 `M` is the number of bits used for each points. One need `M ≥ log(base, n)`. 
 """
@@ -208,7 +208,7 @@ DigitalShift
 ```
 
 Digital shift. 
-`randomization(x, S::DigitalShift)` returns a scrambled version of `x`. 
+`randomize(x, S::DigitalShift)` returns a scrambled version of `x`. 
 
 The scramble method is Digital Shift.
 It scramble each corrdinate in base `b` as `yₖ = (xₖ + Uₖ) mod b` where `Uₖ ∼ 𝕌({0:b-1})`. 

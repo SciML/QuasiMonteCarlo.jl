@@ -4,6 +4,7 @@ using Sobol, LatticeRules, Distributions, Primes, LinearAlgebra, Random
 using ConcreteStructs
 
 abstract type SamplingAlgorithm end
+abstract type RandomizationMethod end
 
 include("VanDerCorput.jl")
 include("Faure.jl")
@@ -89,7 +90,6 @@ function logi(b::Int, n::Int)
     return m
 end
 
-abstract type RandomizationMethod end
 """
 ```julia
 NoRand
@@ -98,7 +98,7 @@ NoRand
 No Randomization is performed on the sampled sequence.
 """
 struct NoRand <: RandomizationMethod end
-randomization(x::AbstractArray, S::NoRand) = x
+randomize(x, S::NoRand) = x
 
 include("RandomizedQuasiMonteCarlo/shifting.jl")
 include("RandomizedQuasiMonteCarlo/conversion.jl")
@@ -117,7 +117,7 @@ export SamplingAlgorithm,
        KroneckerSample,
        SectionSample,
        FaureSample,
-       randomization,
+       randomize,
        RandomizationMethod,
        NoRand,
        Shift,

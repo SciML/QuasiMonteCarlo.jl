@@ -402,11 +402,13 @@ end
     u_faure = QuasiMonteCarlo.sample(N, d, FaureSample())
 
     # Randomized version
-    @test u_faure == randomization(u_faure, NoRand())
-    u_nus = randomization(u_faure, OwenScramble(base = b, M = M))
-    u_lms = randomization(u_faure, MatousekScramble(base = b, M = M))
-    u_digital_shift = randomization(u_faure, DigitalShift(base = b, M = M))
-    u_shift = randomization(u_faure, Shift())
+    @test u_faure == randomize(u_faure, NoRand())
+    u_nus = randomize(u_faure, OwenScramble(base = b, M = M))
+    u_lms = randomize(u_faure, MatousekScramble(base = b, M = M))
+    u_digital_shift = randomize(u_faure, DigitalShift(base = b, M = M))
+    u_shift = randomize(u_faure, Shift())
+
+    u_nus = QuasiMonteCarlo.sample(N, d, OwenScramble(base = b, M = M))
 end
 
 @testset "Randomized Quasi Monte Carlo Rational Scrambling" begin
@@ -419,9 +421,9 @@ end
     # Unrandomized low discrepency sequence
     u_sobol = Rational.(QuasiMonteCarlo.sample(N, d, SobolSample()))
     # Randomized version
-    u_nus = randomization(u_sobol, OwenScramble(base = b, M = M))
-    u_lms = randomization(u_sobol, MatousekScramble(base = b, M = M))
-    u_digital_shift = randomization(u_sobol, DigitalShift(base = b, M = M))
+    u_nus = randomize(u_sobol, OwenScramble(base = b, M = M))
+    u_lms = randomize(u_sobol, MatousekScramble(base = b, M = M))
+    u_digital_shift = randomize(u_sobol, DigitalShift(base = b, M = M))
     @test eltype(u_nus) <: Rational
     @test eltype(u_lms) <: Rational
     @test eltype(u_digital_shift) <: Rational
