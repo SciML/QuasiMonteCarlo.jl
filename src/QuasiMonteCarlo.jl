@@ -100,8 +100,8 @@ No Randomization is performed on the sampled sequence.
 struct NoRand <: RandomizationMethod end
 abstract type ScramblingMethod <: RandomizationMethod end
 
-include("RandomizedQuasiMonteCarlo/conversion.jl")
 include("RandomizedQuasiMonteCarlo/shifting.jl")
+include("RandomizedQuasiMonteCarlo/conversion.jl")
 include("RandomizedQuasiMonteCarlo/scrambling_base_b.jl")
 
 export GridSample,
@@ -116,9 +116,9 @@ export GridSample,
        KroneckerSample,
        SectionSample,
        FaureSample,
+       shift,
        owen_scramble,
        matousek_scramble,
-       shift,
        digital_shift,
        SamplingAlgorithm
 end # module
