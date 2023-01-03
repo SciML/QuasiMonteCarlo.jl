@@ -136,10 +136,10 @@ Randomization of a Faure sequence with various methods.
     x_faure = QuasiMonteCarlo.sample(N, d, FaureSample())
 
     # Randomized version
-    x_nus = owen_scramble(x_faure, b; M = M)
-    x_lms = matousek_scramble(x_faure, b; M = M)
-    x_digital_shift = digital_shift(x_faure, b; M = M)
-    x_shift = shift(x_faure)
+    x_nus = randomization(x_faure, OwenScramble(base = b, M = M))
+    x_lms = randomization(x_faure, MatousekScramble(base = b, M = M))
+    x_digital_shift = randomization(x_faure, DigitalShift(base = b, M = M))
+    x_shift = randomization(x_faure, Shift())
     x_uniform = rand(d, N) # plain i.i.d. uniform
 ```
 

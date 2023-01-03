@@ -5,9 +5,15 @@ Shifting
 
 Cranley-Patterson rotation aka Shifting
 """
-Base.@kwdef struct Shifting <: RandomizationMethod
-    rng::AbstractRNG = Random.GLOBAL
+Base.@kwdef @concrete struct Shift <: RandomizationMethod
+    rng::AbstractRNG = Random.GLOBAL_RNG
 end
+
+"""
+    randomization(x, S::Shift)
+Cranley Patterson Rotation i.e. `y = (points .+ U) mod 1` where `U ∼ 𝕌([0,1]ᵈ)` and `points` is a `d×n` matrix
+"""
+randomization(x, S::Shift) = shift(S.rng, x)
 
 """
     shift(points::AbstractArray) 

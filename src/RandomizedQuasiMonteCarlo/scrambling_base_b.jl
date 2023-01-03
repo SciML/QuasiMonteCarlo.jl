@@ -1,62 +1,62 @@
-"""
-```julia
-OwenScrambling
-```
-
-Nested Uniform Scrambling aka Owen' scrambling
-"""
-Base.@kwdef struct OwenScrambling <: ScramblingMethod
-    rng::AbstractRNG = Random.GLOBAL
-    b::Integer
-end
-"""
-```julia
-MatousekScrambling
-```
-
-Linear Matrix Scrambling aka Matousek' scrambling
-"""
-Base.@kwdef struct MatousekScrambling <: ScramblingMethod
-    rng::AbstractRNG = Random.GLOBAL
-    b::Integer
-end
 """ 
-    owen_scramble(points::AbstractArray; M=32)
-Return a scrambled version of the `points`. 
-The scrambling method is Nested Uniform Scrambling which was introduced in Owen (1995).
+    ```julia
+    ScrambleMethod
+    ```
+A scramble method needs at lease the scrambling base `b`, the number of "bits" to use `M` (`M=32` is the default) and a seed `rng` (`rng = Random.GLOBAL_RNG` is the default).
+The scramble methods implementer are 
+- `DigitalShift`.
+- `OwenScramble`: Nested Uniform Scramble which was introduced in Owen (1995).
+- `MatousekScramble`: Linear Matrix Scramble which was introduced in Matousek (1998).
+"""
+abstract type ScrambleMethod <: RandomizationMethod end
+
+""" 
+    randomization(x, S::ScrambleMethod)
+Return a scrambled version of `x`. 
+The scramble methods implemented are 
+- `DigitalShift`.
+- `OwenScramble`: Nested Uniform Scramble which was introduced in Owen (1995).
+- `MatousekScramble`: Linear Matrix Scramble which was introduced in Matousek (1998).
+"""
+function randomization(x::AbstractArray, S::ScrambleMethod)
+    random_x = permutedims(similar(x))
+    randomize!(random_x, permutedims(x), S)
+    return permutedims(random_x)
+end
+
+"""
+```julia
+OwenScramble
+```
+
+Nested Uniform Scramble aka Owen' scramble.
+
+`randomization(x, S::OwenScramble)` returns a scrambled version of `x`. 
+The scramble method is Nested Uniform Scramble which was introduced in Owen (1995).
 `M` is the number of bits used for each points. One needs `M ≥ log(base, n)`. 
 """
-function owen_scramble(rng::AbstractRNG, points::AbstractArray, b::Integer;
-                       M = 32)
-    random_points = permutedims(similar(points))
-    owen_scramble!(rng, random_points, permutedims(points), b; M = M)
-    return permutedims(random_points)
+Base.@kwdef struct OwenScramble <: ScrambleMethod
+    base::Integer
+    M::Integer = 32
+    rng::AbstractRNG = Random.GLOBAL_RNG
 end
 
-function owen_scramble(points::AbstractArray, b::Integer; M = 32)
-    owen_scramble(Random.default_rng(), points, b; M = M)
-end
-
-function owen_scramble!(rng::AbstractRNG, random_points::AbstractArray{T, N},
-                        points, b::Integer;
-                        M = 32) where {T, N}
+function randomize!(random_points::AbstractArray{T, N},
+                   points, S::OwenScramble) where {T, N}
     @assert size(points) == size(random_points)
-    unrandomized_bits = unif2bits(points, b, M = M)
+    b = S.base
+    unrandomized_bits = unif2bits(points, b, M = S.M)
     indices = which_permutation(unrandomized_bits, b)
     random_bits = similar(unrandomized_bits)
-    owen_scramble_bit!(rng, random_bits, unrandomized_bits, indices, b)
+    owen_scramble_bit!(S.rng, random_bits, unrandomized_bits, indices, b)
     for i in CartesianIndices(random_points)
         random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
     end
 end
 
-function owen_scramble!(random_points::AbstractArray, points::AbstractArray,
-                        b::Integer; M = 32)
-    owen_scramble!(Random.default_rng(), random_points, points, b; M = M)
-end
 """ 
 owen_scramble_bit!(rng::AbstractRNG, random_bits::AbstractArray{<:Integer, 3}, origin_bits::AbstractArray{<:Integer, 3}, indices::AbstractArray{T, 3} where {T <: Integer}, b::Integer)
-In place version of Nested Uniform Scrambling (for the bit array). This is faster to use this functions for multiple scrambling of the same array.
+In place version of Nested Uniform Scramble (for the bit array). This is faster to use this functions for multiple scramble of the same array.
 """
 function owen_scramble_bit!(rng::AbstractRNG,
                             random_bits::AbstractArray{<:Integer, 3},
@@ -126,44 +126,39 @@ function which_permutation!(indices::AbstractMatrix{<:Integer},
     indices .+= 1 # array indexing starts at 1
 end
 
-""" 
-    matousek_scramble(points::AbstractArray, b::Integer; M=32)
-Return a scrambled version of the `points`. 
-The scrambling method is Linear Matrix Scrambling which was introduced in Matousek (1998).
+"""
+```julia
+MatousekScramble
+```
+
+Linear Matrix Scramble aka Matousek' scramble.
+
+`randomization(x, S::MatousekScramble)` returns a scrambled version of `x`. 
+The scramble method is Linear Matrix Scramble which was introduced in Matousek (1998).
 `M` is the number of bits used for each points. One need `M ≥ log(base, n)`. 
 """
-function matousek_scramble(rng::AbstractRNG, points::AbstractArray{T, N}, b::Integer;
-                           M = 32) where {T, N}
-    random_points = permutedims(similar(points))
-    matousek_scramble!(rng, random_points, permutedims(points), b; M = M)
-    return permutedims(random_points)
+Base.@kwdef struct MatousekScramble <: ScrambleMethod
+    base::Integer
+    M::Int = 32
+    rng::AbstractRNG = Random.GLOBAL_RNG
 end
 
-function matousek_scramble(points::AbstractArray, b::Integer; M = 32)
-    matousek_scramble(Random.default_rng(), points, b; M = M)
-end
-
-function matousek_scramble!(rng::AbstractRNG, random_points::AbstractArray{T, N},
-                            points, b::Integer;
-                            M = 32) where {T, N}
+function randomize!(random_points::AbstractArray{T, N},
+                   points, S::MatousekScramble) where {T, N}
     @assert size(points) == size(random_points)
-    unrandomized_bits = unif2bits(points, b, M = M)
+    b = S.base
+    unrandomized_bits = unif2bits(points, b, M = S.M)
     random_bits = similar(unrandomized_bits)
-    matousek_scramble_bit!(rng, random_bits, unrandomized_bits, b)
+    matousek_scramble_bit!(S.rng, random_bits, unrandomized_bits, b)
     for i in CartesianIndices(random_points)
         random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
     end
 end
 
-function matousek_scramble!(random_points::AbstractArray, points::AbstractArray,
-                            b::Integer; M = 32)
-    matousek_scramble!(Random.default_rng(), random_points, points, b; M = M)
-end
-
-#? Weird it should be faster than nested uniform Scrambling but here it is not at all.-> look for other implementation and paper
+#? Weird it should be faster than nested uniform Scramble but here it is not at all.-> look for other implementation and paper
 """ 
     matousek_scramble_bit!(rng::AbstractRNG, random_bits::AbstractArray{<:Integer, 3}, origin_bits::AbstractArray{<:Integer, 3}, b::Integer)
-In place version of Linear Matrix Scrambling (for the bit array). This is faster to use this functions for multiple scrambling of the same array.
+In place version of Linear Matrix Scramble (for the bit array). This is faster to use this functions for multiple scramble of the same array.
 """
 function matousek_scramble_bit!(rng::AbstractRNG,
                                 random_bits::AbstractArray{<:Integer, 3},
@@ -209,46 +204,33 @@ getmatousek(m::Integer, b::Integer) = getmatousek(Random.GLOBAL_RNG, m, b)
 
 """
 ```julia
-DigitalShifting in base b
+DigitalShift
 ```
 
-Digital Shift
+Digital shift. 
+`randomization(x, S::DigitalShift)` returns a scrambled version of `x`. 
+
+The scramble method is Digital Shift.
+It scramble each corrdinate in base `b` as `yₖ = (xₖ + Uₖ) mod b` where `Uₖ ∼ 𝕌({0:b-1})`. 
+`U` is the same for every point `points` but i.i.d along every dimensions.
 """
-Base.@kwdef struct DigitalShifting <: ScramblingMethod
-    rng::AbstractRNG = Random.GLOBAL
-    b::Integer
+Base.@kwdef struct DigitalShift <: ScrambleMethod
+    base::Integer
+    M::Int = 32
+    rng::AbstractRNG = Random.GLOBAL_RNG
 end
 
-"""
-    digital_shift(points::AbstractArray) 
-Digital shift each corrdinate in base `b` is shifted as `yₖ = (xₖ + Uₖ) mod b` where `Uₖ ∼ 𝕌({0:b-1})`. `U` is the same for every point `points` but i.i.d along every dimensions.
-"""
-function digital_shift(rng::AbstractRNG, points::AbstractArray, b::Integer;
-                       M = 32)
-    random_points = permutedims(similar(points))
-    digital_shift!(rng, random_points, permutedims(points), b; M = M)
-    return permutedims(random_points)
-end
-
-function digital_shift(points::AbstractArray, b::Integer; M = 32)
-    digital_shift(Random.default_rng(), points, b; M = M)
-end
-
-function digital_shift!(rng::AbstractRNG, random_points::AbstractArray{T, N}, points,
-                        b::Integer; M = 32) where {T, N}
-    bits = unif2bits(points, b, M = M)
+function randomize!(random_points::AbstractArray{T, N}, points,
+                        S::DigitalShift) where {T, N}
+    b = S.base
+    bits = unif2bits(points, b, M = S.M)
     for s in axes(random_points, 3)
-        digital_shift_bits!(rng, @view(bits[:, :, s]), b)
+        digital_shift_bits!(S.rng, @view(bits[:, :, s]), b)
     end
 
     for i in CartesianIndices(random_points)
         random_points[i] = bits2unif(T, @view(bits[:, i]), b)
     end
-end
-
-function digital_shift!(random_points::AbstractArray, points::AbstractArray, b::Integer;
-                        M = 32)
-    digital_shift!(Random.default_rng(), random_points, points, b; M = M)
 end
 
 function digital_shift_bits!(rng::AbstractRNG, random_bits::AbstractMatrix{<:Integer},

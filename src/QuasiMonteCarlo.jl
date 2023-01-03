@@ -98,13 +98,14 @@ NoRand
 No Randomization is performed on the sampled sequence.
 """
 struct NoRand <: RandomizationMethod end
-abstract type ScramblingMethod <: RandomizationMethod end
+randomization(x::AbstractArray, S::NoRand) = x
 
 include("RandomizedQuasiMonteCarlo/shifting.jl")
 include("RandomizedQuasiMonteCarlo/conversion.jl")
 include("RandomizedQuasiMonteCarlo/scrambling_base_b.jl")
 
-export GridSample,
+export SamplingAlgorithm,
+       GridSample,
        UniformSample,
        SobolSample,
        LatinHypercubeSample,
@@ -116,9 +117,12 @@ export GridSample,
        KroneckerSample,
        SectionSample,
        FaureSample,
-       shift,
-       owen_scramble,
-       matousek_scramble,
-       digital_shift,
-       SamplingAlgorithm
+       randomization,
+       RandomizationMethod,
+       NoRand,
+       Shift,
+       ScrambleMethod,
+       OwenScramble,
+       MatousekScramble,
+       DigitalShift
 end # module
