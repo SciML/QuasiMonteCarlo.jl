@@ -408,7 +408,7 @@ end
     u_digital_shift = randomize(u_faure, DigitalShift(base = b, M = M))
     u_shift = randomize(u_faure, Shift())
 
-    u_nus = QuasiMonteCarlo.sample(N, d, OwenScramble(base = b, M = M))
+    u_nus = QuasiMonteCarlo.sample(N, d, FaureSample(OwenScramble(base = b, M = M)))
 end
 
 @testset "Randomized Quasi Monte Carlo Rational Scrambling" begin
