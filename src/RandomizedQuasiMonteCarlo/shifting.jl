@@ -13,27 +13,19 @@ end
     randomize(x, S::Shift)
 Cranley Patterson Rotation i.e. `y = (points .+ U) mod 1` where `U ∼ 𝕌([0,1]ᵈ)` and `points` is a `d×n` matrix
 """
-randomize(x, S::Shift) = shift(S.rng, x)
-
-"""
-    shift(points::AbstractArray) 
-Cranley Patterson Rotation i.e. `y = (points .+ U) mod 1` where `U ∼ 𝕌([0,1]ᵈ)` and `points` is a `d×n` matrix
-"""
-function shift(rng::AbstractRNG, points::AbstractArray)
-    y = copy(points)
-    shift!(rng, y)
+function randomize(x, S::Shift)
+    y = copy(x)
+    shift!(S.rng, y)
     return y
 end
-
-shift(points::AbstractArray) = shift(Random.default_rng(), points)
-shift!(points::AbstractArray) = shift!(Random.default_rng(), points)
-shift!(points::AbstractMatrix, U::AbstractVector) = shift!(Random.default_rng(), points, U)
 
 function shift!(rng::AbstractRNG, points::AbstractMatrix)
     d = size(points, 1)
     U = zeros(d)
     shift!(rng, points, U)
 end
+
+shift!(points::AbstractMatrix, U::AbstractVector) = shift!(Random.default_rng(), points, U)
 
 function shift!(rng::AbstractRNG, points::AbstractMatrix, U::AbstractVector)
     rand!(rng, U)

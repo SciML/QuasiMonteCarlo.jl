@@ -1,6 +1,6 @@
 """
     unif2bits(x<:AbstractArray, b::Integer; M=32)
-Return the b-adic decomposition of all element y of an array y = ∑ₖ yₖ/bᵏ a number yₖ∈[0,1[ -> [y₁, ⋯, yₘ] 
+Return the b-ary decomposition of all element y of an array y = ∑ₖ yₖ/bᵏ a number yₖ∈[0,1[ -> [y₁, ⋯, yₘ] 
 """
 function unif2bits(x::AbstractArray, b::Integer; M = 32)
     bits = zeros(Int, M, size(x)...)
@@ -15,27 +15,13 @@ function unif2bits!(bits::AbstractArray, x::AbstractArray, b::Integer)
     end
 end
 
-function unif2bits(x::AbstractArray; M = 32)
-    bits = BitArray(undef, M, size(x)...)
-    unif2bits!(bits, x, 2)
-    return bits
-end
 """
     unif2bits(y<:Real, b::Integer; M=32)
-Return the b-adic decomposition y = ∑ₖ yₖ/bᵏ a number y∈[0,1[ -> [y₁, ⋯, yₘ] 
+Return the b-ary decomposition y = ∑ₖ yₖ/bᵏ a number y∈[0,1[ -> [y₁, ⋯, yₘ] 
 """
 function unif2bits(y::Real, b::Integer; M = 32)
     bits = zeros(Int, M)
     unif2bits!(bits, y, b)
-    return bits
-end
-"""
-    unif2bits(y; M=32)
-Return the binary decomposition y = ∑ₖ yₖ/2ᵏ a number y∈[0,1[ -> [y₁, ⋯, yₘ] 
-"""
-function unif2bits(y; M = 32)
-    bits = BitArray(undef, M)
-    unif2bits!(bits, y, 2)
     return bits
 end
 
