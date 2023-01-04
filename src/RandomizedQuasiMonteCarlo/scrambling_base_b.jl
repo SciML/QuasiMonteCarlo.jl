@@ -66,7 +66,7 @@ function owen_scramble_bit!(rng::AbstractRNG,
     # in place nested uniform Scramble.
     #
     m, n, d = size(indices)
-    M = size(random_bits, 3)
+    M = size(random_bits, 1)
     @assert m≥1 "We need m ≥ 1" # m=0 causes awkward corner case below.
 
     for s in 1:d
