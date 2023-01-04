@@ -19,7 +19,7 @@ The scramble methods implemented are
 - `MatousekScramble`: Linear Matrix Scramble which was introduced in Matousek (1998).
 """
 function randomize(x, S::ScrambleMethod)
-    random_x = permutedims(similar(x))
+    random_x = permutedims(copy(x))
     randomize!(random_x, permutedims(x), S)
     return permutedims(random_x)
 end
