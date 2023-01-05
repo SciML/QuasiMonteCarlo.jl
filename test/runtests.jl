@@ -4,7 +4,7 @@ using Aqua, Test
 
 using Compat
 using Statistics, LinearAlgebra, StatsBase, Random
-using IntervalArithmetic, Primes, Combinatorics, Distributions, InvertedIndices
+using Primes, Combinatorics, Distributions, InvertedIndices
 using HypothesisTests
 
 # struct InertSampler <: Random.AbstractRNG end
@@ -140,36 +140,6 @@ end
     @test pvalue(SignedRankTest(eachrow(s)...)) > 0.0001
 end
 
-####################
-### T, M, S NETS ###
-####################
-
-# check RQMC stratification properties
-# net must be an iterator of points in [0,1]^d
-function test_tms(net; λ::I, t::I, power::I, d::I, base::I) where {I <: Integer}
-    pass = true
-    n = λ * (base^power)
-    # How can our stratification "budget" of power-t be split up/spent across dimensions?
-    parts = Iterators.map(Iterators.flatten((partitions(power - t, i) for i in 1:d))) do x
-        vcat(x, zeros(typeof(d), d - length(x)))::Vector{I}
-    end
-    perms = Iterators.map(parts) do x
-        multiset_permutations(x, d)
-    end |> Iterators.flatten
-    for stepsize in perms
-        intervals = mince(IntervalBox([interval(0, 1) for i in 1:d]),
-                          NTuple{d, Int}(base .^ stepsize))
-        pass &= all(intervals) do intvl
-            λ * base^t == count(point -> point ∈ intvl, net)
-        end
-        if !pass
-            println("Errors in dimension $d, interval $stepsize, sample size $n")
-            return pass
-        end
-    end
-    return pass
-end
-
 @testset "Van der Corput Sequence" begin
     lb = 0
     ub = 1
@@ -202,7 +172,7 @@ end
     for (i, j) in combinations(1:d, 2)
         @test pvalue(SignedRankTest(s[i, :], s[j, :])) > 0.0001
     end
-    @test test_tms(collect(eachcol(s)); λ = 1, t = power - d, power, d, base)
+    @test istmsnet(s; λ = 1, t = power - d, m = power, s = d, base)
     for dim in sort.(eachrow(s))
         # all dimensions should be base-2 van der Corput
         @test dim ≈ vdc
@@ -248,8 +218,7 @@ end
         base = nextprime(d)
         n = base^power
         s = QuasiMonteCarlo.sample(n, d, sampler)
-        points = collect(eachcol(s))
-        @test test_tms(points; λ = 1, t = 0, power, d, base)
+        @test istmsnet(s; λ = 1, t = 0, m = power, s = d, base)
     end
     # test 2d stratification of next 3 primes
     power = 2
@@ -258,8 +227,7 @@ end
         λ = 2
         n = λ * base^power
         s = QuasiMonteCarlo.sample(n, d, sampler)
-        points = collect(eachcol(s))
-        @test test_tms(points; λ, t = 0, power, d, base)  # test 3d stratification of next 3 primes
+        @test istmsnet(s; λ, t = 0, m = power, s = d, base)  # test 3d stratification of next 3 primes
     end
 end
 
@@ -427,4 +395,56 @@ end
     @test eltype(u_nus) <: Rational
     @test eltype(u_lms) <: Rational
     @test eltype(u_digital_shift) <: Rational
+end
+
+@testset "Sobol' sequence are (tₛ,m,s)-net in base 2 even after scrambling" begin
+    #! Note that this is the first 2ᵐ elements of the sequence which are tested
+    #! Note that the Sobol' sequence from Sobol.jl is the "controversed" version where the first element have be removed
+
+    # Table of qualitity parameter t with respect to dimension s for Sobol' sequence.
+    # See "The algebraic-geometry approach to low-discrepancy sequences" H Niederreiter, C Xing - Monte Carlo and Quasi-Monte Carlo Methods 1996, 1998
+    t_sobol = [0, 0, 1, 3, 5, 8, 11, 15, 19, 23, 27, 31, 35, 40, 45, 50, 55, 60, 65, 71]
+
+    m = 12
+    base = 2
+    n = base^m
+    λ = 1
+    v = [
+        NoRand(),
+        OwenScramble(base = base, M = m),
+        MatousekScramble(base = base, M = m),
+        DigitalShift(base = base, M = m),
+    ]
+    pass = Array{Bool}(undef, length(v), m)
+    for (s, t) in enumerate(t_sobol[1:m])
+        net = Rational.(QuasiMonteCarlo.sample(n, s, SobolSample()))
+        for j in eachindex(v)
+            pass[j, s] = istmsnet(randomize(net, v[j]); λ, t, m, s,
+                                  base = base)
+        end
+    end
+    @test all(pass)
+end
+
+@testset "Faure sequence are (0,m,s)-net even after scrambling" begin
+    # Faure sequence are exactly (t=0, s)-sequence in base b=nextprime(s)
+    m = 4
+    M = m
+    λ = 1
+    t = 0
+
+    pass = Array{Bool}(undef, 4, m)
+    for s in 1:m
+        net = Rational{BigInt}.(QuasiMonteCarlo.sample(nextprime(s)^m, s, FaureSample())) # Convert the sequence in Rational{BigInt} (needed to scramble)
+        pass[1, s] = istmsnet(randomize(net, NoRand()); λ, t, m, s,
+                              base = nextprime(s))
+        pass[2, s] = istmsnet(randomize(net, OwenScramble(base = nextprime(s), M = m));
+                              λ, t, m, s, base = nextprime(s))
+        pass[3, s] = istmsnet(randomize(net,
+                                        MatousekScramble(base = nextprime(s), M = m));
+                              λ, t, m, s, base = nextprime(s))
+        pass[4, s] = istmsnet(randomize(net, DigitalShift(base = nextprime(s), M = m));
+                              λ, t, m, s, base = nextprime(s))
+    end
+    @test all(pass)
 end

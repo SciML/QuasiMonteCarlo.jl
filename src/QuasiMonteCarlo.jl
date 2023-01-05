@@ -1,6 +1,7 @@
 module QuasiMonteCarlo
 
 using Sobol, LatticeRules, Distributions, Primes, LinearAlgebra, Random
+using IntervalArithmetic, Combinatorics
 using ConcreteStructs
 
 abstract type SamplingAlgorithm end
@@ -101,7 +102,7 @@ struct NoRand <: RandomizationMethod end
 randomize(x, S::NoRand) = x
 
 include("RandomizedQuasiMonteCarlo/shifting.jl")
-include("RandomizedQuasiMonteCarlo/conversion.jl")
+include("RandomizedQuasiMonteCarlo/net_utilities.jl")
 include("RandomizedQuasiMonteCarlo/scrambling_base_b.jl")
 
 export SamplingAlgorithm,
@@ -124,5 +125,6 @@ export SamplingAlgorithm,
        ScrambleMethod,
        OwenScramble,
        MatousekScramble,
-       DigitalShift
+       DigitalShift,
+       istmsnet
 end # module
