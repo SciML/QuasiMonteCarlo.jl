@@ -42,7 +42,7 @@ Base.@kwdef struct OwenScramble <: ScrambleMethod
 end
 
 function randomize!(random_points::AbstractMatrix{T},
-                    points::AbstractMatrix{T}, S::OwenScramble) where {T}
+                    points::AbstractMatrix{T}, S::OwenScramble) where {T <: Real}
     @assert size(points) == size(random_points)
     b = S.base
     unrandomized_bits = unif2bits(points, b, M = S.M)
@@ -61,8 +61,8 @@ In place version of Nested Uniform Scramble (for the bit array). This is faster 
 function owen_scramble_bit!(rng::AbstractRNG,
                             random_bits::AbstractArray{T, 3},
                             origin_bits::AbstractArray{T, 3},
-                            indices::AbstractArray{F, 3} where {T <: Integer, F <: Integer},
-                            b::Integer)
+                            indices::AbstractArray{F, 3},
+                            b::Integer) where {T <: Integer, F <: Integer}
     # in place nested uniform Scramble.
     #
     m, n, d = size(indices)
@@ -144,7 +144,7 @@ Base.@kwdef struct MatousekScramble <: ScrambleMethod
 end
 
 function randomize!(random_points::AbstractMatrix{T},
-                    points::AbstractMatrix{T}, S::MatousekScramble) where {T}
+                    points::AbstractMatrix{T}, S::MatousekScramble) where {T <: Real}
     @assert size(points) == size(random_points)
     b = S.base
     unrandomized_bits = unif2bits(points, b, M = S.M)
@@ -222,7 +222,7 @@ Base.@kwdef struct DigitalShift <: ScrambleMethod
 end
 
 function randomize!(random_points::AbstractMatrix{T},
-                    points::AbstractMatrix{T}, S::DigitalShift) where {T}
+                    points::AbstractMatrix{T}, S::DigitalShift) where {T <: Real}
     b = S.base
     bits = unif2bits(points, b, M = S.M)
     for s in axes(random_points, 2)
