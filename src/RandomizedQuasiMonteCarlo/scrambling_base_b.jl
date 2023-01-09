@@ -41,8 +41,8 @@ Base.@kwdef struct OwenScramble <: ScrambleMethod
     rng::AbstractRNG = Random.GLOBAL_RNG
 end
 
-function randomize!(random_points::AbstractArray{T, N},
-                    points, S::OwenScramble) where {T, N}
+function randomize!(random_points::AbstractMatrix{T},
+                    points::AbstractMatrix{T}, S::OwenScramble) where {T}
     @assert size(points) == size(random_points)
     b = S.base
     unrandomized_bits = unif2bits(points, b, M = S.M)
@@ -59,9 +59,9 @@ owen_scramble_bit!(rng::AbstractRNG, random_bits::AbstractArray{<:Integer, 3}, o
 In place version of Nested Uniform Scramble (for the bit array). This is faster to use this functions for multiple scramble of the same array.
 """
 function owen_scramble_bit!(rng::AbstractRNG,
-                            random_bits::AbstractArray{<:Integer, 3},
-                            origin_bits::AbstractArray{<:Integer, 3},
-                            indices::AbstractArray{T, 3} where {T <: Integer},
+                            random_bits::AbstractArray{T, 3},
+                            origin_bits::AbstractArray{T, 3},
+                            indices::AbstractArray{F, 3} where {T <: Integer, F <: Integer},
                             b::Integer)
     # in place nested uniform Scramble.
     #
@@ -143,8 +143,8 @@ Base.@kwdef struct MatousekScramble <: ScrambleMethod
     rng::AbstractRNG = Random.GLOBAL_RNG
 end
 
-function randomize!(random_points::AbstractArray{T, N},
-                    points, S::MatousekScramble) where {T, N}
+function randomize!(random_points::AbstractMatrix{T},
+                    points::AbstractMatrix{T}, S::MatousekScramble) where {T}
     @assert size(points) == size(random_points)
     b = S.base
     unrandomized_bits = unif2bits(points, b, M = S.M)
@@ -161,8 +161,9 @@ end
 In place version of Linear Matrix Scramble (for the bit array). This is faster to use this functions for multiple scramble of the same array.
 """
 function matousek_scramble_bit!(rng::AbstractRNG,
-                                random_bits::AbstractArray{<:Integer, 3},
-                                origin_bits::AbstractArray{<:Integer, 3}, b::Integer)
+                                random_bits::AbstractArray{T, 3},
+                                origin_bits::AbstractArray{T, 3},
+                                b::Integer) where {T <: Integer}
     # https://statweb.stanford.edu/~owen/mc/ Chapter 17.6 around equation (17.15).
     #
     M, n, d = size(origin_bits)
@@ -220,8 +221,8 @@ Base.@kwdef struct DigitalShift <: ScrambleMethod
     rng::AbstractRNG = Random.GLOBAL_RNG
 end
 
-function randomize!(random_points::AbstractArray{T, N}, points,
-                    S::DigitalShift) where {T, N}
+function randomize!(random_points::AbstractMatrix{T},
+                    points::AbstractMatrix{T}, S::DigitalShift) where {T}
     b = S.base
     bits = unif2bits(points, b, M = S.M)
     for s in axes(random_points, 3)
