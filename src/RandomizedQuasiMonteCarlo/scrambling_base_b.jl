@@ -225,7 +225,7 @@ function randomize!(random_points::AbstractMatrix{T},
                     points::AbstractMatrix{T}, S::DigitalShift) where {T}
     b = S.base
     bits = unif2bits(points, b, M = S.M)
-    for s in axes(random_points, 3)
+    for s in axes(random_points, 2)
         digital_shift_bits!(S.rng, @view(bits[:, :, s]), b)
     end
 
