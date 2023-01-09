@@ -223,26 +223,47 @@ end
 
 function randomize!(random_points::AbstractMatrix{T},
                     points::AbstractMatrix{T}, S::DigitalShift) where {T <: Real}
+    @assert size(points) == size(random_points)
     b = S.base
-    bits = unif2bits(points, b, M = S.M)
-    for s in axes(random_points, 2)
-        digital_shift_bits!(S.rng, @view(bits[:, :, s]), b)
-    end
-
+    unrandomized_bits = unif2bits(points, b, M = S.M)
+    random_bits = similar(unrandomized_bits)
+    digital_shift_bits!(S.rng, random_bits, unrandomized_bits, b)
     for i in CartesianIndices(random_points)
-        random_points[i] = bits2unif(T, @view(bits[:, i]), b)
+        random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
     end
 end
 
-function digital_shift_bits!(rng::AbstractRNG, random_bits::AbstractMatrix{<:Integer},
-                             b::Integer)
-    M, n = size(random_bits)
-    DS = rand(rng, 0:(b - 1), M)
-    for i in 1:n
-        random_bits[:, i] = (random_bits[:, i] + DS) .% b
+""" 
+    digital_shift_bit!(rng::AbstractRNG, random_bits::AbstractArray{<:Integer, 3}, origin_bits::AbstractArray{<:Integer, 3}, b::Integer)
+In place version of Digital Shift (for the bit array). This is faster to use this functions for multiple scramble of the same array.
+"""
+function digital_shift_bits!(rng::AbstractRNG,
+                                random_bits::AbstractArray{T, 3},
+                                origin_bits::AbstractArray{T, 3},
+                                b::Integer) where {T <: Integer}
+    # https://statweb.stanford.edu/~owen/mc/ Chapter 17.6 around equation (17.15).
+    #
+    M, n, d = size(origin_bits)
+    m = logi(b, n)
+    @assert m≥1 "We need m ≥ 1" # m=0 causes awkward corner case below.  Caller handles that case specially.
+
+    for s in 1:d
+        # Permutations matrix and shift to apply to bits 1:m
+        DS = rand(rng, 0:(b - 1), m)
+
+        # xₖ = (aₖ + Cₖ) mod b where xₖ is the k element in base b
+        # origin_bits (m×n) .+ DS (m×1) 
+        random_bits[1:m, :, s] = (origin_bits[1:m, :, s] .+ DS) .% b
+    end
+
+    # Paste in random entries for bits after m'th one
+    if M > m
+        random_bits[(m + 1):M, :, :] = rand(rng, 0:(b - 1), n * d * (M - m))
     end
 end
 
-function digital_shift_bits!(random_bits::AbstractMatrix{<:Integer}, b::Integer)
-    digital_shift_bits!(Random.default_rng(), random_bits, b)
+function digital_shift_bits!(random_bits::AbstractArray{T, 3},
+                             origin_bits::AbstractArray{T, 3},
+                             b::Integer) where {T <: Integer}
+    digital_shift_bits!(Random.default_rng(), random_bits, origin_bits, b)
 end
