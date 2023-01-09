@@ -36,8 +36,8 @@ The scramble method is Nested Uniform Scramble which was introduced in Owen (199
 `M` is the number of bits used for each points. One needs `M ≥ log(base, n)`. 
 """
 Base.@kwdef struct OwenScramble <: ScrambleMethod
-    base::Any
-    M::Integer = 32
+    base::Int
+    M::Int = 32
     rng::AbstractRNG = Random.GLOBAL_RNG
 end
 
@@ -138,7 +138,7 @@ The scramble method is Linear Matrix Scramble which was introduced in Matousek (
 `M` is the number of bits used for each points. One need `M ≥ log(base, n)`. 
 """
 Base.@kwdef struct MatousekScramble <: ScrambleMethod
-    base::Integer
+    base::Int
     M::Int = 32
     rng::AbstractRNG = Random.GLOBAL_RNG
 end
@@ -215,7 +215,7 @@ It scramble each corrdinate in base `b` as `yₖ = (xₖ + Uₖ) mod b` where `U
 `U` is the same for every point `points` but i.i.d along every dimensions.
 """
 Base.@kwdef struct DigitalShift <: ScrambleMethod
-    base::Integer
+    base::Int
     M::Int = 32
     rng::AbstractRNG = Random.GLOBAL_RNG
 end
