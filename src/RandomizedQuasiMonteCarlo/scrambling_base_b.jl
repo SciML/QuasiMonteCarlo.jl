@@ -180,7 +180,7 @@ function matousek_scramble_bit!(rng::AbstractRNG,
 
     # Paste in random entries for bits after m'th one
     if M > m
-        random_bits[(m + 1):M, :, :] = rand(rng, Bool, n * d * (M - m))
+        random_bits[(m + 1):M, :, :] = rand(rng, 0:(b - 1), n * d * (M - m))
     end
 end
 
