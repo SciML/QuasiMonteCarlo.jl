@@ -46,9 +46,9 @@ function randomize!(random_points::AbstractMatrix{T},
     @assert size(points) == size(random_points)
     b = S.base
     unrandomized_bits = unif2bits(points, b, M = S.M)
-    indices = which_permutation(unrandomized_bits, b)
     random_bits = similar(unrandomized_bits)
-    owen_scramble_bit!(S.rng, random_bits, unrandomized_bits, indices, b)
+    indices = which_permutation(unrandomized_bits, b)
+    randomize_bit!(random_bits, unrandomized_bits, indices, S)
     for i in CartesianIndices(random_points)
         random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
     end
@@ -58,14 +58,15 @@ end
 owen_scramble_bit!(rng::AbstractRNG, random_bits::AbstractArray{<:Integer, 3}, origin_bits::AbstractArray{<:Integer, 3}, indices::AbstractArray{T, 3} where {T <: Integer}, b::Integer)
 In place version of Nested Uniform Scramble (for the bit array). This is faster to use this functions for multiple scramble of the same array.
 """
-function owen_scramble_bit!(rng::AbstractRNG,
-                            random_bits::AbstractArray{T, 3},
+function randomize_bit!(random_bits::AbstractArray{T, 3},
                             origin_bits::AbstractArray{T, 3},
                             indices::AbstractArray{F, 3},
-                            b::Integer) where {T <: Integer, F <: Integer}
+                            S::OwenScramble) where {T <: Integer, F <: Integer}
     # in place nested uniform Scramble.
     #
     m, n, d = size(indices)
+    b = S.base
+    rng = S.rng
     M = size(random_bits, 1)
     @assert m≥1 "We need m ≥ 1" # m=0 causes awkward corner case below.
 
@@ -149,7 +150,7 @@ function randomize!(random_points::AbstractMatrix{T},
     b = S.base
     unrandomized_bits = unif2bits(points, b, M = S.M)
     random_bits = similar(unrandomized_bits)
-    matousek_scramble_bit!(S.rng, random_bits, unrandomized_bits, b)
+    randomize_bit!(random_bits, unrandomized_bits, S)
     for i in CartesianIndices(random_points)
         random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
     end
@@ -160,13 +161,14 @@ end
     matousek_scramble_bit!(rng::AbstractRNG, random_bits::AbstractArray{<:Integer, 3}, origin_bits::AbstractArray{<:Integer, 3}, b::Integer)
 In place version of Linear Matrix Scramble (for the bit array). This is faster to use this functions for multiple scramble of the same array.
 """
-function matousek_scramble_bit!(rng::AbstractRNG,
-                                random_bits::AbstractArray{T, 3},
-                                origin_bits::AbstractArray{T, 3},
-                                b::Integer) where {T <: Integer}
+function randomize_bit!(random_bits::AbstractArray{T, 3},
+                        origin_bits::AbstractArray{T, 3},
+                        S::MatousekScramble) where {T <: Integer}
     # https://statweb.stanford.edu/~owen/mc/ Chapter 17.6 around equation (17.15).
     #
     M, n, d = size(origin_bits)
+    b = S.base
+    rng = S.rng
     m = logi(b, n)
     @assert m≥1 "We need m ≥ 1" # m=0 causes awkward corner case below.  Caller handles that case specially.
 
@@ -227,7 +229,8 @@ function randomize!(random_points::AbstractMatrix{T},
     b = S.base
     unrandomized_bits = unif2bits(points, b, M = S.M)
     random_bits = similar(unrandomized_bits)
-    digital_shift_bits!(S.rng, random_bits, unrandomized_bits, b)
+
+    randomize_bits!(S.rng, random_bits, unrandomized_bits, SBits)
     for i in CartesianIndices(random_points)
         random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
     end
@@ -237,13 +240,14 @@ end
     digital_shift_bit!(rng::AbstractRNG, random_bits::AbstractArray{<:Integer, 3}, origin_bits::AbstractArray{<:Integer, 3}, b::Integer)
 In place version of Digital Shift (for the bit array). This is faster to use this functions for multiple scramble of the same array.
 """
-function digital_shift_bits!(rng::AbstractRNG,
-                                random_bits::AbstractArray{T, 3},
-                                origin_bits::AbstractArray{T, 3},
-                                b::Integer) where {T <: Integer}
+function randomize_bits!(random_bits::AbstractArray{T, 3},
+                         origin_bits::AbstractArray{T, 3},
+                         S::DigitalShift) where {T <: Integer}
     # https://statweb.stanford.edu/~owen/mc/ Chapter 17.6 around equation (17.15).
     #
     M, n, d = size(origin_bits)
+    b = S.base
+    rng = S.rng
     m = logi(b, n)
     @assert m≥1 "We need m ≥ 1" # m=0 causes awkward corner case below.  Caller handles that case specially.
 
@@ -260,10 +264,4 @@ function digital_shift_bits!(rng::AbstractRNG,
     if M > m
         random_bits[(m + 1):M, :, :] = rand(rng, 0:(b - 1), n * d * (M - m))
     end
-end
-
-function digital_shift_bits!(random_bits::AbstractArray{T, 3},
-                             origin_bits::AbstractArray{T, 3},
-                             b::Integer) where {T <: Integer}
-    digital_shift_bits!(Random.default_rng(), random_bits, origin_bits, b)
 end
