@@ -99,7 +99,7 @@ NoRand
 No Randomization is performed on the sampled sequence.
 """
 struct NoRand <: RandomizationMethod end
-randomize(x, S::NoRand) = x
+randomize(x, R::NoRand) = x
 
 include("RandomizedQuasiMonteCarlo/shifting.jl")
 include("RandomizedQuasiMonteCarlo/net_utilities.jl")

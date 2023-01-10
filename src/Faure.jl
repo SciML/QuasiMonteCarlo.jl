@@ -20,7 +20,7 @@ end
 end
 
 """
-    FaureSample(S::RandomizationMethod)
+    FaureSample(R::RandomizationMethod)
 
 A Faure low-discrepancy sequence.
 
@@ -41,7 +41,7 @@ Faure, H. (1982). Discrepance de suites associees a un systeme de numeration (en
 Owen, A. B. (1997). Monte Carlo variance of scrambled net quadrature. *SIAM Journal on Numerical Analysis*, 34(5), 1884-1910.
 """
 Base.@kwdef struct FaureSample <: SamplingAlgorithm
-    S::RandomizationMethod = NoRand()
+    R::RandomizationMethod = NoRand()
 end
 
 @fastmath function sample(n::Integer, dimension::Integer, F::FaureSample, T = Float64;
@@ -56,7 +56,7 @@ end
                             "Try $n or $(n+base^power) instead."))
     end
 
-    return randomize(_faure_samples(n, n_digits, dimension, T), F.S)
+    return randomize(_faure_samples(n, n_digits, dimension, T), F.R)
 end
 
 @fastmath @views function _faure_samples(n_samples::I, n_digits::I, dimension::I,

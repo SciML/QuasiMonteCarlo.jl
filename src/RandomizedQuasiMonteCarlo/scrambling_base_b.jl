@@ -11,16 +11,16 @@ The scramble methods implementer are
 abstract type ScrambleMethod <: RandomizationMethod end
 
 """ 
-    randomize(x, S::ScrambleMethod)
+    randomize(x, R::ScrambleMethod)
 Return a scrambled version of `x`. 
 The scramble methods implemented are 
 - `DigitalShift`.
 - `OwenScramble`: Nested Uniform Scramble which was introduced in Owen (1995).
 - `MatousekScramble`: Linear Matrix Scramble which was introduced in Matousek (1998).
 """
-function randomize(x, S::ScrambleMethod)
+function randomize(x, R::ScrambleMethod)
     random_x = permutedims(copy(x))
-    randomize!(random_x, permutedims(x), S)
+    randomize!(random_x, permutedims(x), R)
     return permutedims(random_x)
 end
 
@@ -31,7 +31,7 @@ OwenScramble
 
 Nested Uniform Scramble aka Owen' scramble.
 
-`randomize(x, S::OwenScramble)` returns a scrambled version of `x`. 
+`randomize(x, R::OwenScramble)` returns a scrambled version of `x`. 
 The scramble method is Nested Uniform Scramble which was introduced in Owen (1995).
 `M` is the number of bits used for each points. One needs `M ≥ log(base, n)`. 
 """
@@ -42,13 +42,13 @@ Base.@kwdef struct OwenScramble <: ScrambleMethod
 end
 
 function randomize!(random_points::AbstractMatrix{T},
-                    points::AbstractMatrix{T}, S::OwenScramble) where {T <: Real}
+                    points::AbstractMatrix{T}, R::OwenScramble) where {T <: Real}
     @assert size(points) == size(random_points)
-    b = S.base
-    unrandomized_bits = unif2bits(points, b, M = S.M)
+    b = R.base
+    unrandomized_bits = unif2bits(points, b, M = R.M)
     random_bits = similar(unrandomized_bits)
     indices = which_permutation(unrandomized_bits, b)
-    randomize_bit!(random_bits, unrandomized_bits, indices, S)
+    randomize_bit!(random_bits, unrandomized_bits, indices, R)
     for i in CartesianIndices(random_points)
         random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
     end
@@ -61,12 +61,12 @@ In place version of Nested Uniform Scramble (for the bit array). This is faster 
 function randomize_bit!(random_bits::AbstractArray{T, 3},
                             origin_bits::AbstractArray{T, 3},
                             indices::AbstractArray{F, 3},
-                            S::OwenScramble) where {T <: Integer, F <: Integer}
+                            R::OwenScramble) where {T <: Integer, F <: Integer}
     # in place nested uniform Scramble.
     #
     m, n, d = size(indices)
-    b = S.base
-    rng = S.rng
+    b = R.base
+    rng = R.rng
     M = size(random_bits, 1)
     @assert m≥1 "We need m ≥ 1" # m=0 causes awkward corner case below.
 
@@ -134,7 +134,7 @@ MatousekScramble
 
 Linear Matrix Scramble aka Matousek' scramble.
 
-`randomize(x, S::MatousekScramble)` returns a scrambled version of `x`. 
+`randomize(x, R::MatousekScramble)` returns a scrambled version of `x`. 
 The scramble method is Linear Matrix Scramble which was introduced in Matousek (1998).
 `M` is the number of bits used for each points. One need `M ≥ log(base, n)`. 
 """
@@ -145,12 +145,12 @@ Base.@kwdef struct MatousekScramble <: ScrambleMethod
 end
 
 function randomize!(random_points::AbstractMatrix{T},
-                    points::AbstractMatrix{T}, S::MatousekScramble) where {T <: Real}
+                    points::AbstractMatrix{T}, R::MatousekScramble) where {T <: Real}
     @assert size(points) == size(random_points)
-    b = S.base
-    unrandomized_bits = unif2bits(points, b, M = S.M)
+    b = R.base
+    unrandomized_bits = unif2bits(points, b, M = R.M)
     random_bits = similar(unrandomized_bits)
-    randomize_bit!(random_bits, unrandomized_bits, S)
+    randomize_bit!(random_bits, unrandomized_bits, R)
     for i in CartesianIndices(random_points)
         random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
     end
@@ -163,12 +163,12 @@ In place version of Linear Matrix Scramble (for the bit array). This is faster t
 """
 function randomize_bit!(random_bits::AbstractArray{T, 3},
                         origin_bits::AbstractArray{T, 3},
-                        S::MatousekScramble) where {T <: Integer}
+                        R::MatousekScramble) where {T <: Integer}
     # https://statweb.stanford.edu/~owen/mc/ Chapter 17.6 around equation (17.15).
     #
     M, n, d = size(origin_bits)
-    b = S.base
-    rng = S.rng
+    b = R.base
+    rng = R.rng
     m = logi(b, n)
     @assert m≥1 "We need m ≥ 1" # m=0 causes awkward corner case below.  Caller handles that case specially.
 
@@ -211,7 +211,7 @@ DigitalShift
 ```
 
 Digital shift. 
-`randomize(x, S::DigitalShift)` returns a scrambled version of `x`. 
+`randomize(x, R::DigitalShift)` returns a scrambled version of `x`. 
 
 The scramble method is Digital Shift.
 It scramble each corrdinate in base `b` as `yₖ = (xₖ + Uₖ) mod b` where `Uₖ ∼ 𝕌({0:b-1})`. 
@@ -224,13 +224,13 @@ Base.@kwdef struct DigitalShift <: ScrambleMethod
 end
 
 function randomize!(random_points::AbstractMatrix{T},
-                    points::AbstractMatrix{T}, S::DigitalShift) where {T <: Real}
+                    points::AbstractMatrix{T}, R::DigitalShift) where {T <: Real}
     @assert size(points) == size(random_points)
-    b = S.base
-    unrandomized_bits = unif2bits(points, b, M = S.M)
+    b = R.base
+    unrandomized_bits = unif2bits(points, b, M = R.M)
     random_bits = similar(unrandomized_bits)
 
-    randomize_bits!(S.rng, random_bits, unrandomized_bits, SBits)
+    randomize_bits!(R.rng, random_bits, unrandomized_bits, SBits)
     for i in CartesianIndices(random_points)
         random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
     end
@@ -242,12 +242,12 @@ In place version of Digital Shift (for the bit array). This is faster to use thi
 """
 function randomize_bits!(random_bits::AbstractArray{T, 3},
                          origin_bits::AbstractArray{T, 3},
-                         S::DigitalShift) where {T <: Integer}
+                         R::DigitalShift) where {T <: Integer}
     # https://statweb.stanford.edu/~owen/mc/ Chapter 17.6 around equation (17.15).
     #
     M, n, d = size(origin_bits)
-    b = S.base
-    rng = S.rng
+    b = R.base
+    rng = R.rng
     m = logi(b, n)
     @assert m≥1 "We need m ≥ 1" # m=0 causes awkward corner case below.  Caller handles that case specially.
 
