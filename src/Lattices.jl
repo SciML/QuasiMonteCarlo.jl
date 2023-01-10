@@ -20,7 +20,7 @@ end
 Generate a point set using a lattice rule.
 """
 Base.@kwdef @concrete struct LatticeRuleSample <: SamplingAlgorithm
-    R::RandomizationMethod
+    R::RandomizationMethod = NoRand()
 end
 
 function sample(n::Integer, d::Integer, S::LatticeRuleSample, T = Float64)
