@@ -19,15 +19,22 @@ function randomize(x, R::Shift)
     return y
 end
 
-function shift!(rng::AbstractRNG, points::AbstractMatrix)
+function randomize!(x, R::Shift)
+    shift!(R.rng, x)
+end
+
+function shift!(rng::AbstractRNG, points::AbstractMatrix{T}) where {T <: Real}
     d = size(points, 1)
-    U = zeros(d)
+    U = zeros(T, d)
     shift!(rng, points, U)
 end
 
-shift!(points::AbstractMatrix, U::AbstractVector) = shift!(Random.default_rng(), points, U)
+function shift!(points::AbstractMatrix{T}, U::AbstractVector{T}) where {T <: Real}
+    shift!(Random.default_rng(), points, U)
+end
 
-function shift!(rng::AbstractRNG, points::AbstractMatrix, U::AbstractVector)
+function shift!(rng::AbstractRNG, points::AbstractMatrix{T},
+                U::AbstractVector{T}) where {T <: Real}
     rand!(rng, U)
     for i in axes(points, 2)
         points[:, i] += U
