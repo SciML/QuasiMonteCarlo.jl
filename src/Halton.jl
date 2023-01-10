@@ -3,9 +3,11 @@
 
 Create a Halton sequence.
 """
-struct HaltonSample <: SamplingAlgorithm end
+Base.@kwdef @concrete struct HaltonSample <: DeterministicSamplingAlgorithm
+    R::RandomizationMethod = NoRand()
+end
 
-@views function sample(n::I, d::I, ::HaltonSample, T::Type = Float64) where {I <: Integer}
+@views function sample(n::I, d::I, S::HaltonSample, T::Type = Float64) where {I <: Integer}
     bases = nextprimes(one(n), d)
     n_digits = ceil.(I, log.(bases, n))
     λ = n .÷ bases .^ n_digits
@@ -13,7 +15,7 @@ struct HaltonSample <: SamplingAlgorithm end
     for i in axes(halton_seq, 1)
         halton_seq[i, :] .= _vdc(λ[i], n_digits[i], bases[i], T; n)
     end
-    return halton_seq
+    return randomize(halton_seq, S.R)
 end
 
 # @fastmath @views function vdc(n::I, base::Vector{I}, F=Float64) where I <: Integer

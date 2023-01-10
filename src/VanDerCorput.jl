@@ -10,8 +10,10 @@ interval in the first pass (the first 2 samples); then one sample in each quarte
 eighth, and so on. This creates a well-stratified sample, so long as the number of samples
 is a multiple of a power of the base.
 """
-struct VanDerCorputSample{I <: Integer} <: SamplingAlgorithm
+Base.@kwdef @concrete struct VanDerCorputSample{I <: Integer} <:
+                             DeterministicSamplingAlgorithm
     base::I
+    R::RandomizationMethod = NoRa
 end
 
 function sample(n::Integer, d::Integer, S::VanDerCorputSample, T::Type = Float64)
@@ -22,7 +24,7 @@ function sample(n::Integer, d::Integer, S::VanDerCorputSample, T::Type = Float64
     t = floor(Int, log_n)
     n_digits = ceil(Int, log_n)
     λ = n ÷ (base^t)
-    return _vdc(promote(λ, n_digits, base)..., T; n)
+    return randomize(_vdc(promote(λ, n_digits, base)..., T; n), S.R)
 end
 
 """

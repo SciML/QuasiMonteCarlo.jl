@@ -3,8 +3,11 @@ module QuasiMonteCarlo
 using Sobol, LatticeRules, Distributions, Primes, LinearAlgebra, Random
 using IntervalArithmetic, Combinatorics
 using ConcreteStructs
+using Accessors
 
 abstract type SamplingAlgorithm end
+abstract type RandomSamplingAlgorithm <: SamplingAlgorithm end
+abstract type DeterministicSamplingAlgorithm <: SamplingAlgorithm end
 abstract type RandomizationMethod end
 
 include("VanDerCorput.jl")
@@ -29,11 +32,11 @@ end
 _check_sequence(n::Integer) = @assert n>0 ZERO_SAMPLES_MESSAGE
 
 """
-    RandomSample <: SamplingAlgorithm
+    RandomSample <: RandomSamplingAlgorithm
 
 Randomly distributed random numbers.
 """
-Base.@kwdef @concrete struct RandomSample <: SamplingAlgorithm
+Base.@kwdef @concrete struct RandomSample <: RandomSamplingAlgorithm
     rng::AbstractRNG = Random.GLOBAL_RNG
 end
 
@@ -74,16 +77,6 @@ function sample(n::Integer, d::Integer, D::Distributions.Sampleable)
     return reduce(hcat, x)
 end
 
-function generate_design_matrices(n, lb, ub, sampler, num_mats = 2)
-    if n <= 0
-        throw(ZeroSamplesError())
-    end
-    @assert length(lb) == length(ub)
-    d = length(lb)
-    out = sample(n, repeat(lb, num_mats), repeat(ub, num_mats), sampler)
-    [out[(j * d + 1):((j + 1) * d), :] for j in 0:(num_mats - 1)]
-end
-
 # See https://discourse.julialang.org/t/is-there-a-dedicated-function-computing-m-int-log-b-b-m/89776/10
 function logi(b::Int, n::Int)
     m = round(Int, log(b, n))
@@ -99,11 +92,55 @@ NoRand
 No Randomization is performed on the sampled sequence.
 """
 struct NoRand <: RandomizationMethod end
-randomize(x, R::NoRand) = x
+randomize(x, S::NoRand) = x
 
 include("RandomizedQuasiMonteCarlo/shifting.jl")
 include("RandomizedQuasiMonteCarlo/net_utilities.jl")
 include("RandomizedQuasiMonteCarlo/scrambling_base_b.jl")
+
+"""
+    generate_design_matrices(n, lb, ub, sample_method, num_mats)
+    generate_design_matrices(n, d, sample_method, num_mats, T = Float64)
+
+Create num_mats QMC point set, where:
+- `n` is the number of points to sample.
+- `lb` is the lower bound for each variable. The length determines the dimensionality.
+- `ub` is the upper bound.
+- `d` is the dimensionality of the point set.
+- `sample_method` is the quasi-Monte Carlo sampling strategy. Note that any Distributions.jl
+  distribution can be used in addition to any `SamplingAlgorithm`.
+"""
+function generate_design_matrices(n, lb, ub, sampler::DeterministicSamplingAlgorithm,
+                                  num_mats = 2)
+    if n <= 0
+        throw(ZeroSamplesError())
+    end
+    @assert length(lb) == length(ub)
+
+    # Generate a vector of num_mats independent "randomized" version of the QMC sequence
+    out = generate_design_matrices(n, length(lb), sampler, sampler.R, num_mats, eltype(lb))
+
+    # Scaling
+    for j in eachindex(out)
+        out[j] = (ub .- lb) .* out[j] .+ lb
+    end
+    return out
+end
+
+function generate_design_matrices(n, d, sampler, R::NoRand, num_mats, T = Float64)
+    out = sample(n, num_mats * d, sampler, T)
+    return [out[(j * d + 1):((j + 1) * d), :] for j in 0:(num_mats - 1)]
+end
+
+function generate_design_matrices(n, lb, ub, sampler::RandomSamplingAlgorithm, num_mats = 2)
+    if n <= 0
+        throw(ZeroSamplesError())
+    end
+    @assert length(lb) == length(ub)
+    d = length(lb)
+    out = sample(n, repeat(lb, num_mats), repeat(ub, num_mats), sampler)
+    [out[(j * d + 1):((j + 1) * d), :] for j in 0:(num_mats - 1)]
+end
 
 export SamplingAlgorithm,
        GridSample,

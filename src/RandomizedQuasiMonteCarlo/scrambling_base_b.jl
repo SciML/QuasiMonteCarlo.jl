@@ -48,7 +48,7 @@ function randomize!(random_points::AbstractMatrix{T},
     unrandomized_bits = unif2bits(points, b, M = R.M)
     random_bits = similar(unrandomized_bits)
     indices = which_permutation(unrandomized_bits, b)
-    randomize_bit!(random_bits, unrandomized_bits, indices, R)
+    randomize_bits!(random_bits, unrandomized_bits, indices, R)
     for i in CartesianIndices(random_points)
         random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
     end
@@ -58,10 +58,10 @@ end
 owen_scramble_bit!(rng::AbstractRNG, random_bits::AbstractArray{<:Integer, 3}, origin_bits::AbstractArray{<:Integer, 3}, indices::AbstractArray{T, 3} where {T <: Integer}, b::Integer)
 In place version of Nested Uniform Scramble (for the bit array). This is faster to use this functions for multiple scramble of the same array.
 """
-function randomize_bit!(random_bits::AbstractArray{T, 3},
-                            origin_bits::AbstractArray{T, 3},
-                            indices::AbstractArray{F, 3},
-                            R::OwenScramble) where {T <: Integer, F <: Integer}
+function randomize_bits!(random_bits::AbstractArray{T, 3},
+                         origin_bits::AbstractArray{T, 3},
+                         indices::AbstractArray{F, 3},
+                         R::OwenScramble) where {T <: Integer, F <: Integer}
     # in place nested uniform Scramble.
     #
     m, n, d = size(indices)
@@ -150,7 +150,7 @@ function randomize!(random_points::AbstractMatrix{T},
     b = R.base
     unrandomized_bits = unif2bits(points, b, M = R.M)
     random_bits = similar(unrandomized_bits)
-    randomize_bit!(random_bits, unrandomized_bits, R)
+    randomize_bits!(random_bits, unrandomized_bits, R)
     for i in CartesianIndices(random_points)
         random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
     end
@@ -161,9 +161,9 @@ end
     matousek_scramble_bit!(rng::AbstractRNG, random_bits::AbstractArray{<:Integer, 3}, origin_bits::AbstractArray{<:Integer, 3}, b::Integer)
 In place version of Linear Matrix Scramble (for the bit array). This is faster to use this functions for multiple scramble of the same array.
 """
-function randomize_bit!(random_bits::AbstractArray{T, 3},
-                        origin_bits::AbstractArray{T, 3},
-                        R::MatousekScramble) where {T <: Integer}
+function randomize_bits!(random_bits::AbstractArray{T, 3},
+                         origin_bits::AbstractArray{T, 3},
+                         R::MatousekScramble) where {T <: Integer}
     # https://statweb.stanford.edu/~owen/mc/ Chapter 17.6 around equation (17.15).
     #
     M, n, d = size(origin_bits)
@@ -230,7 +230,7 @@ function randomize!(random_points::AbstractMatrix{T},
     unrandomized_bits = unif2bits(points, b, M = R.M)
     random_bits = similar(unrandomized_bits)
 
-    randomize_bits!(R.rng, random_bits, unrandomized_bits, SBits)
+    randomize_bits!(random_bits, unrandomized_bits, R)
     for i in CartesianIndices(random_points)
         random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
     end
@@ -264,4 +264,59 @@ function randomize_bits!(random_bits::AbstractArray{T, 3},
     if M > m
         random_bits[(m + 1):M, :, :] = rand(rng, 0:(b - 1), n * d * (M - m))
     end
+end
+
+function generate_design_matrices(n, d, sampler, R::ScrambleMethod, num_mats, T = Float64)
+
+    # Generate unrandomized sequence
+    no_rand_sampler = @set sampler.R = NoRand()
+    points = permutedims(sample(n, d, no_rand_sampler, T))
+
+    b = R.base
+    unrandomized_bits = unif2bits(points, b, M = R.M)
+    out_bit = [similar(unrandomized_bits) for j in 1:num_mats]
+
+    # Core of the method, the unrandomized_bits are scrambled several times independtly
+    for j in 1:num_mats
+        randomize_bits!(out_bit[j], unrandomized_bits, R)
+    end
+
+    # Conversion back to point∈[0,1)ᵈ
+    random_points = [similar(points) for j in 1:num_mats]
+    for j in 1:num_mats
+        for i in CartesianIndices(points)
+            random_points[j][i] = bits2unif(T, @view(out_bit[j][:, i]), b)
+        end
+    end
+
+    return permutedims.(random_points)
+end
+
+function generate_design_matrices(n, d, sampler, R::OwenScramble, num_mats, T = Float64)
+
+    # Generate unrandomized sequence
+    no_rand_sampler = @set sampler.R = NoRand()
+    points = permutedims(sample(n, d, no_rand_sampler, T))
+
+    # Conversion from point∈[0,1)ᵈ to b-ary decomposition 
+    b = R.base
+    unrandomized_bits = unif2bits(points, b, M = R.M)
+    out_bit = [similar(unrandomized_bits) for j in 1:num_mats]
+    # OwenScramble the indices argument 
+    indices = which_permutation(unrandomized_bits, b)
+
+    # Core of the method, the unrandomized_bits are scrambled several times independtly
+    for j in 1:num_mats
+        randomize_bits!(out_bit[j], unrandomized_bits, indices, R)
+    end
+
+    # Conversion back to point∈[0,1)ᵈ
+    random_points = [similar(points) for j in 1:num_mats]
+    for j in 1:num_mats
+        for i in CartesianIndices(points)
+            random_points[j][i] = bits2unif(T, @view(out_bit[j][:, i]), b)
+        end
+    end
+
+    return permutedims.(random_points)
 end

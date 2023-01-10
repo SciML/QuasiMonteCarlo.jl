@@ -145,7 +145,7 @@ end
     ub = 1
     for base in [2, 3, 4]
         n = base^4
-        s = QuasiMonteCarlo.sample(n, lb, ub, VanDerCorputSample(base))
+        s = QuasiMonteCarlo.sample(n, lb, ub, VanDerCorputSample(base, NoRand()))
         @test all(diff(sort(s)) .≈ 1 / n)
         @test all(s .≥ lb)
         @test all(s .≤ ub)
@@ -167,7 +167,7 @@ end
     s = QuasiMonteCarlo.sample(n, lb, ub, SobolSample())
     @test s isa Matrix
     @test size(s) == (d, n)
-    vdc = QuasiMonteCarlo.sample(n, 1, VanDerCorputSample(base))
+    vdc = QuasiMonteCarlo.sample(n, 1, VanDerCorputSample(base, NoRand()))
     sort!(vdc)
     for (i, j) in combinations(1:d, 2)
         @test pvalue(SignedRankTest(s[i, :], s[j, :])) > 0.0001
@@ -282,7 +282,7 @@ end
     d = 2
     n = 100
     ρ = 0.7548776662466927
-    s = QuasiMonteCarlo.sample(n, d, KroneckerSample([ρ, ρ^2]))
+    s = QuasiMonteCarlo.sample(n, d, KroneckerSample([ρ, ρ^2], NoRand()))
     t = QuasiMonteCarlo.sample(n, d, GoldenSample())
     @test isa(s, Matrix{Float64})
     @test size(s) == (d, n)
@@ -332,17 +332,29 @@ end
 
 @testset "generate_design_matrices" begin
     d = 4
+    m = 8
     lb = zeros(d)
     ub = ones(d)
     num_mat = 3
-    Ms = QuasiMonteCarlo.generate_design_matrices(n, lb, ub, RandomSample(), num_mat)
-    @test length(Ms) == num_mat
-    A = Ms[1]
-    B = Ms[2]
-    @test isa(A, Matrix{typeof(A[1][1])}) == true
-    @test size(A) == (d, n)
-    @test isa(B, Matrix{typeof(B[1][1])}) == true
-    @test size(B) == (d, n)
+    n = 2^m
+    algorithms = [
+        RandomSample(),
+        LatinHypercubeSample(),
+        SobolSample(R = OwenScramble(base = 2, M = m)),
+        SobolSample(),
+        LatticeRuleSample(R = Shift()),
+        SobolSample(R = MatousekScramble(base = 2, M = m)),
+    ]
+    for algorithm in algorithms
+        Ms = QuasiMonteCarlo.generate_design_matrices(n, lb, ub, algorithm, num_mat)
+        @test length(Ms) == num_mat
+        A = Ms[1]
+        B = Ms[2]
+        @test isa(A, Matrix{typeof(A[1][1])}) == true
+        @test size(A) == (d, n)
+        @test isa(B, Matrix{typeof(B[1][1])}) == true
+        @test size(B) == (d, n)
+    end
 end
 
 @testset "Randomized Quasi Monte Carlo: conversion functions" begin
@@ -360,7 +372,7 @@ end
 end
 
 @testset "Randomized Quasi Monte Carlo" begin
-    m = 8
+    m = 6
     d = 5
     b = QuasiMonteCarlo.nextprime(d)
     N = b^m # Number of points

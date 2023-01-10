@@ -40,11 +40,11 @@ References:
 Faure, H. (1982). Discrepance de suites associees a un systeme de numeration (en dimension s). *Acta Arith.*, 41, 337-351.
 Owen, A. B. (1997). Monte Carlo variance of scrambled net quadrature. *SIAM Journal on Numerical Analysis*, 34(5), 1884-1910.
 """
-Base.@kwdef struct FaureSample <: SamplingAlgorithm
+Base.@kwdef struct FaureSample <: DeterministicSamplingAlgorithm
     R::RandomizationMethod = NoRand()
 end
 
-@fastmath function sample(n::Integer, dimension::Integer, F::FaureSample, T = Float64;
+@fastmath function sample(n::Integer, dimension::Integer, S::FaureSample, T = Float64;
                           skipchecks = false)
     base = nextprime(dimension)
     n_digits = ceil(Int, log(base, n))
@@ -56,7 +56,7 @@ end
                             "Try $n or $(n+base^power) instead."))
     end
 
-    return randomize(_faure_samples(n, n_digits, dimension, T), F.R)
+    return randomize(_faure_samples(n, n_digits, dimension, T), S.R)
 end
 
 @fastmath @views function _faure_samples(n_samples::I, n_digits::I, dimension::I,
