@@ -20,9 +20,10 @@ end
 Generate a point set using a lattice rule.
 """
 Base.@kwdef @concrete struct LatticeRuleSample <: SamplingAlgorithm
+    R::RandomizationMethod
 end
 
 function sample(n::Integer, d::Integer, S::LatticeRuleSample, T = Float64)
     lat = LatticeRules.LatticeRule(d)
-    return reduce(hcat, lat[0:(n - 1)])
+    return randomize(reduce(hcat, lat[0:(n - 1)]), S.R)
 end
