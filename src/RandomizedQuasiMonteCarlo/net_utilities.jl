@@ -25,21 +25,12 @@ function unif2bits(y::Real, b::Integer; pad = 32)
     return bits
 end
 
-check_zero(a::Rational; kwargs...) = a == 0
-#! isequal(0.18518518518518515... -1/3^2-2/3^3 , 0) Should be true but is not! It fouls the binary expansion! Hence the isapprox with a hand tuned tolerence
-check_zero(a::AbstractFloat; atol = 3e-16) = isapprox(a, 0, atol = atol)
-
+# Inspired by digits!(a::AbstractVector{T}, n::Integer; base) where T<:Integer in Base at intfuncs.jl:926
 function unif2bits!(bits::AbstractVector{<:Integer}, y, b::Integer; kwargs...)
-    bits .= 0
-    for j in eachindex(bits), bb in (b - 1):-1:1
-        a = y - bb // b^j
-        if check_zero(a; kwargs...)
-            bits[j] = bb
-            break # it breaks from the nested loop (see here)[https://stackoverflow.com/questions/39796234/how-to-break-out-of-nested-for-loops-in-julia]
-        elseif a > 0
-            bits[j] = bb
-            y = a
-        end
+    invbase = inv(b)
+    for i in eachindex(bits)
+        r, y = divrem(y, invbase^i)
+        bits[i] = r
     end
 end
 
