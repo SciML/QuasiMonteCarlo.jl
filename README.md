@@ -114,9 +114,9 @@ Note that this feature is currently experimental and is thus subject to interfac
 non-breaking (minor) releases.
 
 Given a matrix `x` of size `d×n` and `xᵢₛ∈[0,1]ᵈ` one obtain a randomized version `y` using one the following methods
-* `owen_scramble(x, b; M = M)` where `b` is the base used to scramble and `M` the number of bits in base `b` used to represent digits.
-* `matousek_scramble(x, base; M = M)`.
-* `digital_shift(x, base; M = M)`.
+* `owen_scramble(x, b; pad = pad)` where `b` is the base used to scramble and `pad` the number of bits in base `b` used to represent digits.
+* `matousek_scramble(x, base; pad = pad)`.
+* `digital_shift(x, base; pad = pad)`.
 * `shift(x)`.
 
 All these functions guarantee that the resulting array will have its components uniformly distributed `yᵢₛ∼𝐔([0,1]ᵈ)` (but not independent).
@@ -130,15 +130,15 @@ Randomization of a Faure sequence with various methods.
     d = 3
     b = QuasiMonteCarlo.nextprime(d)
     N = b^m # Number of points
-    M = m
+    pad = m
 
     # Unrandomized low discrepency sequence
     x_faure = QuasiMonteCarlo.sample(N, d, FaureSample())
 
     # Randomized version
-    x_nus = randomize(x_faure, OwenScramble(base = b, M = M))
-    x_lms = randomize(x_faure, MatousekScramble(base = b, M = M))
-    x_digital_shift = randomize(x_faure, DigitalShift(base = b, M = M))
+    x_nus = randomize(x_faure, OwenScramble(base = b, pad = pad))
+    x_lms = randomize(x_faure, MatousekScramble(base = b, pad = pad))
+    x_digital_shift = randomize(x_faure, DigitalShift(base = b, pad = pad))
     x_shift = randomize(x_faure, Shift())
     x_uniform = rand(d, N) # plain i.i.d. uniform
 ```

@@ -340,10 +340,10 @@ end
     algorithms = [
         RandomSample(),
         LatinHypercubeSample(),
-        SobolSample(R = OwenScramble(base = 2, M = m)),
+        SobolSample(R = OwenScramble(base = 2, pad = m)),
         SobolSample(),
         LatticeRuleSample(R = Shift()),
-        SobolSample(R = MatousekScramble(base = 2, M = m)),
+        SobolSample(R = MatousekScramble(base = 2, pad = m)),
     ]
     for algorithm in algorithms
         Ms = QuasiMonteCarlo.generate_design_matrices(n, lb, ub, algorithm, num_mat)
@@ -366,7 +366,7 @@ end
 
     b = 3
     x = (0 // 27):(1 // 27):(26 // 27)
-    bits = QuasiMonteCarlo.unif2bits(x, b, M = 8)
+    bits = QuasiMonteCarlo.unif2bits(x, b, pad = 8)
     y = [QuasiMonteCarlo.bits2unif(Rational, s, b) for s in eachcol(bits)]
     @test x == y
 end
@@ -376,19 +376,19 @@ end
     d = 5
     b = QuasiMonteCarlo.nextprime(d)
     N = b^m # Number of points
-    M = 2m
+    pad = 2m
 
     # Unrandomized low discrepency sequence
     u_faure = QuasiMonteCarlo.sample(N, d, FaureSample())
 
     # Randomized version
     @test u_faure == randomize(u_faure, NoRand())
-    u_nus = randomize(u_faure, OwenScramble(base = b, M = M))
-    u_lms = randomize(u_faure, MatousekScramble(base = b, M = M))
-    u_digital_shift = randomize(u_faure, DigitalShift(base = b, M = M))
+    u_nus = randomize(u_faure, OwenScramble(base = b, pad = pad))
+    u_lms = randomize(u_faure, MatousekScramble(base = b, pad = pad))
+    u_digital_shift = randomize(u_faure, DigitalShift(base = b, pad = pad))
     u_shift = randomize(u_faure, Shift())
 
-    u_nus = QuasiMonteCarlo.sample(N, d, FaureSample(OwenScramble(base = b, M = M)))
+    u_nus = QuasiMonteCarlo.sample(N, d, FaureSample(OwenScramble(base = b, pad = pad)))
 end
 
 @testset "Randomized Quasi Monte Carlo Rational Scrambling" begin
@@ -396,14 +396,14 @@ end
     d = 2
     b = QuasiMonteCarlo.nextprime(d)
     N = b^m # Number of points
-    M = m
+    pad = m
 
     # Unrandomized low discrepency sequence
     u_sobol = Rational.(QuasiMonteCarlo.sample(N, d, SobolSample()))
     # Randomized version
-    u_nus = randomize(u_sobol, OwenScramble(base = b, M = M))
-    u_lms = randomize(u_sobol, MatousekScramble(base = b, M = M))
-    u_digital_shift = randomize(u_sobol, DigitalShift(base = b, M = M))
+    u_nus = randomize(u_sobol, OwenScramble(base = b, pad = pad))
+    u_lms = randomize(u_sobol, MatousekScramble(base = b, pad = pad))
+    u_digital_shift = randomize(u_sobol, DigitalShift(base = b, pad = pad))
     @test eltype(u_nus) <: Rational
     @test eltype(u_lms) <: Rational
     @test eltype(u_digital_shift) <: Rational
@@ -423,9 +423,9 @@ end
     λ = 1
     v = [
         NoRand(),
-        OwenScramble(base = base, M = m),
-        MatousekScramble(base = base, M = m),
-        DigitalShift(base = base, M = m),
+        OwenScramble(base = base, pad = m),
+        MatousekScramble(base = base, pad = m),
+        DigitalShift(base = base, pad = m),
     ]
     pass = Array{Bool}(undef, length(v), m)
     for (s, t) in enumerate(t_sobol[1:m])
@@ -441,7 +441,7 @@ end
 @testset "Faure sequence are (0,m,s)-net even after scrambling" begin
     # Faure sequence are exactly (t=0, s)-sequence in base b=nextprime(s)
     m = 4
-    M = m
+    pad = m
     λ = 1
     t = 0
 
@@ -450,12 +450,12 @@ end
         net = Rational{BigInt}.(QuasiMonteCarlo.sample(nextprime(s)^m, s, FaureSample())) # Convert the sequence in Rational{BigInt} (needed to scramble)
         pass[1, s] = istmsnet(randomize(net, NoRand()); λ, t, m, s,
                               base = nextprime(s))
-        pass[2, s] = istmsnet(randomize(net, OwenScramble(base = nextprime(s), M = m));
+        pass[2, s] = istmsnet(randomize(net, OwenScramble(base = nextprime(s), pad = m));
                               λ, t, m, s, base = nextprime(s))
         pass[3, s] = istmsnet(randomize(net,
-                                        MatousekScramble(base = nextprime(s), M = m));
+                                        MatousekScramble(base = nextprime(s), pad = m));
                               λ, t, m, s, base = nextprime(s))
-        pass[4, s] = istmsnet(randomize(net, DigitalShift(base = nextprime(s), M = m));
+        pass[4, s] = istmsnet(randomize(net, DigitalShift(base = nextprime(s), pad = m));
                               λ, t, m, s, base = nextprime(s))
     end
     @test all(pass)

@@ -1,26 +1,26 @@
 """
-    unif2bits(x<:AbstractArray, b::Integer; M=32)
+    unif2bits(x<:AbstractArray, b::Integer; pad=32)
 Return the b-ary decomposition of all element y of an array y = ∑ₖ yₖ/bᵏ a number yₖ∈[0,1[ -> [y₁, ⋯, yₘ] 
 """
-function unif2bits(x::AbstractArray, b::Integer; M = 32)
-    bits = zeros(Int, M, size(x)...)
+function unif2bits(x::AbstractArray, b::Integer; pad = 32)
+    bits = zeros(Int, pad, size(x)...)
     unif2bits!(bits, x, b)
     return bits
 end
 
 function unif2bits!(bits::AbstractArray, x::AbstractArray, b::Integer)
-    @assert all([size(bits, d + 1) == size(x, d) for d in ndims(x)]) "Bit array of size $(size(bits)) instead of (M, $(size(x)))"
+    @assert all([size(bits, d + 1) == size(x, d) for d in ndims(x)]) "Bit array of size $(size(bits)) instead of (pad, $(size(x)))"
     for i in CartesianIndices(x)
         unif2bits!(@view(bits[:, i]), x[i], b)
     end
 end
 
 """
-    unif2bits(y<:Real, b::Integer; M=32)
+    unif2bits(y<:Real, b::Integer; pad=32)
 Return the b-ary decomposition y = ∑ₖ yₖ/bᵏ a number y∈[0,1[ -> [y₁, ⋯, yₘ] 
 """
-function unif2bits(y::Real, b::Integer; M = 32)
-    bits = zeros(Int, M)
+function unif2bits(y::Real, b::Integer; pad = 32)
+    bits = zeros(Int, pad)
     unif2bits!(bits, y, b)
     return bits
 end
@@ -49,7 +49,7 @@ end
 """
     bits2unif(::Type{T}, bits::AbstractVector{<:Integer},
                    b::Integer)
-Convert a vector of M "bits" in base b into a number y∈[0,1[.
+Convert a vector of pad "bits" in base b into a number y∈[0,1[.
 """
 function bits2unif(::Type{T}, bits::AbstractVector{<:Integer},
                    b::Integer) where {T <: Rational}
@@ -85,7 +85,7 @@ end
 #?   13.113 ns (0 allocations: 0 bytes)  
 """
     bits2int(bit::AbstractMatrix{<:Integer}, b::Integer)
-Convert a vector of M "bits" in base b into an integer.
+Convert a vector of pad "bits" in base b into an integer.
 """
 function bits2int(bit::AbstractVector, b::Integer)
     m = length(bit)
@@ -97,7 +97,7 @@ function bits2int(bit::AbstractVector, b::Integer)
 end
 
 ####################
-### T, M, S NETS ###
+### T, pad, S NETS ###
 ####################
 
 """
