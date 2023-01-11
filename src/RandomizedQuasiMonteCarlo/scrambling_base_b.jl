@@ -55,8 +55,9 @@ function randomize!(random_points::AbstractMatrix{T},
 end
 
 """ 
-owen_scramble_bit!(rng::AbstractRNG, random_bits::AbstractArray{<:Integer, 3}, origin_bits::AbstractArray{<:Integer, 3}, indices::AbstractArray{T, 3} where {T <: Integer}, b::Integer)
-In place version of Nested Uniform Scramble (for the bit array). This is faster to use this functions for multiple scramble of the same array.
+    randomize_bits!(random_bits::AbstractArray{T, 3}, origin_bits::AbstractArray{T, 3}, R::ScrambleMethod) where {T <: Integer}
+In place version of a `OwenScramble` (Nested Uniform Scramble) for the "bit" array. 
+This is faster to use this functions for multiple scramble of the same array (use `generate_design_matrices`).
 """
 function randomize_bits!(random_bits::AbstractArray{T, 3},
                          origin_bits::AbstractArray{T, 3},
@@ -158,8 +159,9 @@ end
 
 #? Weird it should be faster than nested uniform Scramble but here it is not at all.-> look for other implementation and paper
 """ 
-    matousek_scramble_bit!(rng::AbstractRNG, random_bits::AbstractArray{<:Integer, 3}, origin_bits::AbstractArray{<:Integer, 3}, b::Integer)
-In place version of Linear Matrix Scramble (for the bit array). This is faster to use this functions for multiple scramble of the same array.
+    randomize_bits!(random_bits::AbstractArray{T, 3}, origin_bits::AbstractArray{T, 3}, R::ScrambleMethod) where {T <: Integer}
+In place version of a ScrambleMethod (`MatousekScramble` or `DigitalShift`) for the "bit" array. 
+This is faster to use this functions for multiple scramble of the same array (use `generate_design_matrices`).
 """
 function randomize_bits!(random_bits::AbstractArray{T, 3},
                          origin_bits::AbstractArray{T, 3},
@@ -236,10 +238,6 @@ function randomize!(random_points::AbstractMatrix{T},
     end
 end
 
-""" 
-    digital_shift_bit!(rng::AbstractRNG, random_bits::AbstractArray{<:Integer, 3}, origin_bits::AbstractArray{<:Integer, 3}, b::Integer)
-In place version of Digital Shift (for the bit array). This is faster to use this functions for multiple scramble of the same array.
-"""
 function randomize_bits!(random_bits::AbstractArray{T, 3},
                          origin_bits::AbstractArray{T, 3},
                          R::DigitalShift) where {T <: Integer}
