@@ -86,30 +86,28 @@ end
 
 """
 ```julia
-NoRand
+generate_design_matrices(n, lb, ub, sample_method, num_mats)
 ```
 
-No Randomization is performed on the sampled sequence.
-"""
-struct NoRand <: RandomizationMethod end
-randomize(x, S::NoRand) = x
-
-include("RandomizedQuasiMonteCarlo/shifting.jl")
-include("RandomizedQuasiMonteCarlo/net_utilities.jl")
-include("RandomizedQuasiMonteCarlo/scrambling_base_b.jl")
-
-"""
-    generate_design_matrices(n, lb, ub, sample_method, num_mats)
-    generate_design_matrices(n, d, sample_method, num_mats, T = Float64)
-
-Create num_mats QMC point set, where:
+Create `num_mats` matrices each containing a QMC point set, where:
 - `n` is the number of points to sample.
 - `lb` is the lower bound for each variable. The length determines the dimensionality.
 - `ub` is the upper bound.
 - `d` is the dimensionality of the point set.
 - `sample_method` is the quasi-Monte Carlo sampling strategy. Note that any Distributions.jl
   distribution can be used in addition to any `SamplingAlgorithm`.
+- You can specify a `RandomizationMethod` for `sample_method<:DeterministicSamplingAlgorithm`
 """
+function generate_design_matrices(n, lb, ub, sampler::RandomSamplingAlgorithm, num_mats = 2)
+    if n <= 0
+        throw(ZeroSamplesError())
+    end
+    @assert length(lb) == length(ub)
+    d = length(lb)
+    out = sample(n, repeat(lb, num_mats), repeat(ub, num_mats), sampler)
+    [out[(j * d + 1):((j + 1) * d), :] for j in 0:(num_mats - 1)]
+end
+
 function generate_design_matrices(n, lb, ub, sampler::DeterministicSamplingAlgorithm,
                                   num_mats = 2)
     if n <= 0
@@ -127,20 +125,29 @@ function generate_design_matrices(n, lb, ub, sampler::DeterministicSamplingAlgor
     return out
 end
 
+"""
+```julia
+NoRand
+```
+
+No Randomization is performed on the sampled sequence.
+"""
+struct NoRand <: RandomizationMethod end
+randomize(x, S::NoRand) = x
+
+"""
+    generate_design_matrices(n, d, sampler, R::NoRand, num_mats, T = Float64)
+`R = NoRand()` produces `num_mats` matrices each containing a different deterministic point set in `[0, 1)ᵈ`.
+Note that this is an ad hoc way to produce different `generate_design_matrices` as it create a deterministic point in dimension `d × num_mats` and split it in `num_mats` point set in dimension `d`.
+"""
 function generate_design_matrices(n, d, sampler, R::NoRand, num_mats, T = Float64)
     out = sample(n, num_mats * d, sampler, T)
     return [out[(j * d + 1):((j + 1) * d), :] for j in 0:(num_mats - 1)]
 end
 
-function generate_design_matrices(n, lb, ub, sampler::RandomSamplingAlgorithm, num_mats = 2)
-    if n <= 0
-        throw(ZeroSamplesError())
-    end
-    @assert length(lb) == length(ub)
-    d = length(lb)
-    out = sample(n, repeat(lb, num_mats), repeat(ub, num_mats), sampler)
-    [out[(j * d + 1):((j + 1) * d), :] for j in 0:(num_mats - 1)]
-end
+include("RandomizedQuasiMonteCarlo/shifting.jl")
+include("RandomizedQuasiMonteCarlo/net_utilities.jl")
+include("RandomizedQuasiMonteCarlo/scrambling_base_b.jl")
 
 export SamplingAlgorithm,
        GridSample,
