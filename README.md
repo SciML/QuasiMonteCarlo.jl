@@ -152,7 +152,6 @@ default(fontfamily="Computer Modern", linewidth=1, label=nothing, grid=true, fra
 Plot the resulting sequences along dimensions `1` and `3`.
 
 ```julia
-begin
     d1 = 1
     d2 = 3
     sequences = [x_uniform, x_faure, x_shift, x_digital_shift, x_lms, x_nus]
@@ -171,7 +170,6 @@ begin
         vline!(p[i], range(0, 1, step=1 / 2), c=:gray, alpha=0.8)
     end
     plot(p..., size=(1500, 900))
-end
 ```
 
 ![Different randomize methods of the same initial set of points](img/various_randomization.svg)
