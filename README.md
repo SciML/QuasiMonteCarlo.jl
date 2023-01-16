@@ -72,16 +72,21 @@ all sampled from the same low-discrepancy sequence.
 
 ## Available Sampling Methods
 
-- `GridSample(dx)` where the grid is given by `lb:dx[i]:ub` in the ith direction.
-- `UniformSample` for uniformly distributed random numbers.
-- `SobolSample` for the Sobol sequence.
-- `LatinHypercubeSample` for a Latin Hypercube.
-- `LatticeRuleSample` for a randomly-shifted rank-1 lattice rule.
-- `HaltonSample(base)` where `base[i]` is the base in the ith direction.
-- `GoldenSample` for a Golden Ratio sequence.
-- `KroneckerSample(alpha, s0)` for a Kronecker sequence, where alpha is an length-d vector of irrational numbers (often sqrt(d)) and s0 is a length-d seed vector (often 0).
-- `SectionSample(x0, sampler)` where `sampler` is any sampler above and `x0` is a vector of either `NaN` for a free dimension or some scalar for a constrained dimension.
-- Additionally, any `Distribution` can be used, and it will be sampled from.
+Sampling methods `SamplingAlgorithm` are divided into two subtypes
+
+- `DeterministicSamplingAlgorithm`
+  - `GridSample(dx)` where the grid is given by `lb:dx[i]:ub` in the ith direction.
+  - `SobolSample` for the Sobol' sequence.
+  - `FaureSample` for the Faure sequence.
+  - `LatticeRuleSample` for a randomly-shifted rank-1 lattice rule.
+  - `HaltonSample(base)` where `base[i]` is the base in the ith direction.
+  - `GoldenSample` for a Golden Ratio sequence.
+  - `KroneckerSample(alpha, s0)` for a Kronecker sequence, where alpha is an length-`d` vector of irrational numbers (often `sqrt(d`)) and `s0` is a length-`d` seed vector (often `0`).
+- `RandomSamplingAlgorithm`
+  - `UniformSample` for uniformly distributed random numbers.
+  - `LatinHypercubeSample` for a Latin Hypercube.
+  - Additionally, any `Distribution` can be used, and it will be sampled from.
+  <!-- - `SectionSample(x0, sampler)` where `sampler` is any sampler above and `x0` is a vector of either `NaN` for a free dimension or some scalar for a constrained dimension. Not currently supported. -->
 
 ## Adding a new sampling method
 
@@ -132,7 +137,6 @@ All these randomization methods guarantee that the resulting array will have its
 
 For numerous independent randomization, use `generate_design_matrices(n, d, ::DeterministicSamplingAlgorithm), ::RandomizationMethod, num_mats)` where `num_mats` is the number of independent `X` generated.
 
-
 ### Example
 
 Randomization of a Faure sequence with various methods.
@@ -166,7 +170,7 @@ Plot the resulting sequences along dimensions `1` and `3`.
 
 ```julia
     d1 = 1
-    d2 = 3
+    d2 = 3 # you can try every combination of dimension (d1, d2)
     sequences = [x_uniform, x_faure, x_shift, x_digital_shift, x_lms, x_nus]
     names = ["Uniform", "Faure (deterministic)", "Shift", "Digital Shift", "Matousek Scramble", "Owen Scramble"]
     p = [plot(thickness_scaling=1.5, aspect_ratio=:equal) for i in sequences]
@@ -194,7 +198,7 @@ You must see one point per rectangle of volume $1/b^m$. Points on the "left" bor
 ```julia
 begin
     d1 = 1 
-    d2 = 3 # you can try every combination of dimension
+    d2 = 3 # you can try every combination of dimension (d1, d2)
     x = x_nus # Owen Scramble, you can try x_lms and x_digital_shift
     p = [plot(thickness_scaling=1.5, aspect_ratio=:equal) for i in 0:m]
     for i in 0:m
