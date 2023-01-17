@@ -116,24 +116,19 @@ end
 ## Randomization of QMC sequences
 
 Most of the previous methods are deterministic i.e. `sample(n, d, Sampler()::DeterministicSamplingAlgorithm)` always produces the same sequence $X = (X_1, \dots, X_n)$.
-A randomized QMC method must
+The API to randomize sequence is either 
+- Directly use `QuasiMonteCarlo.sample(n, d, DeterministicSamplingAlgorithm(R = RandomizationMethod()))` or `sample(n, lb, up, DeterministicSamplingAlgorithm(R = RandomizationMethod()))`
+- Or given any matrix $X$ ($d\times n$) of $n$ points all in dimension $d$ in $[0,1]^d$ one can do `randomize(x, ::RandomizationMethod())`
 
-1. Preserve the QMC (low discrepancy) properties of $X$.
-2. Have $X_i\sim \mathbb{U}([0,1]^d)$ for each $i\in \{1,\cdots, n\}$.
+There are the following randomization methods:
 
-This randomized version can be used to obtain confidence interval or sensitivity analysis for example.
-
-In this package, given a sample matrix `X` of size $d\times n$ randomized version are obtained using the function `randomize(x, ::RandomizationMethod)` where the following methods have been implemented:
-
-- Scrambling methods `ScramblingMethods(base, pad, rng)` are well suited for $(t,m,d)$-nets. `base` is the base used to scramble and `pad` the number of bits in `b`-ary decomposition i.e. $y \simeq \sum_{k=1}^{\texttt{pad}} y_k/\texttt{base}^k $.
+- Scrambling methods `ScramblingMethods(base, pad, rng)` where `base` is the base used to scramble and `pad` the number of bits in `b`-ary decomposition.
 `pad` is generally chosen as $\gtrsim \log_b(n)$.
 The implemented `ScramblingMethods` are
-  - `DigitalShift` the simplest and faster method. For a point $x\in [0,1]^d$ it does $y_k = (x_k + U_k) \mod b$ where $U_k ∼ \mathbb{U}(\{0, \cdots, b-1\})$
-  - `MatousekScramble` a.k.a Linear Matrix Scramble is what people use in practice. Indeed, the observed performances are similar to `OwenScramble` for a lesser numerical cost.
+  - `DigitalShift` 
+  - `MatousekScramble` a.k.a Linear Matrix Scramble.
   - `OwenScramble` a.k.a Nested Uniform Scramble is the most understood theoretically but is more costly to operate.
-- `Shift(rng)` a.k.a. Cranley Patterson Rotation. It is by far the fastest method, it is used in `LatticeRuleScramble` for example.
-
-All these randomization methods guarantee that the resulting array will have its components uniformly distributed (but not independent).
+- `Shift(rng)` a.k.a. Cranley Patterson Rotation. 
 
 For numerous independent randomization, use `generate_design_matrices(n, d, ::DeterministicSamplingAlgorithm), ::RandomizationMethod, num_mats)` where `num_mats` is the number of independent `X` generated.
 
@@ -153,7 +148,7 @@ Randomization of a Faure sequence with various methods.
     x_faure = QuasiMonteCarlo.sample(N, d, FaureSample())
 
     # Randomized version
-    x_nus = randomize(x_faure, OwenScramble(base = b, pad = pad))
+    x_nus = randomize(x_faure, OwenScramble(base = b, pad = pad)) # equivalent to sample(N, d, FaureSample(R = OwenScramble(base = b, pad = pad)))
     x_lms = randomize(x_faure, MatousekScramble(base = b, pad = pad))
     x_digital_shift = randomize(x_faure, DigitalShift(base = b, pad = pad))
     x_shift = randomize(x_faure, Shift())
@@ -190,31 +185,3 @@ Plot the resulting sequences along dimensions `1` and `3`.
 ```
 
 ![Different randomize methods of the same initial set of points](img/various_randomization.svg)
-
-Faure nets and scrambled versions of Faure nets are digital $(t,m,d)$-net ([see this nice book by A. Owen](https://artowen.su.domains/mc/qmcstuff.pdf)). It basically means that they have strong equipartition properties.
-Here we can (visually) verify that with Nested Uniform Scrambling (it also works with Linear Matrix Scrambling and Digital Shift).
-You must see one point per rectangle of volume $1/b^m$. Points on the "left" border of rectangles are included while those on the "right" are excluded.
-
-```julia
-begin
-    d1 = 1 
-    d2 = 3 # you can try every combination of dimension (d1, d2)
-    x = x_nus # Owen Scramble, you can try x_lms and x_digital_shift
-    p = [plot(thickness_scaling=1.5, aspect_ratio=:equal) for i in 0:m]
-    for i in 0:m
-        j = m - i
-        xᵢ = range(0, 1, step=1 / b^(i))
-        xⱼ = range(0, 1, step=1 / b^(j))
-        scatter!(p[i+1], x[d1, :], x[d2, :], ms=2, c=1, grid=false)
-        xlims!(p[i+1], (0, 1.01))
-        ylims!(p[i+1], (0, 1.01))
-        yticks!(p[i+1], [0, 1])
-        xticks!(p[i+1], [0, 1])
-        hline!(p[i+1], xᵢ, c=:gray, alpha=0.2)
-        vline!(p[i+1], xⱼ, c=:gray, alpha=0.2)
-    end
-    plot(p..., size=(1500, 900))
-end
-```
-
-![All the different elementary rectangle contain only one points](img/equidistribution.svg)
