@@ -2,8 +2,7 @@ module QuasiMonteCarlo
 
 using Sobol, LatticeRules, Distributions, Primes, LinearAlgebra, Random
 using IntervalArithmetic, Combinatorics
-using ConcreteStructs
-using Accessors
+using ConcreteStructs, Accessors
 
 abstract type SamplingAlgorithm end
 abstract type RandomSamplingAlgorithm <: SamplingAlgorithm end
@@ -98,17 +97,7 @@ Create `num_mats` matrices each containing a QMC point set, where:
   distribution can be used in addition to any `SamplingAlgorithm`.
 - You can specify a `RandomizationMethod` for `sample_method<:DeterministicSamplingAlgorithm`
 """
-function generate_design_matrices(n, lb, ub, sampler::RandomSamplingAlgorithm, num_mats = 2)
-    if n <= 0
-        throw(ZeroSamplesError())
-    end
-    @assert length(lb) == length(ub)
-    d = length(lb)
-    out = sample(n, repeat(lb, num_mats), repeat(ub, num_mats), sampler)
-    [out[(j * d + 1):((j + 1) * d), :] for j in 0:(num_mats - 1)]
-end
-
-function generate_design_matrices(n, lb, ub, sampler::DeterministicSamplingAlgorithm,
+function generate_design_matrices(n, lb, ub, sampler,
                                   num_mats = 2)
     if n <= 0
         throw(ZeroSamplesError())
@@ -116,7 +105,7 @@ function generate_design_matrices(n, lb, ub, sampler::DeterministicSamplingAlgor
     @assert length(lb) == length(ub)
 
     # Generate a vector of num_mats independent "randomized" version of the QMC sequence
-    out = generate_design_matrices(n, length(lb), sampler, sampler.R, num_mats, eltype(lb))
+    out = generate_design_matrices(n, length(lb), sampler, num_mats, eltype(lb))
 
     # Scaling
     for j in eachindex(out)
@@ -125,6 +114,15 @@ function generate_design_matrices(n, lb, ub, sampler::DeterministicSamplingAlgor
     return out
 end
 
+function generate_design_matrices(n, d, sampler::DeterministicSamplingAlgorithm, num_mats,
+                                  T = Float64)
+    return generate_design_matrices(n, d, sampler, sampler.R, num_mats, T)
+end
+
+function generate_design_matrices(n, d, sampler::RandomSamplingAlgorithm, num_mats,
+                                  T = Float64)
+    return [sample(n, d, sampler, T) for j in 1:num_mats]
+end
 """
 ```julia
 NoRand
@@ -138,7 +136,7 @@ randomize(x, S::NoRand) = x
 """
     generate_design_matrices(n, d, sampler, R::NoRand, num_mats, T = Float64)
 `R = NoRand()` produces `num_mats` matrices each containing a different deterministic point set in `[0, 1)ᵈ`.
-Note that this is an ad hoc way to produce different `generate_design_matrices` as it create a deterministic point in dimension `d × num_mats` and split it in `num_mats` point set in dimension `d`.
+Note that this is an ad hoc way to produce different `generate_design_matrices` as it creates a deterministic point in dimension `d × num_mats` and split it in `num_mats` point set of dimension `d` which have no QMC garantuees.
 """
 function generate_design_matrices(n, d, sampler, R::NoRand, num_mats, T = Float64)
     out = sample(n, num_mats * d, sampler, T)
