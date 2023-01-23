@@ -137,22 +137,22 @@ For numerous independent randomization, use `generate_design_matrices(n, d, ::De
 Randomization of a Faure sequence with various methods.
 
 ```julia
-    using QuasiMonteCarlo
-    m = 4
-    d = 3
-    b = QuasiMonteCarlo.nextprime(d)
-    N = b^m # Number of points
-    pad = m # Can also choose something as `2m` to get "better" randomization
+using QuasiMonteCarlo
+m = 4
+d = 3
+b = QuasiMonteCarlo.nextprime(d)
+N = b^m # Number of points
+pad = m # Length of the b-ary decomposition number = sum(y[k]/b^k for k in 1:pad)
 
-    # Unrandomized low discrepency sequence
-    x_faure = QuasiMonteCarlo.sample(N, d, FaureSample())
+# Unrandomized low discrepency sequence
+x_faure = QuasiMonteCarlo.sample(N, d, FaureSample())
 
-    # Randomized version
-    x_nus = randomize(x_faure, OwenScramble(base = b, pad = pad)) # equivalent to sample(N, d, FaureSample(R = OwenScramble(base = b, pad = pad)))
-    x_lms = randomize(x_faure, MatousekScramble(base = b, pad = pad))
-    x_digital_shift = randomize(x_faure, DigitalShift(base = b, pad = pad))
-    x_shift = randomize(x_faure, Shift())
-    x_uniform = rand(d, N) # plain i.i.d. uniform
+# Randomized version
+x_nus = randomize(x_faure, OwenScramble(base = b, pad = pad)) # equivalent to sample(N, d, FaureSample(R = OwenScramble(base = b, pad = pad)))
+x_lms = randomize(x_faure, MatousekScramble(base = b, pad = pad))
+x_digital_shift = randomize(x_faure, DigitalShift(base = b, pad = pad))
+x_shift = randomize(x_faure, Shift())
+x_uniform = rand(d, N) # plain i.i.d. uniform
 ```
 
 ```julia
@@ -164,24 +164,24 @@ default(fontfamily="Computer Modern", linewidth=1, label=nothing, grid=true, fra
 Plot the resulting sequences along dimensions `1` and `3`.
 
 ```julia
-    d1 = 1
-    d2 = 3 # you can try every combination of dimension (d1, d2)
-    sequences = [x_uniform, x_faure, x_shift, x_digital_shift, x_lms, x_nus]
-    names = ["Uniform", "Faure (deterministic)", "Shift", "Digital Shift", "Matousek Scramble", "Owen Scramble"]
-    p = [plot(thickness_scaling=1.5, aspect_ratio=:equal) for i in sequences]
-    for (i, x) in enumerate(sequences)
-        scatter!(p[i], x[d1, :], x[d2, :], ms=0.9, c=1, grid=false)
-        title!(names[i])
-        xlims!(p[i], (0, 1))
-        ylims!(p[i], (0, 1))
-        yticks!(p[i], [0, 1])
-        xticks!(p[i], [0, 1])
-        hline!(p[i], range(0, 1, step=1 / 4), c=:gray, alpha=0.2)
-        vline!(p[i], range(0, 1, step=1 / 4), c=:gray, alpha=0.2)
-        hline!(p[i], range(0, 1, step=1 / 2), c=:gray, alpha=0.8)
-        vline!(p[i], range(0, 1, step=1 / 2), c=:gray, alpha=0.8)
-    end
-    plot(p..., size=(1500, 900))
+d1 = 1
+d2 = 3 # you can try every combination of dimension (d1, d2)
+sequences = [x_uniform, x_faure, x_shift, x_digital_shift, x_lms, x_nus]
+names = ["Uniform", "Faure (deterministic)", "Shift", "Digital Shift", "Matousek Scramble", "Owen Scramble"]
+p = [plot(thickness_scaling=1.5, aspect_ratio=:equal) for i in sequences]
+for (i, x) in enumerate(sequences)
+    scatter!(p[i], x[d1, :], x[d2, :], ms=0.9, c=1, grid=false)
+    title!(names[i])
+    xlims!(p[i], (0, 1))
+    ylims!(p[i], (0, 1))
+    yticks!(p[i], [0, 1])
+    xticks!(p[i], [0, 1])
+    hline!(p[i], range(0, 1, step=1 / 4), c=:gray, alpha=0.2)
+    vline!(p[i], range(0, 1, step=1 / 4), c=:gray, alpha=0.2)
+    hline!(p[i], range(0, 1, step=1 / 2), c=:gray, alpha=0.8)
+    vline!(p[i], range(0, 1, step=1 / 2), c=:gray, alpha=0.8)
+end
+plot(p..., size=(1500, 900))
 ```
 
 ![Different randomize methods of the same initial set of points](img/various_randomization.svg)

@@ -9,6 +9,7 @@ abstract type RandomSamplingAlgorithm <: SamplingAlgorithm end
 abstract type DeterministicSamplingAlgorithm <: SamplingAlgorithm end
 abstract type RandomizationMethod end
 
+include("net_utilities.jl")
 include("VanDerCorput.jl")
 include("Faure.jl")
 include("Kronecker.jl")
@@ -144,7 +145,6 @@ function generate_design_matrices(n, d, sampler, R::NoRand, num_mats, T = Float6
 end
 
 include("RandomizedQuasiMonteCarlo/shifting.jl")
-include("RandomizedQuasiMonteCarlo/net_utilities.jl")
 include("RandomizedQuasiMonteCarlo/scrambling_base_b.jl")
 
 export SamplingAlgorithm,

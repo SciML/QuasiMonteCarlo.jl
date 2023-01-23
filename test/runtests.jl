@@ -138,6 +138,10 @@ end
         @test variance[i]≈1 / 12 rtol=2 / sqrt(n)
     end
     @test pvalue(SignedRankTest(eachrow(s)...)) > 0.0001
+
+    # A LHS is a scrambled `(λ=1, t=0, m=1, s=d)`-net in base `n`
+    # See Cororollary 17.1 of [Monte Carlo theory, methods, and examples](https://artowen.su.domains/mc/qmcstuff.pdf).
+    @test istmsnet(s, λ = 1, t = 0, m = 1, s = d, base = n)
 end
 
 @testset "Van der Corput Sequence" begin

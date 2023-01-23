@@ -95,10 +95,12 @@ end
     istmsnet(net::AbstractMatrix{T}; λ::I, t::I, m::I, d::I, base::I) where {I <: Integer, T <: Real}
 Test if a point set `net` (`dim×n`) is a `(λ,t,m,s)`-net in base `b`. 
 
-`(λ,t,m,s)`-nets have good stratification properties useful for QMC.
+`(λ,t,m,s)`-nets have strict equidistribution properties making them good QMC sequences.
+Their definition and properties can be found in the book [Monte Carlo theory, methods, and examples](https://artowen.su.domains/mc/qmcstuff.pdf) by Art B. Owen. 
+See Definition 15.7 and for properties see Chapter 15 to 17. 
 
-The test is exact if the element of `net` are of type `Rational`. Indeed in that case, one can exactly deal with points at the edge of intervals of the form [a,b)ᵈ.
-The conversion `Float` to `Rational` is usually possible with usual nets e.g. Sobol, Faure (may require `Rational{BigInt}.(net)`).
+The test is exact if the element of `net` are of type `Rational`. Indeed, in that case, one can exactly deal with points at the edge of intervals of the form [a,b)ᵈ.
+The conversion `Float` to `Rational` is usually possible with usual nets, e.g., Sobol, Faure (may require `Rational{BigInt}.(net)`).
 """
 function istmsnet(net::AbstractMatrix{T}; λ::I, t::I, m::I, s::I,
                   base::I) where {I <: Integer, T <: Real}
