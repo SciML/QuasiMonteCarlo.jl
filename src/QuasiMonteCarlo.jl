@@ -1,7 +1,6 @@
 module QuasiMonteCarlo
 
 using Sobol, LatticeRules, Distributions, Primes, LinearAlgebra, Random
-using IntervalArithmetic, Combinatorics
 using ConcreteStructs, Accessors
 
 abstract type SamplingAlgorithm end
@@ -167,6 +166,5 @@ export SamplingAlgorithm,
        ScrambleMethod,
        OwenScramble,
        MatousekScramble,
-       DigitalShift,
-       istmsnet
+       DigitalShift
 end # module
