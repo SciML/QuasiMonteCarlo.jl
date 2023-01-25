@@ -4,7 +4,7 @@ using Aqua, Test
 
 using Compat
 using Statistics, LinearAlgebra, StatsBase, Random
-using IntervalArithmetic, Primes, Combinatorics, Distributions, InvertedIndices
+using Primes, Combinatorics, Distributions, InvertedIndices, IntervalArithmetic
 using HypothesisTests
 
 # struct InertSampler <: Random.AbstractRNG end
@@ -26,6 +26,54 @@ using HypothesisTests
         return a
     end
 end
+
+####################
+### T, pad, S NETS ###
+####################
+
+"""
+    istmsnet(net::AbstractMatrix{T}; λ::I, t::I, m::I, d::I, base::I) where {I <: Integer, T <: Real}
+Test if a point set `net` (`dim×n`) is a `(λ,t,m,s)`-net in base `b`. 
+
+`(λ,t,m,s)`-nets have strict equidistribution properties making them good QMC sequences.
+Their definition and properties can be found in the book [Monte Carlo theory, methods, and examples](https://artowen.su.domains/mc/qmcstuff.pdf) by Art B. Owen. 
+See Definition 15.7 and for properties see Chapter 15 to 17. 
+
+The test is exact if the element of `net` are of type `Rational`. Indeed, in that case, one can exactly deal with points at the edge of intervals of the form [a,b)ᵈ.
+The conversion `Float` to `Rational` is usually possible with usual nets, e.g., Sobol, Faure (may require `Rational{BigInt}.(net)`).
+"""
+function istmsnet(net::AbstractMatrix{T}; λ::I, t::I, m::I, s::I,
+                  base::I) where {I <: Integer, T <: Real}
+    pass = true
+
+    @assert size(net, 2)==λ * (base^m) "Number of points must be as size(net, 2) = $(size(net, 2)) == λ * (base^m) = $(λ * (base^m))"
+    @assert size(net, 1)==s "Dimension must be as size(net, 2) = $(size(net, 2)) == s = $s"
+    @assert all(0 .≤ net .< 1) "All points must be in [0,1)"
+
+    perms = multiexponents(s, m - t)
+    for stepsize in perms
+        intervals = mince(IntervalBox([interval(zero(T), one(T)) for i in 1:s]),
+                          NTuple{s, Int}(base .^ stepsize))
+        pass &= all(intervals) do intvl
+            λ * base^t == count(point -> inCloseOpen(point, intvl), collect(eachcol((net))))
+        end
+        if !pass
+            println("Errors in direction k = $stepsize")
+            return pass
+        end
+    end
+    return pass
+end
+
+"""
+    in_halfopen(x, a)
+Checks if the number `x` is a member of the interval `a` (close on the left and open on the right), treated as a set.
+"""
+function inCloseOpen(x::T, a::Interval) where {T <: Real}
+    isinf(x) && return false
+    a.lo <= x < a.hi
+end
+inCloseOpen(X::AbstractVector, Y::IntervalBox{N, T}) where {N, T} = all(inCloseOpen.(X, Y))
 
 rng = MersenneTwister(1776)
 
@@ -138,36 +186,10 @@ end
         @test variance[i]≈1 / 12 rtol=2 / sqrt(n)
     end
     @test pvalue(SignedRankTest(eachrow(s)...)) > 0.0001
-end
 
-####################
-### T, M, S NETS ###
-####################
-
-# check RQMC stratification properties
-# net must be an iterator of points in [0,1]^d
-function test_tms(net; λ::I, t::I, power::I, d::I, base::I) where {I <: Integer}
-    pass = true
-    n = λ * (base^power)
-    # How can our stratification "budget" of power-t be split up/spent across dimensions?
-    parts = Iterators.map(Iterators.flatten((partitions(power - t, i) for i in 1:d))) do x
-        vcat(x, zeros(typeof(d), d - length(x)))::Vector{I}
-    end
-    perms = Iterators.map(parts) do x
-        multiset_permutations(x, d)
-    end |> Iterators.flatten
-    for stepsize in perms
-        intervals = mince(IntervalBox([interval(0, 1) for i in 1:d]),
-                          NTuple{d, Int}(base .^ stepsize))
-        pass &= all(intervals) do intvl
-            λ * base^t == count(point -> point ∈ intvl, net)
-        end
-        if !pass
-            println("Errors in dimension $d, interval $stepsize, sample size $n")
-            return pass
-        end
-    end
-    return pass
+    # A LHS is a scrambled `(λ=1, t=0, m=1, s=d)`-net in base `n`
+    # See Cororollary 17.1 of [Monte Carlo theory, methods, and examples](https://artowen.su.domains/mc/qmcstuff.pdf).
+    @test istmsnet(s, λ = 1, t = 0, m = 1, s = d, base = n)
 end
 
 @testset "Van der Corput Sequence" begin
@@ -175,7 +197,7 @@ end
     ub = 1
     for base in [2, 3, 4]
         n = base^4
-        s = QuasiMonteCarlo.sample(n, lb, ub, VanDerCorputSample(base))
+        s = QuasiMonteCarlo.sample(n, lb, ub, VanDerCorputSample(base, NoRand()))
         @test all(diff(sort(s)) .≈ 1 / n)
         @test all(s .≥ lb)
         @test all(s .≤ ub)
@@ -197,12 +219,12 @@ end
     s = QuasiMonteCarlo.sample(n, lb, ub, SobolSample())
     @test s isa Matrix
     @test size(s) == (d, n)
-    vdc = QuasiMonteCarlo.sample(n, 1, VanDerCorputSample(base))
+    vdc = QuasiMonteCarlo.sample(n, 1, VanDerCorputSample(base, NoRand()))
     sort!(vdc)
     for (i, j) in combinations(1:d, 2)
         @test pvalue(SignedRankTest(s[i, :], s[j, :])) > 0.0001
     end
-    @test test_tms(collect(eachcol(s)); λ = 1, t = power - d, power, d, base)
+    @test istmsnet(s; λ = 1, t = power - d, m = power, s = d, base)
     for dim in sort.(eachrow(s))
         # all dimensions should be base-2 van der Corput
         @test dim ≈ vdc
@@ -248,8 +270,7 @@ end
         base = nextprime(d)
         n = base^power
         s = QuasiMonteCarlo.sample(n, d, sampler)
-        points = collect(eachcol(s))
-        @test test_tms(points; λ = 1, t = 0, power, d, base)
+        @test istmsnet(s; λ = 1, t = 0, m = power, s = d, base)
     end
     # test 2d stratification of next 3 primes
     power = 2
@@ -258,8 +279,7 @@ end
         λ = 2
         n = λ * base^power
         s = QuasiMonteCarlo.sample(n, d, sampler)
-        points = collect(eachcol(s))
-        @test test_tms(points; λ, t = 0, power, d, base)  # test 3d stratification of next 3 primes
+        @test istmsnet(s; λ, t = 0, m = power, s = d, base)  # test 3d stratification of next 3 primes
     end
 end
 
@@ -314,7 +334,7 @@ end
     d = 2
     n = 100
     ρ = 0.7548776662466927
-    s = QuasiMonteCarlo.sample(n, d, KroneckerSample([ρ, ρ^2]))
+    s = QuasiMonteCarlo.sample(n, d, KroneckerSample([ρ, ρ^2], NoRand()))
     t = QuasiMonteCarlo.sample(n, d, GoldenSample())
     @test isa(s, Matrix{Float64})
     @test size(s) == (d, n)
@@ -364,15 +384,131 @@ end
 
 @testset "generate_design_matrices" begin
     d = 4
+    m = 8
     lb = zeros(d)
     ub = ones(d)
     num_mat = 3
-    Ms = QuasiMonteCarlo.generate_design_matrices(n, lb, ub, RandomSample(), num_mat)
-    @test length(Ms) == num_mat
-    A = Ms[1]
-    B = Ms[2]
-    @test isa(A, Matrix{typeof(A[1][1])}) == true
-    @test size(A) == (d, n)
-    @test isa(B, Matrix{typeof(B[1][1])}) == true
-    @test size(B) == (d, n)
+    n = 2^m
+    algorithms = [
+        RandomSample(),
+        LatinHypercubeSample(),
+        SobolSample(R = OwenScramble(base = 2, pad = m)),
+        SobolSample(),
+        LatticeRuleSample(R = Shift()),
+        SobolSample(R = MatousekScramble(base = 2, pad = m)),
+    ]
+    for algorithm in algorithms
+        Ms = QuasiMonteCarlo.generate_design_matrices(n, lb, ub, algorithm, num_mat)
+        @test length(Ms) == num_mat
+        A = Ms[1]
+        B = Ms[2]
+        @test isa(A, Matrix{typeof(A[1][1])}) == true
+        @test size(A) == (d, n)
+        @test isa(B, Matrix{typeof(B[1][1])}) == true
+        @test size(B) == (d, n)
+    end
+end
+
+@testset "Randomized Quasi Monte Carlo: conversion functions" begin
+    b = 2
+    x = (0 // 16):(1 // 16):(15 // 16)
+    bits = QuasiMonteCarlo.unif2bits(x, b)
+    y = [QuasiMonteCarlo.bits2unif(s, b) for s in eachcol(bits)]
+    @test x == y
+
+    b = 3
+    x = (0 // 27):(1 // 27):(26 // 27)
+    bits = QuasiMonteCarlo.unif2bits(x, b, pad = 8)
+    y = [QuasiMonteCarlo.bits2unif(Rational, s, b) for s in eachcol(bits)]
+    @test x == y
+end
+
+@testset "Randomized Quasi Monte Carlo" begin
+    m = 6
+    d = 5
+    b = QuasiMonteCarlo.nextprime(d)
+    N = b^m # Number of points
+    pad = 2m
+
+    # Unrandomized low discrepency sequence
+    u_faure = QuasiMonteCarlo.sample(N, d, FaureSample())
+
+    # Randomized version
+    @test u_faure == randomize(u_faure, NoRand())
+    u_nus = randomize(u_faure, OwenScramble(base = b, pad = pad))
+    u_lms = randomize(u_faure, MatousekScramble(base = b, pad = pad))
+    u_digital_shift = randomize(u_faure, DigitalShift(base = b, pad = pad))
+    u_shift = randomize(u_faure, Shift())
+
+    u_nus = QuasiMonteCarlo.sample(N, d, FaureSample(OwenScramble(base = b, pad = pad)))
+end
+
+@testset "Randomized Quasi Monte Carlo Rational Scrambling" begin
+    m = 5
+    d = 2
+    b = QuasiMonteCarlo.nextprime(d)
+    N = b^m # Number of points
+    pad = m
+
+    # Unrandomized low discrepency sequence
+    u_sobol = Rational.(QuasiMonteCarlo.sample(N, d, SobolSample()))
+    # Randomized version
+    u_nus = randomize(u_sobol, OwenScramble(base = b, pad = pad))
+    u_lms = randomize(u_sobol, MatousekScramble(base = b, pad = pad))
+    u_digital_shift = randomize(u_sobol, DigitalShift(base = b, pad = pad))
+    @test eltype(u_nus) <: Rational
+    @test eltype(u_lms) <: Rational
+    @test eltype(u_digital_shift) <: Rational
+end
+
+@testset "Sobol' sequence are (tₛ,m,s)-net in base 2 even after scrambling" begin
+    #! Note that this is the first 2ᵐ elements of the sequence which are tested
+    #! Note that the Sobol' sequence from Sobol.jl is the "controversed" version where the first element have be removed
+
+    # Table of qualitity parameter t with respect to dimension s for Sobol' sequence.
+    # See "The algebraic-geometry approach to low-discrepancy sequences" H Niederreiter, C Xing - Monte Carlo and Quasi-Monte Carlo Methods 1996, 1998
+    t_sobol = [0, 0, 1, 3, 5, 8, 11, 15, 19, 23, 27, 31, 35, 40, 45, 50, 55, 60, 65, 71]
+
+    m = 12
+    base = 2
+    n = base^m
+    λ = 1
+    v = [
+        NoRand(),
+        OwenScramble(base = base, pad = m),
+        MatousekScramble(base = base, pad = m),
+        DigitalShift(base = base, pad = m),
+    ]
+    pass = Array{Bool}(undef, length(v), m)
+    for (s, t) in enumerate(t_sobol[1:m])
+        net = Rational.(QuasiMonteCarlo.sample(n, s, SobolSample()))
+        for j in eachindex(v)
+            pass[j, s] = istmsnet(randomize(net, v[j]); λ, t, m, s,
+                                  base = base)
+        end
+    end
+    @test all(pass)
+end
+
+@testset "Faure sequence are (0,m,s)-net even after scrambling" begin
+    # Faure sequence are exactly (t=0, s)-sequence in base b=nextprime(s)
+    m = 4
+    pad = m
+    λ = 1
+    t = 0
+
+    pass = Array{Bool}(undef, 4, m)
+    for s in 1:m
+        net = Rational{BigInt}.(QuasiMonteCarlo.sample(nextprime(s)^m, s, FaureSample())) # Convert the sequence in Rational{BigInt} (needed to scramble)
+        pass[1, s] = istmsnet(randomize(net, NoRand()); λ, t, m, s,
+                              base = nextprime(s))
+        pass[2, s] = istmsnet(randomize(net, OwenScramble(base = nextprime(s), pad = m));
+                              λ, t, m, s, base = nextprime(s))
+        pass[3, s] = istmsnet(randomize(net,
+                                        MatousekScramble(base = nextprime(s), pad = m));
+                              λ, t, m, s, base = nextprime(s))
+        pass[4, s] = istmsnet(randomize(net, DigitalShift(base = nextprime(s), pad = m));
+                              λ, t, m, s, base = nextprime(s))
+    end
+    @test all(pass)
 end

@@ -1,10 +1,14 @@
 module QuasiMonteCarlo
 
 using Sobol, LatticeRules, Distributions, Primes, LinearAlgebra, Random
-using ConcreteStructs
+using ConcreteStructs, Accessors
 
 abstract type SamplingAlgorithm end
+abstract type RandomSamplingAlgorithm <: SamplingAlgorithm end
+abstract type DeterministicSamplingAlgorithm <: SamplingAlgorithm end
+abstract type RandomizationMethod end
 
+include("net_utilities.jl")
 include("VanDerCorput.jl")
 include("Faure.jl")
 include("Kronecker.jl")
@@ -27,11 +31,11 @@ end
 _check_sequence(n::Integer) = @assert n>0 ZERO_SAMPLES_MESSAGE
 
 """
-    RandomSample <: SamplingAlgorithm
+    RandomSample <: RandomSamplingAlgorithm
 
 Randomly distributed random numbers.
 """
-Base.@kwdef @concrete struct RandomSample <: SamplingAlgorithm
+Base.@kwdef @concrete struct RandomSample <: RandomSamplingAlgorithm
     rng::AbstractRNG = Random.GLOBAL_RNG
 end
 
@@ -72,17 +76,78 @@ function sample(n::Integer, d::Integer, D::Distributions.Sampleable)
     return reduce(hcat, x)
 end
 
-function generate_design_matrices(n, lb, ub, sampler, num_mats = 2)
+# See https://discourse.julialang.org/t/is-there-a-dedicated-function-computing-m-int-log-b-b-m/89776/10
+function logi(b::Int, n::Int)
+    m = round(Int, log(b, n))
+    b^m == n || throw(ArgumentError("$n is not a power of $b"))
+    return m
+end
+
+"""
+```julia
+generate_design_matrices(n, lb, ub, sample_method, num_mats)
+```
+
+Create `num_mats` matrices each containing a QMC point set, where:
+- `n` is the number of points to sample.
+- `lb` is the lower bound for each variable. The length determines the dimensionality.
+- `ub` is the upper bound.
+- `d` is the dimensionality of the point set.
+- `sample_method` is the quasi-Monte Carlo sampling strategy. Note that any Distributions.jl
+  distribution can be used in addition to any `SamplingAlgorithm`.
+- You can specify a `RandomizationMethod` for `sample_method<:DeterministicSamplingAlgorithm`
+"""
+function generate_design_matrices(n, lb, ub, sampler,
+                                  num_mats = 2)
     if n <= 0
         throw(ZeroSamplesError())
     end
     @assert length(lb) == length(ub)
-    d = length(lb)
-    out = sample(n, repeat(lb, num_mats), repeat(ub, num_mats), sampler)
-    [out[(j * d + 1):((j + 1) * d), :] for j in 0:(num_mats - 1)]
+
+    # Generate a vector of num_mats independent "randomized" version of the QMC sequence
+    out = generate_design_matrices(n, length(lb), sampler, num_mats, eltype(lb))
+
+    # Scaling
+    for j in eachindex(out)
+        out[j] = (ub .- lb) .* out[j] .+ lb
+    end
+    return out
 end
 
-export GridSample,
+function generate_design_matrices(n, d, sampler::DeterministicSamplingAlgorithm, num_mats,
+                                  T = Float64)
+    return generate_design_matrices(n, d, sampler, sampler.R, num_mats, T)
+end
+
+function generate_design_matrices(n, d, sampler::RandomSamplingAlgorithm, num_mats,
+                                  T = Float64)
+    return [sample(n, d, sampler, T) for j in 1:num_mats]
+end
+"""
+```julia
+NoRand
+```
+
+No Randomization is performed on the sampled sequence.
+"""
+struct NoRand <: RandomizationMethod end
+randomize(x, S::NoRand) = x
+
+"""
+    generate_design_matrices(n, d, sampler, R::NoRand, num_mats, T = Float64)
+`R = NoRand()` produces `num_mats` matrices each containing a different deterministic point set in `[0, 1)ᵈ`.
+Note that this is an ad hoc way to produce different `generate_design_matrices` as it creates a deterministic point in dimension `d × num_mats` and split it in `num_mats` point set of dimension `d` which have no QMC garantuees.
+"""
+function generate_design_matrices(n, d, sampler, R::NoRand, num_mats, T = Float64)
+    out = sample(n, num_mats * d, sampler, T)
+    return [out[(j * d + 1):((j + 1) * d), :] for j in 0:(num_mats - 1)]
+end
+
+include("RandomizedQuasiMonteCarlo/shifting.jl")
+include("RandomizedQuasiMonteCarlo/scrambling_base_b.jl")
+
+export SamplingAlgorithm,
+       GridSample,
        UniformSample,
        SobolSample,
        LatinHypercubeSample,
@@ -94,6 +159,12 @@ export GridSample,
        KroneckerSample,
        SectionSample,
        FaureSample,
-       SamplingAlgorithm
-
+       randomize,
+       RandomizationMethod,
+       NoRand,
+       Shift,
+       ScrambleMethod,
+       OwenScramble,
+       MatousekScramble,
+       DigitalShift
 end # module

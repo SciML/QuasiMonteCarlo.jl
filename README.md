@@ -72,16 +72,21 @@ all sampled from the same low-discrepancy sequence.
 
 ## Available Sampling Methods
 
-* `GridSample(dx)` where the grid is given by `lb:dx[i]:ub` in the ith direction.
-* `UniformSample` for uniformly distributed random numbers.
-* `SobolSample` for the Sobol sequence.
-* `LatinHypercubeSample` for a Latin Hypercube.
-* `LatticeRuleSample` for a randomly-shifted rank-1 lattice rule.
-* `HaltonSample(base)` where `base[i]` is the base in the ith direction.
-* `GoldenSample` for a Golden Ratio sequence.
-* `KroneckerSample(alpha, s0)` for a Kronecker sequence, where alpha is an length-d vector of irrational numbers (often sqrt(d)) and s0 is a length-d seed vector (often 0).
-* `SectionSample(x0, sampler)` where `sampler` is any sampler above and `x0` is a vector of either `NaN` for a free dimension or some scalar for a constrained dimension.
-* Additionally, any `Distribution` can be used, and it will be sampled from.
+Sampling methods `SamplingAlgorithm` are divided into two subtypes
+
+- `DeterministicSamplingAlgorithm`
+  - `GridSample(dx)` where the grid is given by `lb:dx[i]:ub` in the ith direction.
+  - `SobolSample` for the Sobol' sequence.
+  - `FaureSample` for the Faure sequence.
+  - `LatticeRuleSample` for a randomly-shifted rank-1 lattice rule.
+  - `HaltonSample(base)` where `base[i]` is the base in the ith direction.
+  - `GoldenSample` for a Golden Ratio sequence.
+  - `KroneckerSample(alpha, s0)` for a Kronecker sequence, where alpha is an length-`d` vector of irrational numbers (often `sqrt(d`)) and `s0` is a length-`d` seed vector (often `0`).
+- `RandomSamplingAlgorithm`
+  - `UniformSample` for uniformly distributed random numbers.
+  - `LatinHypercubeSample` for a Latin Hypercube.
+  - Additionally, any `Distribution` can be used, and it will be sampled from.
+  <!-- - `SectionSample(x0, sampler)` where `sampler` is any sampler above and `x0` is a vector of either `NaN` for a free dimension or some scalar for a constrained dimension. Not currently supported. -->
 
 ## Adding a new sampling method
 
@@ -107,3 +112,76 @@ function sample(n,lb,ub,::NewAmazingSamplingAlgorithm)
     end
 end
 ```
+
+## Randomization of QMC sequences
+
+Most of the previous methods are deterministic i.e. `sample(n, d, Sampler()::DeterministicSamplingAlgorithm)` always produces the same sequence $X = (X_1, \dots, X_n)$.
+The API to randomize sequence is either 
+- Directly use `QuasiMonteCarlo.sample(n, d, DeterministicSamplingAlgorithm(R = RandomizationMethod()))` or `sample(n, lb, up, DeterministicSamplingAlgorithm(R = RandomizationMethod()))`
+- Or given any matrix $X$ ($d\times n$) of $n$ points all in dimension $d$ in $[0,1]^d$ one can do `randomize(x, ::RandomizationMethod())`
+
+There are the following randomization methods:
+
+- Scrambling methods `ScramblingMethods(base, pad, rng)` where `base` is the base used to scramble and `pad` the number of bits in `b`-ary decomposition.
+`pad` is generally chosen as $\gtrsim \log_b(n)$.
+The implemented `ScramblingMethods` are
+  - `DigitalShift` 
+  - `MatousekScramble` a.k.a Linear Matrix Scramble.
+  - `OwenScramble` a.k.a Nested Uniform Scramble is the most understood theoretically but is more costly to operate.
+- `Shift(rng)` a.k.a. Cranley Patterson Rotation. 
+
+For numerous independent randomization, use `generate_design_matrices(n, d, ::DeterministicSamplingAlgorithm), ::RandomizationMethod, num_mats)` where `num_mats` is the number of independent `X` generated.
+
+### Example
+
+Randomization of a Faure sequence with various methods.
+
+```julia
+using QuasiMonteCarlo
+m = 4
+d = 3
+b = QuasiMonteCarlo.nextprime(d)
+N = b^m # Number of points
+pad = m # Length of the b-ary decomposition number = sum(y[k]/b^k for k in 1:pad)
+
+# Unrandomized low discrepency sequence
+x_faure = QuasiMonteCarlo.sample(N, d, FaureSample())
+
+# Randomized version
+x_nus = randomize(x_faure, OwenScramble(base = b, pad = pad)) # equivalent to sample(N, d, FaureSample(R = OwenScramble(base = b, pad = pad)))
+x_lms = randomize(x_faure, MatousekScramble(base = b, pad = pad))
+x_digital_shift = randomize(x_faure, DigitalShift(base = b, pad = pad))
+x_shift = randomize(x_faure, Shift())
+x_uniform = rand(d, N) # plain i.i.d. uniform
+```
+
+```julia
+using Plots
+# Setting I like for plotting
+default(fontfamily="Computer Modern", linewidth=1, label=nothing, grid=true, framestyle=:default)
+```
+
+Plot the resulting sequences along dimensions `1` and `3`.
+
+```julia
+d1 = 1
+d2 = 3 # you can try every combination of dimension (d1, d2)
+sequences = [x_uniform, x_faure, x_shift, x_digital_shift, x_lms, x_nus]
+names = ["Uniform", "Faure (deterministic)", "Shift", "Digital Shift", "Matousek Scramble", "Owen Scramble"]
+p = [plot(thickness_scaling=1.5, aspect_ratio=:equal) for i in sequences]
+for (i, x) in enumerate(sequences)
+    scatter!(p[i], x[d1, :], x[d2, :], ms=0.9, c=1, grid=false)
+    title!(names[i])
+    xlims!(p[i], (0, 1))
+    ylims!(p[i], (0, 1))
+    yticks!(p[i], [0, 1])
+    xticks!(p[i], [0, 1])
+    hline!(p[i], range(0, 1, step=1 / 4), c=:gray, alpha=0.2)
+    vline!(p[i], range(0, 1, step=1 / 4), c=:gray, alpha=0.2)
+    hline!(p[i], range(0, 1, step=1 / 2), c=:gray, alpha=0.8)
+    vline!(p[i], range(0, 1, step=1 / 2), c=:gray, alpha=0.8)
+end
+plot(p..., size=(1500, 900))
+```
+
+![Different randomize methods of the same initial set of points](img/various_randomization.svg)

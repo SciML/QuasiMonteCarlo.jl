@@ -1,5 +1,5 @@
 """
-    KroneckerSample(generator::AbstractVector) <: SamplingAlgorithm
+    KroneckerSample(generator::AbstractVector) <: DeterministicSamplingAlgorithm
 
 A Kronecker sequence is a point set generated using a vector and equation:
 `x[i] = i * generator .% 1`
@@ -19,25 +19,26 @@ References:
 Leobacher, G., & Pillichshammer, F. (2014). *Introduction to quasi-Monte Carlo integration and applications.* Switzerland: Springer International Publishing.
 https://link.springer.com/content/pdf/10.1007/978-3-319-03425-6.pdf
 """
-struct KroneckerSample{V <: Union{AbstractVector, Missing}} <: SamplingAlgorithm
-    generator::V
+Base.@kwdef struct KroneckerSample{V <: Union{AbstractVector, Missing}} <:
+                   DeterministicSamplingAlgorithm
+    generator::V = missing
+    R::RandomizationMethod = NoRand()
 end
 
-KroneckerSample() = KroneckerSample(missing)
-function KroneckerSample(d::Integer, T = Float64)
+function KroneckerSample(d::Integer, R = NoRand(), T = Float64)
     ratio = harmonious(d, 2eps(T))
     generator = [ratio^i for i in 1:d]
-    return KroneckerSample(generator)
+    return KroneckerSample(generator, R)
 end
 
-function sample(n::Integer, d::Integer, ::KroneckerSample{Missing}, T = Float64)
-    return sample(n, d, KroneckerSample(d, T))
+function sample(n::Integer, d::Integer, S::KroneckerSample{Missing}, T = Float64)
+    return sample(n, d, KroneckerSample(d, S.R, T))
 end
 
 function sample(n::Integer, d::Integer, k::KroneckerSample{V},
                 T) where {V <: AbstractVector}
     @assert eltype(V)==T "Sample type must match generator type."
-    return sample(n, d, k)
+    return randomize(sample(n, d, k), k.R)
 end
 
 function sample(n::Integer, d::Integer, k::KroneckerSample{V}) where {V <: AbstractVector}

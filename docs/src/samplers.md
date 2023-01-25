@@ -8,14 +8,28 @@ sample
 
 ## Samplers
 
+Samplers are divided into two subtypes
+```julia
+abstract type SamplingAlgorithm end
+abstract type RandomSamplingAlgorithm <: SamplingAlgorithm end
+abstract type DeterministicSamplingAlgorithm <: SamplingAlgorithm end
+```
+
+### Deterministic Sampling Algorithm
+
 ```@docs
 GridSample
-UniformSample
 SobolSample
-LatinHypercubeSample
 LatticeRuleSample
 HaltonSample
 GoldenSample
 KroneckerSample
-SectionSample
+```
+
+### Random Sampling Algorithm
+
+```@docs
+UniformSample
+LatinHypercubeSample
+<!-- SectionSample -->
 ```
