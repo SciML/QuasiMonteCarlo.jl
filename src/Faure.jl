@@ -37,7 +37,7 @@ The Faure sequence in dimension `s` forms a `(0, s)`-sequence with base `b = nex
 A Faure sequence must have length `k * base^s` with `k < base < 1`.
 
 References:
-Faure, H. (1982). Discrepance de suites associees a un systeme de numeration (en dimension s). *Acta Arith.*, 41, 337-351.
+Faure, H. (1982). Discrepance de suites associées a un systeme de numération (en dimension s). *Acta Arith.*, 41, 337-351.
 Owen, A. B. (1997). Monte Carlo variance of scrambled net quadrature. *SIAM Journal on Numerical Analysis*, 34(5), 1884-1910.
 """
 Base.@kwdef struct FaureSample <: DeterministicSamplingAlgorithm
