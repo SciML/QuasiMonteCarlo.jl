@@ -28,12 +28,12 @@ ub = [1.0,20.0]
 n = 5
 d = 2
 
-s = QuasiMonteCarlo.sample(n,lb,ub,GridSample([0.1,0.5]))
-s = QuasiMonteCarlo.sample(n,lb,ub,UniformSample())
+s = QuasiMonteCarlo.sample(n,lb,ub,GridSample())
+s = QuasiMonteCarlo.sample(n,lb,ub,Uniform())
 s = QuasiMonteCarlo.sample(n,lb,ub,SobolSample())
 s = QuasiMonteCarlo.sample(n,lb,ub,LatinHypercubeSample())
 s = QuasiMonteCarlo.sample(n,lb,ub,LatticeRuleSample())
-s = QuasiMonteCarlo.sample(n,lb,ub,HaltonSample([10,3], false))
+s = QuasiMonteCarlo.sample(n,lb,ub,HaltonSample())
 ```
 
 The output `s` is a matrix, so one can use things like `@uview` from
@@ -53,11 +53,18 @@ Everything has the same interface:
 A = QuasiMonteCarlo.sample(n,lb,ub,sample_method)
 ```
 
+or to generate points directly in the unit box $[0,1]^d$
+
+```julia
+A = QuasiMonteCarlo.sample(n,d,sample_method) # = QuasiMonteCarlo.sample(n,zeros(d),ones(d),sample_method)
+```
+
 where:
 
 - `n` is the number of points to sample.
 - `lb` is the lower bound for each variable. The length determines the dimensionality.
 - `ub` is the upper bound.
+- `d` is the dimension of the unit box.
 - `sample_method` is the quasi-Monte Carlo sampling strategy.
 
 Additionally, there is a helper function for generating design matrices:
@@ -75,13 +82,13 @@ all sampled from the same low-discrepancy sequence.
 Sampling methods `SamplingAlgorithm` are divided into two subtypes
 
 - `DeterministicSamplingAlgorithm`
-  - `GridSample(dx)` where the grid is given by `lb:dx[i]:ub` in the ith direction.
+  - `GridSample` for samples on a regular grid.
   - `SobolSample` for the Sobol' sequence.
   - `FaureSample` for the Faure sequence.
   - `LatticeRuleSample` for a randomly-shifted rank-1 lattice rule.
-  - `HaltonSample(base)` where `base[i]` is the base in the ith direction.
+  - `HaltonSample` for the Halton sequence.
   - `GoldenSample` for a Golden Ratio sequence.
-  - `KroneckerSample(alpha, s0)` for a Kronecker sequence, where alpha is an length-`d` vector of irrational numbers (often `sqrt(d`)) and `s0` is a length-`d` seed vector (often `0`).
+  - `KroneckerSample(alpha, s0)` for a Kronecker sequence, where alpha is an length-`d` vector of irrational numbers (often `sqrt(d)`) and `s0` is a length-`d` seed vector (often `0`).
 - `RandomSamplingAlgorithm`
   - `UniformSample` for uniformly distributed random numbers.
   - `LatinHypercubeSample` for a Latin Hypercube.
@@ -116,23 +123,24 @@ end
 ## Randomization of QMC sequences
 
 Most of the previous methods are deterministic i.e. `sample(n, d, Sampler()::DeterministicSamplingAlgorithm)` always produces the same sequence $X = (X_1, \dots, X_n)$.
-The API to randomize sequence is either 
-- Directly use `QuasiMonteCarlo.sample(n, d, DeterministicSamplingAlgorithm(R = RandomizationMethod()))` or `sample(n, lb, up, DeterministicSamplingAlgorithm(R = RandomizationMethod()))`
-- Or given any matrix $X$ ($d\times n$) of $n$ points all in dimension $d$ in $[0,1]^d$ one can do `randomize(x, ::RandomizationMethod())`
+There are two ways to obtain a randomized sequence:
 
-There are the following randomization methods:
+- Either directly use `QuasiMonteCarlo.sample(n, d, DeterministicSamplingAlgorithm(R = RandomizationMethod()))` or `sample(n, lb, up, DeterministicSamplingAlgorithm(R = RandomizationMethod()))`.
+- Or, given $n$ points $d$-dimensional points, all in $[0,1]^d$ one can do `randomize(X, ::RandomizationMethod())` where $X$ is a $d\times n$-matrix.
 
-- Scrambling methods `ScramblingMethods(base, pad, rng)` where `base` is the base used to scramble and `pad` the number of bits in `b`-ary decomposition.
+The currently available randomization methods are:
+
+- Scrambling methods `ScramblingMethods(b, pad, rng)` where `b` is the base used to scramble and `pad` the number of bits in `b`-ary decomposition.
 `pad` is generally chosen as $\gtrsim \log_b(n)$.
 The implemented `ScramblingMethods` are
-  - `DigitalShift` 
+  - `DigitalShift`
   - `MatousekScramble` a.k.a Linear Matrix Scramble.
   - `OwenScramble` a.k.a Nested Uniform Scramble is the most understood theoretically but is more costly to operate.
-- `Shift(rng)` a.k.a. Cranley Patterson Rotation. 
+- `Shift(rng)` a.k.a. Cranley Patterson Rotation.
 
 For numerous independent randomization, use `generate_design_matrices(n, d, ::DeterministicSamplingAlgorithm), ::RandomizationMethod, num_mats)` where `num_mats` is the number of independent `X` generated.
 
-### Example
+### Randomization Example
 
 Randomization of a Faure sequence with various methods.
 
@@ -144,7 +152,7 @@ b = QuasiMonteCarlo.nextprime(d)
 N = b^m # Number of points
 pad = m # Length of the b-ary decomposition number = sum(y[k]/b^k for k in 1:pad)
 
-# Unrandomized low discrepency sequence
+# Unrandomized (deterministic) low discrepancy sequence
 x_faure = QuasiMonteCarlo.sample(N, d, FaureSample())
 
 # Randomized version
@@ -165,7 +173,7 @@ Plot the resulting sequences along dimensions `1` and `3`.
 
 ```julia
 d1 = 1
-d2 = 3 # you can try every combination of dimension (d1, d2)
+d2 = 3 # you can try every combination of dimensions (d1, d2)
 sequences = [x_uniform, x_faure, x_shift, x_digital_shift, x_lms, x_nus]
 names = ["Uniform", "Faure (deterministic)", "Shift", "Digital Shift", "Matousek Scramble", "Owen Scramble"]
 p = [plot(thickness_scaling=1.5, aspect_ratio=:equal) for i in sequences]

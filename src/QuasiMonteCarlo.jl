@@ -57,7 +57,7 @@ Create a QMC point set, where:
   distribution can be used in addition to any `SamplingAlgorithm`.
 """
 function sample(n::Integer, lb::T, ub::T,
-                S::SamplingAlgorithm) where {T <: Union{Base.AbstractVecOrTuple, Number}}
+                S::D) where {T <: Union{Base.AbstractVecOrTuple, Number}, D <: Union{SamplingAlgorithm, Distributions.Sampleable}}
     _check_sequence(lb, ub, n)
     lb = float.(lb)
     ub = float.(ub)
@@ -70,7 +70,7 @@ end
 
 Returns a tuple containing independent random samples from distribution `D`.
 """
-function sample(n::Integer, d::Integer, D::Distributions.Sampleable)
+function sample(n::Integer, d::Integer, D::Distributions.Sampleable, T = eltype(D))
     @assert n>0 ZERO_SAMPLES_MESSAGE
     x = [[rand(D) for j in 1:d] for i in 1:n]
     return reduce(hcat, x)

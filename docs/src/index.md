@@ -21,12 +21,12 @@ ub = [1.0,20.0]
 n = 5
 d = 2
 
-s = QuasiMonteCarlo.sample(n,lb,ub,GridSample([0.1,0.5]))
-s = QuasiMonteCarlo.sample(n,lb,ub,UniformSample())
+s = QuasiMonteCarlo.sample(n,lb,ub,GridSample())
+s = QuasiMonteCarlo.sample(n,lb,ub,Uniform())
 s = QuasiMonteCarlo.sample(n,lb,ub,SobolSample())
 s = QuasiMonteCarlo.sample(n,lb,ub,LatinHypercubeSample())
 s = QuasiMonteCarlo.sample(n,lb,ub,LatticeRuleSample())
-s = QuasiMonteCarlo.sample(n,lb,ub,HaltonSample([10,3]))
+s = QuasiMonteCarlo.sample(n,lb,ub,HaltonSample())
 ```
 
 The output `s` is a matrix, so one can use things like `@uview` from
