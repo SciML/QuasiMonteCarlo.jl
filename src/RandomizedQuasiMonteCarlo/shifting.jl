@@ -13,7 +13,7 @@ end
 
 """
     randomize(x, R::Shift)
-Cranley Patterson Rotation i.e. `y = (points .+ U) mod 1` where `U ∼ 𝕌([0,1]ᵈ)` and `points` is a `d×n` matrix
+Cranley Patterson Rotation i.e. `y = (x .+ U) mod 1` where `U ∼ 𝕌([0,1]ᵈ)` and `x` is a `d×n` matrix
 """
 function randomize(x, R::Shift)
     y = copy(x)

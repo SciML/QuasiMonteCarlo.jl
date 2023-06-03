@@ -33,9 +33,9 @@ randomize
 The `pad` is generally chosen as $\gtrsim \log_b(n)$.
 
 !!! warning
-    In principle, the base `b` used for the scrambling method `ScramblingMethods(b, pad, rng)` can be an arbitrary integer, however to preserve discrepancy properties, it must match the base of the sequence to scramble.
-
-    For example, (deterministic) Sobol' sequence are base $b=2$, $(t,m,d)$ sequences while (deterministic) Faure sequences are $(t,m,d)$ sequences in prime base i.e. $b$ is a prime number.
+    In principle, the base `b` used for scrambling methods `ScramblingMethods(b, pad, rng)` can be an arbitrary integer.
+    However, to preserve good Quasi Monte Carlo properties, it must match the base of the sequence to scramble.
+    For example, (deterministic) Sobol' sequence are base $b=2$, $(t,m,d)$ sequences while (deterministic) Faure sequences are $(t,m,d)$ sequences in prime base i.e. $b$ is an arbitrary prime number.
 
 The implemented `ScramblingMethods` are
 
@@ -67,10 +67,10 @@ Shift
 
 ## Design Matrices
 
-For numerous independent randomization, use `generate_design_matrices(n, d, ::DeterministicSamplingAlgorithm), ::RandomizationMethod, num_mats)` where `num_mats` is the number of independent `X` generated.
+For multiple independent randomization, use `generate_design_matrices(n, d, ::DeterministicSamplingAlgorithm), ::RandomizationMethod, num_mats)` where `num_mats` is the number of independent `X` generated.
 
 ```@docs
-generate_design_matrices
+QuasiMonteCarlo.generate_design_matrices
 ```
 
 ## Example
@@ -88,7 +88,7 @@ b = QuasiMonteCarlo.nextprime(d)
 N = b^m # Number of points
 pad = m # Can also choose something as `2m` to get "better" randomization
 
-# Unrandomized low discrepency sequence
+# Unrandomized low discrepancy sequence
 x_faure = QuasiMonteCarlo.sample(N, d, FaureSample())
 
 # Randomized version
@@ -130,11 +130,11 @@ plot(p..., size=(800, 600))
 
 ### $(t,m,d)$-net visualization
 
-<!-- TODO add precise ref for this kind of plot + `istms` net function + post into the pkg to say we are using -->
+<!-- TODO post into the pkg to say we are using -->
 
-Faure nets and scrambled versions of Faure nets are still digital $(t,m,d)$-net, it means that they have strong equipartition properties.
-On the following plot, we can (visually) verify that with Nested Uniform Scrambling (it also works with Linear Matrix Scrambling and Digital Shift).
-You must see one point per rectangle of volume $1/b^m$. Points on the "left" border of rectangles are included while those on the "right" are excluded.
+Faure nets and its scrambled versions are digital $(t,m,d)$-net, it means that they have strong equipartition properties.
+On the following plot, we can (visually) verify that with Nested Uniform Scrambling, it also works with Linear Matrix Scrambling and Digital Shift.
+You must see one point per rectangle of volume $1/b^m$. Points on the "left" border of rectangles are included while those on the "right" are excluded. See [Chapter 15.7](https://artowen.su.domains/mc/qmcstuff.pdf) and Figure 15.10 for more details.
 
 ```@example 1
 d1 = 1 
@@ -155,3 +155,7 @@ for i in 0:m
 end
 plot(p..., size=(800, 600))
 ```
+
+!!! note
+    To check if a point set is a $(t,m,d)$-net, you can use the function `istmsnet` defined in the [tests](https://github.com/SciML/QuasiMonteCarlo.jl/blob/2dce9905e564a85e1280115cc8af071674fc7d80/test/runtests.jl#L34) of this package. 
+    It uses the excellent [IntervalArithmetic.jl](https://github.com/JuliaIntervals/IntervalArithmetic.jl) package.
