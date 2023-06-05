@@ -1,6 +1,6 @@
 """
 ```julia
-Shifting
+Shifting <: RandomizationMethod
 ```
 
 Cranley-Patterson rotation aka Shifting

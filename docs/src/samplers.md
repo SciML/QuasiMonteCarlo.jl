@@ -3,7 +3,7 @@
 ## Sample
 
 ```@docs
-sample
+QuasiMonteCarlo.sample
 ```
 
 ## Samplers
@@ -31,6 +31,5 @@ KroneckerSample
 ### Random Sampling Algorithm
 
 ```@docs
-UniformSample
 LatinHypercubeSample
 ```

@@ -1,5 +1,5 @@
 """
-    GridSample()
+    GridSample(R::RandomizationMethod = NoRand()) <: DeterministicSamplingAlgorithm
 
 A simple rectangular grid lattice.
 
@@ -17,7 +17,7 @@ function sample(n::Integer, d::Integer, S::GridSample, T = Float64)
 end
 
 """
-    LatticeRuleSample()
+    LatticeRuleSample() <: DeterministicSamplingAlgorithm
 
 Generate a point set using a lattice rule.
 """

@@ -123,9 +123,10 @@ function generate_design_matrices(n, d, sampler::RandomSamplingAlgorithm, num_ma
                                   T = Float64)
     return [sample(n, d, sampler, T) for j in 1:num_mats]
 end
+
 """
 ```julia
-NoRand
+NoRand <: RandomizationMethod
 ```
 
 No Randomization is performed on the sampled sequence.
@@ -148,7 +149,6 @@ include("RandomizedQuasiMonteCarlo/scrambling_base_b.jl")
 
 export SamplingAlgorithm,
        GridSample,
-       UniformSample,
        SobolSample,
        LatinHypercubeSample,
        LatticeRuleSample,

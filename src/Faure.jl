@@ -20,7 +20,7 @@ end
 end
 
 """
-    FaureSample(R::RandomizationMethod)
+    FaureSample(R::RandomizationMethod = NoRand()) <: DeterministicSamplingAlgorithm
 
 A Faure low-discrepancy sequence.
 

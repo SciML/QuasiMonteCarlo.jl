@@ -1,9 +1,10 @@
 # * The scrambling codes were first inspired from Owen's `R` implementation that can be found [here](https://artowen.su.domains/code/rsobol.R). * #
 
 """ 
-    ```julia
-    ScrambleMethod
-    ```
+```julia
+ScrambleMethod <: RandomizationMethod
+```
+
 A scramble method needs at lease the scrambling base `b`, the number of "bits" to use `pad` (`pad=32` is the default) and a seed `rng` (`rng = Random.GLOBAL_RNG` is the default).
 The scramble methods implementer are 
 - `DigitalShift`.
@@ -28,7 +29,7 @@ end
 
 """
 ```julia
-OwenScramble
+OwenScramble <: ScrambleMethod
 ```
 
 Nested Uniform Scramble aka Owen' scramble.
@@ -134,7 +135,7 @@ end
 
 """
 ```julia
-MatousekScramble
+MatousekScramble <: ScrambleMethod
 ```
 
 Linear Matrix Scramble aka Matousek' scramble.
@@ -215,7 +216,7 @@ getmatousek(m::Integer, b::Integer) = getmatousek(Random.GLOBAL_RNG, m, b)
 
 """
 ```julia
-DigitalShift
+DigitalShift <: ScrambleMethod
 ```
 
 Digital shift. 

@@ -1,8 +1,8 @@
 # Randomization methods
 
-Most of the methods presented in [Sampler](@ref Samplers) are deterministic i.e. `X = sample(n, d, Sampler()::DeterministicSamplingAlgorithm)` always produces the same sequence $X = (X_1, \dots, X_n)$.
+Most of the methods presented in [Sampler](@ref Samplers) are deterministic i.e. `X = sample(n, d, ::DeterministicSamplingAlgorithm)` will always produce the same sequence $X = (X_1, \dots, X_n)$.
 
-The main issue with deterministic Quasi Monte Carlo sampling is that it does not allow easy error estimation as opposed to plain Monte Carlo where the variance can be estimated.
+The main issue with deterministic Quasi Monte Carlo sampling is that it does not allow easy error estimation as opposed to plain Monte Carlo where the variance can be estimated. 
 
 A Randomized Quasi Monte Carlo method must respect the two following criteria:
 
@@ -24,9 +24,17 @@ There are two ways to obtain a randomized sequence:
 randomize
 ```
 
+The default method of `DeterministicSamplingAlgorithm` is `NoRand`
+
+```@docs
+NoRand
+```
+
 ## Scrambling methods
 
-<!-- TODO add ref in doc and dosstrings -->
+```@docs
+ScrambleMethod
+```
 
 `ScramblingMethods(b, pad, rng)` are well suited for $(t,m,d)$-nets in base $b$. `b` is the base used to scramble and `pad` the number of bits in `b`-ary decomposition i.e. $y \simeq \sum_{k=1}^{\texttt{pad}} y_k/\texttt{b}^k$.
 
@@ -129,8 +137,6 @@ plot(p..., size=(800, 600))
 ```
 
 ### $(t,m,d)$-net visualization
-
-<!-- TODO post into the pkg to say we are using -->
 
 Faure nets and its scrambled versions are digital $(t,m,d)$-net, it means that they have strong equipartition properties.
 On the following plot, we can (visually) verify that with Nested Uniform Scrambling, it also works with Linear Matrix Scrambling and Digital Shift.
