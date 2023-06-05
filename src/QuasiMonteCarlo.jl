@@ -8,16 +8,6 @@ abstract type RandomSamplingAlgorithm <: SamplingAlgorithm end
 abstract type DeterministicSamplingAlgorithm <: SamplingAlgorithm end
 abstract type RandomizationMethod end
 
-include("net_utilities.jl")
-include("VanDerCorput.jl")
-include("Faure.jl")
-include("Kronecker.jl")
-include("Halton.jl")
-include("Sobol.jl")
-include("LatinHypercube.jl")
-include("Lattices.jl")
-include("Section.jl")
-
 const UB_LB_MESSAGE = "Lower bound exceeds upper bound (lb > ub)"
 const ZERO_SAMPLES_MESSAGE = "Number of samples must be greater than zero"
 const DIM_MISMATCH_MESSAGE = "Dimensionality of lb and ub must match"
@@ -95,6 +85,16 @@ function logi(b::Int, n::Int)
     b^m == n || throw(ArgumentError("$n is not a power of $b"))
     return m
 end
+
+include("net_utilities.jl")
+include("VanDerCorput.jl")
+include("Faure.jl")
+include("Kronecker.jl")
+include("Halton.jl")
+include("Sobol.jl")
+include("LatinHypercube.jl")
+include("Lattices.jl")
+include("Section.jl")
 
 """
 ```julia
