@@ -81,14 +81,6 @@ OwenScramble
 Shift
 ```
 
-## Design Matrices
-
-For multiple independent randomization, use `generate_design_matrices(n, d, ::DeterministicSamplingAlgorithm), ::RandomizationMethod, num_mats)` where `num_mats` is the number of independent `X` generated.
-
-```@docs
-QuasiMonteCarlo.generate_design_matrices
-```
-
 ## Example
 
 Randomization of a Faure sequence with various methods.

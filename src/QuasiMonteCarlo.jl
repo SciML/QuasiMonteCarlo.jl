@@ -86,30 +86,32 @@ function logi(b::Int, n::Int)
     return m
 end
 
-include("net_utilities.jl")
-include("VanDerCorput.jl")
-include("Faure.jl")
-include("Kronecker.jl")
-include("Halton.jl")
-include("Sobol.jl")
-include("LatinHypercube.jl")
-include("Lattices.jl")
-include("Section.jl")
-
 """
 ```julia
-generate_design_matrices(n, lb, ub, sample_method, num_mats)
+generate_design_matrices(n, d, sample_method::DeterministicSamplingAlgorithm,
+num_mats, T = Float64)
+generate_design_matrices(n, d, sample_method::RandomSamplingAlgorithm,
+num_mats, T = Float64)
+generate_design_matrices(n, lb, ub, sample_method,
+num_mats = 2)
 ```
-
 Create `num_mats` matrices each containing a QMC point set, where:
 - `n` is the number of points to sample.
-- `lb` is the lower bound for each variable. The length determines the dimensionality.
-- `ub` is the upper bound.
-- `d` is the dimensionality of the point set.
-- `sample_method` is the quasi-Monte Carlo sampling strategy. Note that any Distributions.jl
-  distribution can be used in addition to any `SamplingAlgorithm`.
-- You can specify a `RandomizationMethod` for `sample_method<:DeterministicSamplingAlgorithm`
+- `d` is the dimensionality of the point set in `[0, 1)ᵈ`,
+- `sample_method` is the quasi-Monte Carlo sampling strategy used to create a deterministic point set `out`.
+- `T` is the `eltype` of the point sets. For some QMC methods (Faure, Sobol) this can be `Rational`
+If the bound `lb` and `ub` are specified, the sampled will be in the box `[lb, ub]`.
 """
+function generate_design_matrices(n, d, sampler::DeterministicSamplingAlgorithm, num_mats,
+                                  T = Float64)
+    return generate_design_matrices(n, d, sampler, sampler.R, num_mats, T)
+end
+
+function generate_design_matrices(n, d, sampler::RandomSamplingAlgorithm, num_mats,
+                                  T = Float64)
+    return [sample(n, d, sampler, T) for j in 1:num_mats]
+end
+
 function generate_design_matrices(n, lb, ub, sampler,
                                   num_mats = 2)
     if n <= 0
@@ -127,15 +129,15 @@ function generate_design_matrices(n, lb, ub, sampler,
     return out
 end
 
-function generate_design_matrices(n, d, sampler::DeterministicSamplingAlgorithm, num_mats,
-                                  T = Float64)
-    return generate_design_matrices(n, d, sampler, sampler.R, num_mats, T)
-end
-
-function generate_design_matrices(n, d, sampler::RandomSamplingAlgorithm, num_mats,
-                                  T = Float64)
-    return [sample(n, d, sampler, T) for j in 1:num_mats]
-end
+include("net_utilities.jl")
+include("VanDerCorput.jl")
+include("Faure.jl")
+include("Kronecker.jl")
+include("Halton.jl")
+include("Sobol.jl")
+include("LatinHypercube.jl")
+include("Lattices.jl")
+include("Section.jl")
 
 """
 ```julia
