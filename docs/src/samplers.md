@@ -18,6 +18,8 @@ abstract type DeterministicSamplingAlgorithm <: SamplingAlgorithm end
 
 ### Deterministic Sampling Algorithm
 
+All `DeterministicSamplingAlgorithm` have `NoRand()` as their default `RandomizationMethod`, see [Randomization methods](@ref Randomization) section.
+
 ```@docs
 GridSample
 SobolSample

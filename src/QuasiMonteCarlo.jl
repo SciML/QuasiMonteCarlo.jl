@@ -45,19 +45,23 @@ function sample(n::Integer, d::Integer, S::RandomSample, T = Float64)
 end
 
 """
-    sample(n, lb, ub, sample_method)
-    sample(n, d, sample_method)
+```julia
+sample(n::Integer, d::Integer, S::SamplingAlgorithm, T = Float64)
+sample(n::Integer, lb::T, ub::T, S::SamplingAlgorithm) where T <: Union{Base.AbstractVecOrTuple, Number}
+```
 
-Create a QMC point set, where:
+Return a QMC point set where:
 - `n` is the number of points to sample.
-- `lb` is the lower bound for each variable. The length determines the dimensionality.
-- `ub` is the upper bound.
-- `d` is the dimensionality of the point set.
-- `sample_method` is the quasi-Monte Carlo sampling strategy. Note that any Distributions.jl
-  distribution can be used in addition to any `SamplingAlgorithm`.
+- `S` is the quasi-Monte Carlo sampling strategy. 
+The point set is in a `d`-dimensional unit box `[0, 1]^d`. 
+If the bounds are specified, the sample is transformed (translation + scaling) into a box `[lb, ub]` where:
+- `lb` is the lower bound for each variable. Its length fixes the dimensionality of the sample.
+- `ub` is the upper bound. Its dimension must match `length(lb)`.
+
+In the first method the type of the point set is specified by `T` while in the second method the output type is infered from the bound types.
 """
 function sample(n::Integer, lb::T, ub::T,
-                S::D) where {T <: Union{Base.AbstractVecOrTuple, Number}, D <: Union{SamplingAlgorithm, Distributions.Sampleable}}
+    S::D) where {T <: Union{Base.AbstractVecOrTuple, Number}, D <: Union{SamplingAlgorithm, Distributions.Sampleable}}
     _check_sequence(lb, ub, n)
     lb = float.(lb)
     ub = float.(ub)
@@ -66,9 +70,18 @@ function sample(n::Integer, lb::T, ub::T,
 end
 
 """
-    sample(n, d, D::Distribution)
+```julia
+sample(n::Integer, lb::T, ub::T, D::Distributions.Sampleable, T = eltype(D))
+sample(n::Integer, lb::T, ub::T, D::Distributions.Sampleable) where T <: Union{Base.AbstractVecOrTuple, Number}
+```
 
-Returns a tuple containing independent random samples from distribution `D`.
+Return a point set from a distribution `D`:
+- `n` is the number of points to sample.
+- `D` is a `Distributions.Sampleable` from Distributions.jl.
+The point set is in a `d`-dimensional unit box `[0, 1]^d`. 
+If the bounds are specified, the sample is transformed (translation + scaling) into a box `[lb, ub]` where:
+- `lb` is the lower bound for each variable. Its length fixes the dimensionality of the sample.
+- `ub` is the upper bound. Its dimension must match `length(lb)`.
 """
 function sample(n::Integer, d::Integer, D::Distributions.Sampleable, T = eltype(D))
     @assert n>0 ZERO_SAMPLES_MESSAGE

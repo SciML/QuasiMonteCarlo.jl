@@ -1,6 +1,6 @@
 """
 ```julia
-Shifting <: RandomizationMethod
+Shifting(rng::AbstractRNG = Random.GLOBAL_RNG) <: RandomizationMethod
 ```
 
 Cranley-Patterson rotation aka Shifting

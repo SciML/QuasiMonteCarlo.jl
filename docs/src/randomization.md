@@ -1,8 +1,8 @@
-# Randomization methods
+# [Randomization methods](@id Randomization)
 
 Most of the methods presented in [Sampler](@ref Samplers) are deterministic i.e. `X = sample(n, d, ::DeterministicSamplingAlgorithm)` will always produce the same sequence $X = (X_1, \dots, X_n)$.
 
-The main issue with deterministic Quasi Monte Carlo sampling is that it does not allow easy error estimation as opposed to plain Monte Carlo where the variance can be estimated. 
+The main issue with deterministic Quasi Monte Carlo sampling is that it does not allow easy error estimation as opposed to plain Monte Carlo where the variance can be estimated.
 
 A Randomized Quasi Monte Carlo method must respect the two following criteria:
 
@@ -13,12 +13,16 @@ This randomized version is unbiased and can be used to obtain confidence interva
 
 A good reference is the [book by A. Owen](https://artowen.su.domains/mc/qmcstuff.pdf), especially the Chapters 15, 16 and 17.
 
-## API
+## API for randomization
+
+```julia
+abstract type RandomizationMethod end
+```
 
 There are two ways to obtain a randomized sequence:
 
-- Either directly use `QuasiMonteCarlo.sample(n, d, DeterministicSamplingAlgorithm(R = RandomizationMethod()))` or `sample(n, lb, up, DeterministicSamplingAlgorithm(R = RandomizationMethod()))`.
-- Or, given $n$ points $d$-dimensional points, all in $[0,1]^d$ one can do `randomize(X, ::RandomizationMethod())` where $X$ is a $d\times n$-matrix.
+- Either directly use `QuasiMonteCarlo.sample(n, d, DeterministicSamplingAlgorithm(R = SomeRandomizationMethod()))` or `sample(n, lb, up, DeterministicSamplingAlgorithm(R = RandomizationMethod()))`.
+- Or, given $n$ points $d$-dimensional points, all in $[0,1]^d$ one can do `randomize(X, SomeRandomizationMethod())` where $X$ is a $d\times n$-matrix.
 
 ```@docs
 randomize
@@ -31,6 +35,10 @@ NoRand
 ```
 
 ## Scrambling methods
+
+```julia
+abstract type ScrambleMethod <: RandomizationMethod end
+```
 
 ```@docs
 ScrambleMethod
@@ -163,5 +171,5 @@ plot(p..., size=(800, 600))
 ```
 
 !!! note
-    To check if a point set is a $(t,m,d)$-net, you can use the function `istmsnet` defined in the [tests](https://github.com/SciML/QuasiMonteCarlo.jl/blob/2dce9905e564a85e1280115cc8af071674fc7d80/test/runtests.jl#L34) of this package. 
+    To check if a point set is a $(t,m,d)$-net, you can use the function `istmsnet` defined in the [tests](https://github.com/SciML/QuasiMonteCarlo.jl/blob/2dce9905e564a85e1280115cc8af071674fc7d80/test/runtests.jl#L34) of this package.
     It uses the excellent [IntervalArithmetic.jl](https://github.com/JuliaIntervals/IntervalArithmetic.jl) package.
