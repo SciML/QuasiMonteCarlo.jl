@@ -18,7 +18,7 @@ abstract type DeterministicSamplingAlgorithm <: SamplingAlgorithm end
 
 ### Deterministic Sampling Algorithm
 
-All `DeterministicSamplingAlgorithm` have `NoRand()` as their default `RandomizationMethod`, see [Randomization methods](@ref Randomization) section.
+All `DeterministicSamplingAlgorithm` have `NoRand()` as their default `RandomizationMethod`, see [Randomization methods](@ref Randomization) and [Design Matrices section](@ref DesignMatrices) for more information on randomization.
 
 ```@docs
 GridSample

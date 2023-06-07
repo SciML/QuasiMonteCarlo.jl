@@ -38,6 +38,54 @@ using UnsafeArrays
 @uview s[:,i]
 ```
 
+## Toy application MC vs QMC
+
+We illustrate the gain of QMC methods over plain Monte Carlo using the 5-dimensional example from Section 15.9 in the [book by A. Owen](https://artowen.su.domains/mc/qmcstuff.pdf).
+```@example MCvsQMC; continued = true
+f₁(𝐱) = prod(1 + √(12)/5*(xⱼ - 1/2) for xⱼ ∈ 𝐱)
+μ_exact = 1 # = ∫ f₁(𝐱) d⁵𝐱
+```
+
+One can estimate the integral $\mu$ using plain Monte Carlo, or Quasi Monte Carlo or Randomized Quasi Monte Carlo. See the other section of this documentation for more information on the functions used in the example.
+
+```@example MCvsQMC
+using QuasiMonteCarlo, Random, Distributions
+using Plots; default(fontfamily="Computer Modern")
+Random.seed!(1234)
+d = 5 # Dimension (= prime base for Faure net)
+b = 2 # Base for Sobol net
+m_max = 19
+m_max_Faure = 8
+N = b^m_max
+
+# Generate sequences
+seq_MC = QuasiMonteCarlo.sample(N, d, Uniform()) # Monte Carlo i.i.d Uniform sampling
+seq_QMC_Sobol = QuasiMonteCarlo.sample(N, d, SobolSample()) # Sobol net
+seq_RQMC_Sobol = QuasiMonteCarlo.sample(N, d, SobolSample(R = OwenScramble(base = b, pad = 32))) # Randomized version of Sobol net
+seq_RQMC_Faure = QuasiMonteCarlo.sample(d^m_max_Faure, d, FaureSample(R = OwenScramble(base = d, pad = 32))) # Randomized version of Faure net
+
+# Estimate the integral for different n with different estimator μ̂ₙ
+μ_MC = [mean(f₁(x) for x in eachcol(seq_MC[:, 1:b^m])) for m in 1:m_max]
+μ_QMC_Sobol = [mean(f₁(x) for x in eachcol(seq_QMC_Sobol[:, 1:b^m])) for m in 1:m_max]
+μ_RQMC_Sobol = [mean(f₁(x) for x in eachcol(seq_RQMC_Sobol[:, 1:b^m])) for m in 1:m_max]
+μ_RQMC_Faure = [mean(f₁(x) for x in eachcol(seq_RQMC_Faure[:, 1:d^m])) for m in 1:m_max_Faure]
+
+# Plot the error |μ̂-μ| vs n
+plot(b.^(1:m_max), abs.(μ_MC .- μ_exact), label="MC")
+plot!(b.^(1:m_max), abs.(μ_QMC_Sobol .- μ_exact), label="QMC Sobol")
+plot!(b.^(1:m_max), abs.(μ_RQMC_Sobol .- μ_exact), label="RQMC Sobol")
+plot!(d .^(1:m_max_Faure), abs.(μ_RQMC_Faure .- μ_exact), label="RQMC Faure")
+plot!(n -> n^(-1/2), b.^(1:m_max), c = :black, s = :dot, label = "n^(-1/2)")
+plot!(n -> n^(-3/2), b.^(1:m_max), c = :black, s = :dash, label = "n^(-3/2)") 
+# n^(-3/2) is the theoretical scaling for scrambled nets e.g. Theorem 17.5. in https://artowen.su.domains/mc/qmcstuff.pdf
+xlims!(1, 1e6)
+ylims!(1e-9, 1)
+xaxis!(:log10)
+yaxis!(:log10)
+xlabel!("n", legend = :bottomleft)
+ylabel!("|μ̂-μ|")
+```
+
 ## Adding a new sampling method
 
 Adding a new sampling method is a two-step process:

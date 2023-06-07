@@ -1,4 +1,4 @@
-# Design Matrices
+# [Design Matrices](@id DesignMatrices)
 
 ## API
 

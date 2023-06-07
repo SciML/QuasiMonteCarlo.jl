@@ -69,7 +69,7 @@ Return a point set from a distribution `D`:
 - `n` is the number of points to sample.
 - `D` is a `Distributions.Sampleable` from Distributions.jl.
 The point set is in a `d`-dimensional unit box `[0, 1]^d`. 
-If the bounds are specified, the sample is transformed (translation + scaling) into a box `[lb, ub]` where:
+If the bounds are specified instead of just `d`, the sample is transformed (translation + scaling) into a box `[lb, ub]` where:
 - `lb` is the lower bound for each variable. Its length fixes the dimensionality of the sample.
 - `ub` is the upper bound. Its dimension must match `length(lb)`.
 """
@@ -100,7 +100,7 @@ Create `num_mats` matrices each containing a QMC point set, where:
 - `d` is the dimensionality of the point set in `[0, 1)ᵈ`,
 - `sample_method` is the quasi-Monte Carlo sampling strategy used to create a deterministic point set `out`.
 - `T` is the `eltype` of the point sets. For some QMC methods (Faure, Sobol) this can be `Rational`
-If the bound `lb` and `ub` are specified, the sampled will be in the box `[lb, ub]`.
+If the bound `lb` and `ub` are specified instead of `d`, the samples will be transformed into the box `[lb, ub]`.
 """
 function generate_design_matrices(n, d, sampler::DeterministicSamplingAlgorithm, num_mats,
                                   T = Float64)
@@ -152,7 +152,8 @@ randomize(x, S::NoRand) = x
 """
     generate_design_matrices(n, d, sampler, R::NoRand, num_mats, T = Float64)
 `R = NoRand()` produces `num_mats` matrices each containing a different deterministic point set in `[0, 1)ᵈ`.
-Note that this is an ad hoc way to produce different `generate_design_matrices` as it creates a deterministic point in dimension `d × num_mats` and split it in `num_mats` point set of dimension `d` which have no QMC garantuees.
+Note that this is an ad hoc way to produce i.i.d sequence as it creates a deterministic point in dimension `d × num_mats` and split it in `num_mats` point set of dimension `d`. 
+This does not have any QMC garantuees.
 """
 function generate_design_matrices(n, d, sampler, R::NoRand, num_mats, T = Float64)
     out = sample(n, num_mats * d, sampler, T)

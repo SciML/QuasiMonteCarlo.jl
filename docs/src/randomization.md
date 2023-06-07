@@ -34,6 +34,8 @@ The default method of `DeterministicSamplingAlgorithm` is `NoRand`
 NoRand
 ```
 
+To obtain multiple independent randomization of a sequence i.e. Design Matrices, look at the [Design Matrices section](@ref DesignMatrices).
+
 ## Scrambling methods
 
 ```julia
@@ -163,5 +165,5 @@ plot(p..., size=(800, 600))
 ```
 
 !!! note
-    To check if a point set is a $(t,m,d)$-net, you can use the function `istmsnet` defined in the [tests](https://github.com/SciML/QuasiMonteCarlo.jl/blob/2dce9905e564a85e1280115cc8af071674fc7d80/test/runtests.jl#L34) of this package.
+    To check if a point set is a $(t,m,d)$-net, you can use the function `istmsnet` defined in the [tests file](https://github.com/SciML/QuasiMonteCarlo.jl/blob/2dce9905e564a85e1280115cc8af071674fc7d80/test/runtests.jl#L34) of this package.
     It uses the excellent [IntervalArithmetic.jl](https://github.com/JuliaIntervals/IntervalArithmetic.jl) package.
