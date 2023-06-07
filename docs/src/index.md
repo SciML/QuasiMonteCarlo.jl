@@ -12,7 +12,9 @@ using Pkg
 Pkg.add("QuasiMonteCarlo")
 ```
 
-## Example
+## Get Started
+
+### Basic API
 
 ```julia
 using QuasiMonteCarlo, Distributions
@@ -38,7 +40,7 @@ using UnsafeArrays
 @uview s[:,i]
 ```
 
-## Toy application MC vs QMC
+### MC vs QMC
 
 We illustrate the gain of QMC methods over plain Monte Carlo using the 5-dimensional example from Section 15.9 in the [book by A. Owen](https://artowen.su.domains/mc/qmcstuff.pdf).
 ```@example MCvsQMC; continued = true
