@@ -46,7 +46,6 @@ To obtain multiple independent randomization of a sequence, i.e. Design Matrices
     1. Put all of it into a sequence of size, $N$, thus having the best estimator $\hat{\mu}_N$. The price to pay is that this estimation is not associated with a variance estimation.
     2. Divided your computational budget into $N = n\times M$ to get $M$ independent estimator $\hat{\mu}_n$. From there one can compute an empirical variance of the estimator.
 
-
 ## Scrambling methods
 
 ```julia
