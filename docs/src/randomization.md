@@ -37,6 +37,16 @@ NoRand
 
 To obtain multiple independent randomization of a sequence, i.e. Design Matrices, look at the [Design Matrices section](@ref DesignMatrices).
 
+!!! note
+    In most other QMC packages, randomization is performed "online" as the points are samples. Here, randomization is performed after the deterministic sequence is generated. Both methods are useful in different contexts, the former is generally faster to produce one randomized sequence, while the latter is faster to produce independent realization of the sequence.
+
+    **PRs are welcomed** to add "online" version of the sequence! See [this comment for inspiration](https://github.com/SciML/QuasiMonteCarlo.jl/pull/57#issuecomment-1326662016).
+
+    Another way to view the two approaches is: given a computational budget of $N$ points, one can
+    1. Put all of it into a sequence of size, $N$, thus having the best estimator $\hat{\mu}_N$. The price to pay is that this estimation is not associated with a variance estimation.
+    2. Divided your computational budget into $N = n\times M$ to get $M$ independent estimator $\hat{\mu}_n$. From there one can compute an empirical variance of the estimator.
+
+
 ## Scrambling methods
 
 ```julia
