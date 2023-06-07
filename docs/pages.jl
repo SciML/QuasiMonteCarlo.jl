@@ -4,5 +4,5 @@ pages = [
     "Home" => "index.md",
     "samplers.md",
     "randomization.md",
-    "design_matrix.md"
+    "design_matrix.md",
 ]

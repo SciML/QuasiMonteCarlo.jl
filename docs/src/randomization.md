@@ -1,13 +1,14 @@
+
 # [Randomization methods](@id Randomization)
 
-Most of the methods presented in [Sampler](@ref Samplers) are deterministic i.e. `X = sample(n, d, ::DeterministicSamplingAlgorithm)` will always produce the same sequence $X = (X_1, \dots, X_n)$.
+Most of the methods presented in [Sampler](@ref Samplers) are deterministic, i.e. `X = sample(n, d, ::DeterministicSamplingAlgorithm)` will always produce the same sequence $X = (X_1, \dots, X_n)$.
 
 The main issue with deterministic Quasi Monte Carlo sampling is that it does not allow easy error estimation as opposed to plain Monte Carlo where the variance can be estimated.
 
 A Randomized Quasi Monte Carlo method must respect the two following criteria:
 
 1. Have $X_i\sim \mathbb{U}([0,1]^d)$ for each $i\in \{1,\cdots, n\}$.
-2. Preserve the QMC properties i.e. the randomized $X$ still has low discrepancy.
+2. Preserve the QMC properties, i.e. the randomized $X$ still has low discrepancy.
 
 This randomized version is unbiased and can be used to obtain confidence interval or to do sensitivity analysis.
 
@@ -34,7 +35,7 @@ The default method of `DeterministicSamplingAlgorithm` is `NoRand`
 NoRand
 ```
 
-To obtain multiple independent randomization of a sequence i.e. Design Matrices, look at the [Design Matrices section](@ref DesignMatrices).
+To obtain multiple independent randomization of a sequence, i.e. Design Matrices, look at the [Design Matrices section](@ref DesignMatrices).
 
 ## Scrambling methods
 
@@ -46,7 +47,7 @@ abstract type ScrambleMethod <: RandomizationMethod end
 ScrambleMethod
 ```
 
-`ScramblingMethods(b, pad, rng)` are well suited for $(t,m,d)$-nets in base $b$. `b` is the base used to scramble and `pad` the number of bits in `b`-ary decomposition i.e. $y \simeq \sum_{k=1}^{\texttt{pad}} y_k/\texttt{b}^k$.
+`ScramblingMethods(b, pad, rng)` are well suited for $(t,m,d)$-nets in base $b$. `b` is the base used to scramble and `pad` the number of bits in `b`-ary decomposition, i.e. $y \simeq \sum_{k=1}^{\texttt{pad}} y_k/\texttt{b}^k$.
 
 The `pad` is generally chosen as $\gtrsim \log_b(n)$.
 
@@ -63,13 +64,13 @@ The implemented `ScramblingMethods` are
 DigitalShift
 ```
 
-- `MatousekScramble` a.k.a Linear Matrix Scramble is what people use in practice. Indeed, the observed performances are similar to `OwenScramble` for a lesser numerical cost.
+- `MatousekScramble` a.k.a. Linear Matrix Scramble is what people use in practice. Indeed, the observed performances are similar to `OwenScramble` for a lesser numerical cost.
 
 ```@docs
 MatousekScramble
 ```
 
-- `OwenScramble` a.k.a Nested Uniform Scramble is the most understood theoretically but is more costly to operate.
+- `OwenScramble` a.k.a. Nested Uniform Scramble is the most understood theoretically but is more costly to operate.
 
 ```@docs
 OwenScramble

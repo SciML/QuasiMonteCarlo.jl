@@ -51,7 +51,8 @@ If the bounds are specified, the sample is transformed (translation + scaling) i
 In the first method the type of the point set is specified by `T` while in the second method the output type is infered from the bound types.
 """
 function sample(n::Integer, lb::T, ub::T,
-    S::D) where {T <: Union{Base.AbstractVecOrTuple, Number}, D <: Union{SamplingAlgorithm, Distributions.Sampleable}}
+                S::D) where {T <: Union{Base.AbstractVecOrTuple, Number},
+                             D <: Union{SamplingAlgorithm, Distributions.Sampleable}}
     _check_sequence(lb, ub, n)
     lb = float.(lb)
     ub = float.(ub)

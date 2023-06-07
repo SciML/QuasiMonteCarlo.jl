@@ -1,3 +1,4 @@
+
 # QuasiMonteCarlo.jl
 
 [![Join the chat at https://julialang.zulipchat.com #sciml-bridged](https://img.shields.io/static/v1?label=Zulip&message=chat&color=9558b2&labelColor=389826)](https://julialang.zulipchat.com/#narrow/stream/279055-sciml-bridged)
@@ -88,7 +89,7 @@ Sampling methods `SamplingAlgorithm` are divided into two subtypes
   - `LatticeRuleSample` for a randomly-shifted rank-1 lattice rule.
   - `HaltonSample` for the Halton sequence.
   - `GoldenSample` for a Golden Ratio sequence.
-  - `KroneckerSample(alpha, s0)` for a Kronecker sequence, where alpha is an length-`d` vector of irrational numbers (often `sqrt(d)`) and `s0` is a length-`d` seed vector (often `0`).
+  - `KroneckerSample(alpha, s0)` for a Kronecker sequence, where alpha is a length-`d` vector of irrational numbers (often `sqrt(d)`) and `s0` is a length-`d` seed vector (often `0`).
 - `RandomSamplingAlgorithm`
   - `UniformSample` for uniformly distributed random numbers.
   - `LatinHypercubeSample` for a Latin Hypercube.
@@ -122,7 +123,7 @@ end
 
 ## Randomization of QMC sequences
 
-Most of the previous methods are deterministic i.e. `sample(n, d, Sampler()::DeterministicSamplingAlgorithm)` always produces the same sequence $X = (X_1, \dots, X_n)$.
+Most of the previous methods are deterministic, i.e. `sample(n, d, Sampler()::DeterministicSamplingAlgorithm)` always produces the same sequence $X = (X_1, \dots, X_n)$.
 There are two ways to obtain a randomized sequence:
 
 - Either directly use `QuasiMonteCarlo.sample(n, d, DeterministicSamplingAlgorithm(R = RandomizationMethod()))` or `sample(n, lb, up, DeterministicSamplingAlgorithm(R = RandomizationMethod()))`.
@@ -134,8 +135,8 @@ The currently available randomization methods are:
 `pad` is generally chosen as $\gtrsim \log_b(n)$.
 The implemented `ScramblingMethods` are
   - `DigitalShift`
-  - `MatousekScramble` a.k.a Linear Matrix Scramble.
-  - `OwenScramble` a.k.a Nested Uniform Scramble is the most understood theoretically but is more costly to operate.
+  - `MatousekScramble` a.k.a. Linear Matrix Scramble.
+  - `OwenScramble` a.k.a. Nested Uniform Scramble is the most understood theoretically, but is more costly to operate.
 - `Shift(rng)` a.k.a. Cranley Patterson Rotation.
 
 For numerous independent randomization, use `generate_design_matrices(n, d, ::DeterministicSamplingAlgorithm), ::RandomizationMethod, num_mats)` where `num_mats` is the number of independent `X` generated.
