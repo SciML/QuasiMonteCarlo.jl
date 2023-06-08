@@ -1,5 +1,5 @@
 """
-    KroneckerSample(generator::AbstractVector) <: DeterministicSamplingAlgorithm
+    KroneckerSample(generator::AbstractVector, R::RandomizationMethod = NoRand()) <: DeterministicSamplingAlgorithm
 
 A Kronecker sequence is a point set generated using a vector and equation:
 `x[i] = i * generator .% 1`

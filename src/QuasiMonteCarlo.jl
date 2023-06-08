@@ -8,16 +8,6 @@ abstract type RandomSamplingAlgorithm <: SamplingAlgorithm end
 abstract type DeterministicSamplingAlgorithm <: SamplingAlgorithm end
 abstract type RandomizationMethod end
 
-include("net_utilities.jl")
-include("VanDerCorput.jl")
-include("Faure.jl")
-include("Kronecker.jl")
-include("Halton.jl")
-include("Sobol.jl")
-include("LatinHypercube.jl")
-include("Lattices.jl")
-include("Section.jl")
-
 const UB_LB_MESSAGE = "Lower bound exceeds upper bound (lb > ub)"
 const ZERO_SAMPLES_MESSAGE = "Number of samples must be greater than zero"
 const DIM_MISMATCH_MESSAGE = "Dimensionality of lb and ub must match"
@@ -45,19 +35,24 @@ function sample(n::Integer, d::Integer, S::RandomSample, T = Float64)
 end
 
 """
-    sample(n, lb, ub, sample_method)
-    sample(n, d, sample_method)
+```julia
+sample(n::Integer, d::Integer, S::SamplingAlgorithm, T = Float64)
+sample(n::Integer, lb::T, ub::T, S::SamplingAlgorithm) where T <: Union{Base.AbstractVecOrTuple, Number}
+```
 
-Create a QMC point set, where:
+Return a QMC point set where:
 - `n` is the number of points to sample.
-- `lb` is the lower bound for each variable. The length determines the dimensionality.
-- `ub` is the upper bound.
-- `d` is the dimensionality of the point set.
-- `sample_method` is the quasi-Monte Carlo sampling strategy. Note that any Distributions.jl
-  distribution can be used in addition to any `SamplingAlgorithm`.
+- `S` is the quasi-Monte Carlo sampling strategy. 
+The point set is in a `d`-dimensional unit box `[0, 1]^d`. 
+If the bounds are specified, the sample is transformed (translation + scaling) into a box `[lb, ub]` where:
+- `lb` is the lower bound for each variable. Its length fixes the dimensionality of the sample.
+- `ub` is the upper bound. Its dimension must match `length(lb)`.
+
+In the first method the type of the point set is specified by `T` while in the second method the output type is infered from the bound types.
 """
 function sample(n::Integer, lb::T, ub::T,
-                S::SamplingAlgorithm) where {T <: Union{Base.AbstractVecOrTuple, Number}}
+                S::D) where {T <: Union{Base.AbstractVecOrTuple, Number},
+                             D <: Union{SamplingAlgorithm, Distributions.Sampleable}}
     _check_sequence(lb, ub, n)
     lb = float.(lb)
     ub = float.(ub)
@@ -66,11 +61,20 @@ function sample(n::Integer, lb::T, ub::T,
 end
 
 """
-    sample(n, d, D::Distribution)
+```julia
+sample(n::Integer, lb::T, ub::T, D::Distributions.Sampleable, T = eltype(D))
+sample(n::Integer, lb::T, ub::T, D::Distributions.Sampleable) where T <: Union{Base.AbstractVecOrTuple, Number}
+```
 
-Returns a tuple containing independent random samples from distribution `D`.
+Return a point set from a distribution `D`:
+- `n` is the number of points to sample.
+- `D` is a `Distributions.Sampleable` from Distributions.jl.
+The point set is in a `d`-dimensional unit box `[0, 1]^d`. 
+If the bounds are specified instead of just `d`, the sample is transformed (translation + scaling) into a box `[lb, ub]` where:
+- `lb` is the lower bound for each variable. Its length fixes the dimensionality of the sample.
+- `ub` is the upper bound. Its dimension must match `length(lb)`.
 """
-function sample(n::Integer, d::Integer, D::Distributions.Sampleable)
+function sample(n::Integer, d::Integer, D::Distributions.Sampleable, T = eltype(D))
     @assert n>0 ZERO_SAMPLES_MESSAGE
     x = [[rand(D) for j in 1:d] for i in 1:n]
     return reduce(hcat, x)
@@ -85,18 +89,30 @@ end
 
 """
 ```julia
-generate_design_matrices(n, lb, ub, sample_method, num_mats)
+generate_design_matrices(n, d, sample_method::DeterministicSamplingAlgorithm,
+num_mats, T = Float64)
+generate_design_matrices(n, d, sample_method::RandomSamplingAlgorithm,
+num_mats, T = Float64)
+generate_design_matrices(n, lb, ub, sample_method,
+num_mats = 2)
 ```
-
 Create `num_mats` matrices each containing a QMC point set, where:
 - `n` is the number of points to sample.
-- `lb` is the lower bound for each variable. The length determines the dimensionality.
-- `ub` is the upper bound.
-- `d` is the dimensionality of the point set.
-- `sample_method` is the quasi-Monte Carlo sampling strategy. Note that any Distributions.jl
-  distribution can be used in addition to any `SamplingAlgorithm`.
-- You can specify a `RandomizationMethod` for `sample_method<:DeterministicSamplingAlgorithm`
+- `d` is the dimensionality of the point set in `[0, 1)ᵈ`,
+- `sample_method` is the quasi-Monte Carlo sampling strategy used to create a deterministic point set `out`.
+- `T` is the `eltype` of the point sets. For some QMC methods (Faure, Sobol) this can be `Rational`
+If the bound `lb` and `ub` are specified instead of `d`, the samples will be transformed into the box `[lb, ub]`.
 """
+function generate_design_matrices(n, d, sampler::DeterministicSamplingAlgorithm, num_mats,
+                                  T = Float64)
+    return generate_design_matrices(n, d, sampler, sampler.R, num_mats, T)
+end
+
+function generate_design_matrices(n, d, sampler::RandomSamplingAlgorithm, num_mats,
+                                  T = Float64)
+    return [sample(n, d, sampler, T) for j in 1:num_mats]
+end
+
 function generate_design_matrices(n, lb, ub, sampler,
                                   num_mats = 2)
     if n <= 0
@@ -114,18 +130,19 @@ function generate_design_matrices(n, lb, ub, sampler,
     return out
 end
 
-function generate_design_matrices(n, d, sampler::DeterministicSamplingAlgorithm, num_mats,
-                                  T = Float64)
-    return generate_design_matrices(n, d, sampler, sampler.R, num_mats, T)
-end
+include("net_utilities.jl")
+include("VanDerCorput.jl")
+include("Faure.jl")
+include("Kronecker.jl")
+include("Halton.jl")
+include("Sobol.jl")
+include("LatinHypercube.jl")
+include("Lattices.jl")
+include("Section.jl")
 
-function generate_design_matrices(n, d, sampler::RandomSamplingAlgorithm, num_mats,
-                                  T = Float64)
-    return [sample(n, d, sampler, T) for j in 1:num_mats]
-end
 """
 ```julia
-NoRand
+NoRand <: RandomizationMethod
 ```
 
 No Randomization is performed on the sampled sequence.
@@ -136,7 +153,8 @@ randomize(x, S::NoRand) = x
 """
     generate_design_matrices(n, d, sampler, R::NoRand, num_mats, T = Float64)
 `R = NoRand()` produces `num_mats` matrices each containing a different deterministic point set in `[0, 1)ᵈ`.
-Note that this is an ad hoc way to produce different `generate_design_matrices` as it creates a deterministic point in dimension `d × num_mats` and split it in `num_mats` point set of dimension `d` which have no QMC garantuees.
+Note that this is an ad hoc way to produce i.i.d sequence as it creates a deterministic point in dimension `d × num_mats` and split it in `num_mats` point set of dimension `d`. 
+This does not have any QMC garantuees.
 """
 function generate_design_matrices(n, d, sampler, R::NoRand, num_mats, T = Float64)
     out = sample(n, num_mats * d, sampler, T)
@@ -148,7 +166,6 @@ include("RandomizedQuasiMonteCarlo/scrambling_base_b.jl")
 
 export SamplingAlgorithm,
        GridSample,
-       UniformSample,
        SobolSample,
        LatinHypercubeSample,
        LatticeRuleSample,

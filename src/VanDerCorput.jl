@@ -1,5 +1,5 @@
 """
-    VanDerCorputSample(base::Integer)
+    VanDerCorputSample(base::Integer, R::RandomizationMethod = NoRand()) <: DeterministicSamplingAlgorithm
 
 The van der Corput sequence, also called the radical inverse sequence, is a one-dimensional
 low-discrepancy sequence that recursively splits the unit interval into equally-sized
@@ -13,7 +13,7 @@ is a multiple of a power of the base.
 Base.@kwdef @concrete struct VanDerCorputSample{I <: Integer} <:
                              DeterministicSamplingAlgorithm
     base::I
-    R::RandomizationMethod = NoRa
+    R::RandomizationMethod = NoRand()
 end
 
 function sample(n::Integer, d::Integer, S::VanDerCorputSample, T::Type = Float64)

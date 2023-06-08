@@ -1,7 +1,10 @@
+# * The scrambling codes were first inspired from Owen's `R` implementation that can be found [here](https://artowen.su.domains/code/rsobol.R). * #
+
 """ 
-    ```julia
-    ScrambleMethod
-    ```
+```julia
+ScrambleMethod <: RandomizationMethod
+```
+
 A scramble method needs at lease the scrambling base `b`, the number of "bits" to use `pad` (`pad=32` is the default) and a seed `rng` (`rng = Random.GLOBAL_RNG` is the default).
 The scramble methods implementer are 
 - `DigitalShift`.
@@ -26,7 +29,7 @@ end
 
 """
 ```julia
-OwenScramble
+OwenScramble <: ScrambleMethod
 ```
 
 Nested Uniform Scramble aka Owen' scramble.
@@ -34,6 +37,8 @@ Nested Uniform Scramble aka Owen' scramble.
 `randomize(x, R::OwenScramble)` returns a scrambled version of `x`. 
 The scramble method is Nested Uniform Scramble which was introduced in Owen (1995).
 `pad` is the number of bits used for each points. One needs `pad ≥ log(base, n)`. 
+
+References: Owen, A. B. (1995). Randomly permuted (t, m, s)-nets and (t, s)-sequences. In Monte Carlo and Quasi-Monte Carlo Methods in Scientific Computing: Proceedings of a conference at the University of Nevada, Las Vegas, Nevada, USA, June 23–25, 1994 (pp. 299-317). Springer New York.
 """
 Base.@kwdef struct OwenScramble <: ScrambleMethod
     base::Int
@@ -130,7 +135,7 @@ end
 
 """
 ```julia
-MatousekScramble
+MatousekScramble <: ScrambleMethod
 ```
 
 Linear Matrix Scramble aka Matousek' scramble.
@@ -138,6 +143,8 @@ Linear Matrix Scramble aka Matousek' scramble.
 `randomize(x, R::MatousekScramble)` returns a scrambled version of `x`. 
 The scramble method is Linear Matrix Scramble which was introduced in Matousek (1998).
 `pad` is the number of bits used for each points. One need `pad ≥ log(base, n)`. 
+
+References: Matoušek, J. (1998). On thel2-discrepancy for anchored boxes. Journal of Complexity, 14(4), 527-556.
 """
 Base.@kwdef struct MatousekScramble <: ScrambleMethod
     base::Int
@@ -209,7 +216,7 @@ getmatousek(m::Integer, b::Integer) = getmatousek(Random.GLOBAL_RNG, m, b)
 
 """
 ```julia
-DigitalShift
+DigitalShift <: ScrambleMethod
 ```
 
 Digital shift. 
