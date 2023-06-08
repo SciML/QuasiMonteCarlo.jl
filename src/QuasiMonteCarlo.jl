@@ -51,8 +51,8 @@ If the bounds are specified, the sample is transformed (translation + scaling) i
 In the first method the type of the point set is specified by `T` while in the second method the output type is infered from the bound types.
 """
 function sample(n::Integer, lb::T, ub::T,
-                S::D) where {T <: Union{Base.AbstractVecOrTuple, Number},
-                             D <: Union{SamplingAlgorithm, Distributions.Sampleable}}
+    S::D) where {T <: Union{Base.AbstractVecOrTuple, Number},
+    D <: Union{SamplingAlgorithm, Distributions.Sampleable}}
     _check_sequence(lb, ub, n)
     lb = float.(lb)
     ub = float.(ub)
@@ -104,17 +104,17 @@ Create `num_mats` matrices each containing a QMC point set, where:
 If the bound `lb` and `ub` are specified instead of `d`, the samples will be transformed into the box `[lb, ub]`.
 """
 function generate_design_matrices(n, d, sampler::DeterministicSamplingAlgorithm, num_mats,
-                                  T = Float64)
+    T = Float64)
     return generate_design_matrices(n, d, sampler, sampler.R, num_mats, T)
 end
 
 function generate_design_matrices(n, d, sampler::RandomSamplingAlgorithm, num_mats,
-                                  T = Float64)
+    T = Float64)
     return [sample(n, d, sampler, T) for j in 1:num_mats]
 end
 
 function generate_design_matrices(n, lb, ub, sampler,
-                                  num_mats = 2)
+    num_mats = 2)
     if n <= 0
         throw(ZeroSamplesError())
     end
@@ -165,23 +165,23 @@ include("RandomizedQuasiMonteCarlo/shifting.jl")
 include("RandomizedQuasiMonteCarlo/scrambling_base_b.jl")
 
 export SamplingAlgorithm,
-       GridSample,
-       SobolSample,
-       LatinHypercubeSample,
-       LatticeRuleSample,
-       RandomSample,
-       HaltonSample,
-       VanDerCorputSample,
-       GoldenSample,
-       KroneckerSample,
-       SectionSample,
-       FaureSample,
-       randomize,
-       RandomizationMethod,
-       NoRand,
-       Shift,
-       ScrambleMethod,
-       OwenScramble,
-       MatousekScramble,
-       DigitalShift
+    GridSample,
+    SobolSample,
+    LatinHypercubeSample,
+    LatticeRuleSample,
+    RandomSample,
+    HaltonSample,
+    VanDerCorputSample,
+    GoldenSample,
+    KroneckerSample,
+    SectionSample,
+    FaureSample,
+    randomize,
+    RandomizationMethod,
+    NoRand,
+    Shift,
+    ScrambleMethod,
+    OwenScramble,
+    MatousekScramble,
+    DigitalShift
 end # module

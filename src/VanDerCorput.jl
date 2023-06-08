@@ -40,7 +40,7 @@ function _vdc(n::I, base::I, F = Float64) where {I <: Integer}
     return _vdc(one(n), I(log(base, n)), base, F; n)
 end
 @fastmath @views function _vdc(λ::I, n_digits::I, base::I, F = Float64;
-                               n = λ * base^n_digits) where {I <: Integer}
+    n = λ * base^n_digits) where {I <: Integer}
     sequence = zeros(F, n)
     inv_base = convert(F, inv(base))
     dgs = fill(base - 1, n_digits)

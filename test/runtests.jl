@@ -43,7 +43,7 @@ The test is exact if the element of `net` are of type `Rational`. Indeed, in tha
 The conversion `Float` to `Rational` is usually possible with usual nets, e.g., Sobol, Faure (may require `Rational{BigInt}.(net)`).
 """
 function istmsnet(net::AbstractMatrix{T}; λ::I, t::I, m::I, s::I,
-                  base::I) where {I <: Integer, T <: Real}
+    base::I) where {I <: Integer, T <: Real}
     pass = true
 
     @assert size(net, 2)==λ * (base^m) "Number of points must be as size(net, 2) = $(size(net, 2)) == λ * (base^m) = $(λ * (base^m))"
@@ -53,7 +53,7 @@ function istmsnet(net::AbstractMatrix{T}; λ::I, t::I, m::I, s::I,
     perms = multiexponents(s, m - t)
     for stepsize in perms
         intervals = mince(IntervalBox([interval(zero(T), one(T)) for i in 1:s]),
-                          NTuple{s, Int}(base .^ stepsize))
+            NTuple{s, Int}(base .^ stepsize))
         pass &= all(intervals) do intvl
             λ * base^t == count(point -> inCloseOpen(point, intvl), collect(eachcol((net))))
         end
@@ -484,7 +484,7 @@ end
         net = Rational.(QuasiMonteCarlo.sample(n, s, SobolSample()))
         for j in eachindex(v)
             pass[j, s] = istmsnet(randomize(net, v[j]); λ, t, m, s,
-                                  base = base)
+                base = base)
         end
     end
     @test all(pass)
@@ -501,14 +501,14 @@ end
     for s in 1:m
         net = Rational{BigInt}.(QuasiMonteCarlo.sample(nextprime(s)^m, s, FaureSample())) # Convert the sequence in Rational{BigInt} (needed to scramble)
         pass[1, s] = istmsnet(randomize(net, NoRand()); λ, t, m, s,
-                              base = nextprime(s))
+            base = nextprime(s))
         pass[2, s] = istmsnet(randomize(net, OwenScramble(base = nextprime(s), pad = m));
-                              λ, t, m, s, base = nextprime(s))
+            λ, t, m, s, base = nextprime(s))
         pass[3, s] = istmsnet(randomize(net,
-                                        MatousekScramble(base = nextprime(s), pad = m));
-                              λ, t, m, s, base = nextprime(s))
+                MatousekScramble(base = nextprime(s), pad = m));
+            λ, t, m, s, base = nextprime(s))
         pass[4, s] = istmsnet(randomize(net, DigitalShift(base = nextprime(s), pad = m));
-                              λ, t, m, s, base = nextprime(s))
+            λ, t, m, s, base = nextprime(s))
     end
     @test all(pass)
 end

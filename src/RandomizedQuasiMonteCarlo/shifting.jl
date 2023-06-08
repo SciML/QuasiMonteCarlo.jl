@@ -36,7 +36,7 @@ function shift!(points::AbstractMatrix{T}, U::AbstractVector{T}) where {T <: Rea
 end
 
 function shift!(rng::AbstractRNG, points::AbstractMatrix{T},
-                U::AbstractVector{T}) where {T <: Real}
+    U::AbstractVector{T}) where {T <: Real}
     rand!(rng, U)
     for i in axes(points, 2)
         points[:, i] += U
