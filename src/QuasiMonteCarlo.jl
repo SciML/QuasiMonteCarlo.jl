@@ -183,5 +183,6 @@ export SamplingAlgorithm,
     ScrambleMethod,
     OwenScramble,
     MatousekScramble,
-    DigitalShift
+    DigitalShift,
+    DesignMatrix
 end # module
