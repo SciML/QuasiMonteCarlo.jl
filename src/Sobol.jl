@@ -10,5 +10,5 @@ end
 function sample(n::Integer, d::Integer, S::SobolSample, T = Float64)
     s = Sobol.SobolSeq(zeros(T, d), ones(T, d))
     skip(s, n)
-    return randomize(reduce(hcat, [QuasiMonteCarlo.next!(s) for i in 1:n]), S.R)
+    return randomize(reduce(hcat, [Sobol.next!(s) for i in 1:n]), S.R)
 end
