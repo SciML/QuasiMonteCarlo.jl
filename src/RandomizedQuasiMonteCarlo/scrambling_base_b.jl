@@ -79,12 +79,15 @@ function randomize_bits!(random_bits::AbstractArray{T, 3},
     for s in 1:d
         theperms = getpermset(rng, m, b)         # Permutations to apply to bits 1:m
         for k in 1:m                             # Here is where we want m > 0 so the loop works ok
-            random_bits[k, :, s] = (origin_bits[k, :, s] + theperms[k, indices[k, :, s]]) .%
+            @views random_bits[k, :, s] .= (origin_bits[k, :, s] .+ theperms[k, indices[k, :, s]]) .%
                                    b   # permutation by adding a bit modulo b
         end
     end
-    if pad > m     # Paste in random entries for bits after m'th one
-        random_bits[(m + 1):pad, :, :] = rand(rng, 0:(b - 1), n * d * (pad - m))
+    
+    # Paste in random entries for bits after m'th one
+    if pad > m
+        # random_bits[(m + 1):pad, :, :] = rand(rng, 0:(b - 1), n * d * (pad - m))
+        rand!(rng, @view(random_bits[(m + 1):pad, :, :]), 0:(b - 1))
     end
 end
 
@@ -187,12 +190,13 @@ function randomize_bits!(random_bits::AbstractArray{T, 3},
 
         # xₖ = (∑ₗ Mₖₗ aₗ + Cₖ) mod b where xₖ is the k element in base b
         # matousek_M (m×m) * origin_bits (m×n) .+ matousek_C (m×1) 
-        random_bits[1:m, :, s] = (matousek_M * origin_bits[1:m, :, s] .+ matousek_C) .% b
+        @views random_bits[1:m, :, s] .= (matousek_M * origin_bits[1:m, :, s] .+ matousek_C) .% b
     end
 
     # Paste in random entries for bits after m'th one
     if pad > m
-        random_bits[(m + 1):pad, :, :] = rand(rng, 0:(b - 1), n * d * (pad - m))
+        # random_bits[(m + 1):pad, :, :] = rand(rng, 0:(b - 1), n * d * (pad - m))
+        rand!(rng, @view(random_bits[(m + 1):pad, :, :]), 0:(b - 1))
     end
 end
 
@@ -262,12 +266,13 @@ function randomize_bits!(random_bits::AbstractArray{T, 3},
 
         # xₖ = (aₖ + Cₖ) mod b where xₖ is the k element in base b
         # origin_bits (m×n) .+ DS (m×1) 
-        random_bits[1:m, :, s] = (origin_bits[1:m, :, s] .+ DS) .% b
+        @views random_bits[1:m, :, s] .= (origin_bits[1:m, :, s] .+ DS) .% b
     end
 
     # Paste in random entries for bits after m'th one
     if pad > m
-        random_bits[(m + 1):pad, :, :] = rand(rng, 0:(b - 1), n * d * (pad - m))
+        # random_bits[(m + 1):pad, :, :] = rand(rng, 0:(b - 1), n * d * (pad - m))
+        rand!(rng, @view(random_bits[(m + 1):pad, :, :]), 0:(b - 1))
     end
 end
 

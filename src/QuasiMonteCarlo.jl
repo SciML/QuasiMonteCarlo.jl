@@ -163,6 +163,7 @@ end
 
 include("RandomizedQuasiMonteCarlo/shifting.jl")
 include("RandomizedQuasiMonteCarlo/scrambling_base_b.jl")
+include("RandomizedQuasiMonteCarlo/iterators.jl")
 
 export SamplingAlgorithm,
     GridSample,
