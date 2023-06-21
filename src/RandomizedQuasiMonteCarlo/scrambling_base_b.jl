@@ -136,6 +136,19 @@ function which_permutation!(indices::AbstractMatrix{<:Integer},
     indices .+= 1 # array indexing starts at 1
 end
 
+
+function randomize!(random_points::AbstractMatrix{T},
+    points::AbstractMatrix{T}, R::ScrambleMethod) where {T <: Real}
+    @assert size(points) == size(random_points)
+    b = R.base
+    unrandomized_bits = unif2bits(points, b, pad = R.pad)
+    random_bits = similar(unrandomized_bits)
+    randomize_bits!(random_bits, unrandomized_bits, R)
+    for i in CartesianIndices(random_points)
+        random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
+    end
+end
+
 """
 ```julia
 MatousekScramble <: ScrambleMethod
@@ -153,18 +166,6 @@ Base.@kwdef struct MatousekScramble <: ScrambleMethod
     base::Int
     pad::Int = 32
     rng::AbstractRNG = Random.GLOBAL_RNG
-end
-
-function randomize!(random_points::AbstractMatrix{T},
-    points::AbstractMatrix{T}, R::MatousekScramble) where {T <: Real}
-    @assert size(points) == size(random_points)
-    b = R.base
-    unrandomized_bits = unif2bits(points, b, pad = R.pad)
-    random_bits = similar(unrandomized_bits)
-    randomize_bits!(random_bits, unrandomized_bits, R)
-    for i in CartesianIndices(random_points)
-        random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
-    end
 end
 
 #? Weird it should be faster than nested uniform Scramble but here it is not at all.-> look for other implementation and paper
@@ -234,19 +235,6 @@ Base.@kwdef struct DigitalShift <: ScrambleMethod
     base::Int
     pad::Int = 32
     rng::AbstractRNG = Random.GLOBAL_RNG
-end
-
-function randomize!(random_points::AbstractMatrix{T},
-    points::AbstractMatrix{T}, R::DigitalShift) where {T <: Real}
-    @assert size(points) == size(random_points)
-    b = R.base
-    unrandomized_bits = unif2bits(points, b, pad = R.pad)
-    random_bits = similar(unrandomized_bits)
-
-    randomize_bits!(random_bits, unrandomized_bits, R)
-    for i in CartesianIndices(random_points)
-        random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
-    end
 end
 
 function randomize_bits!(random_bits::AbstractArray{T, 3},
