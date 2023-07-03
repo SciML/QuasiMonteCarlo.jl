@@ -1,25 +1,28 @@
 # * The scrambling codes were first inspired from Owen's `R` implementation that can be found [here](https://artowen.su.domains/code/rsobol.R). * #
 
-""" 
+"""
 ```julia
 ScrambleMethod <: RandomizationMethod
 ```
 
 A scramble method needs at lease the scrambling base `b`, the number of "bits" to use `pad` (`pad=32` is the default) and a seed `rng` (`rng = Random.GLOBAL_RNG` is the default).
-The scramble methods implementer are 
-- `DigitalShift`.
-- `OwenScramble`: Nested Uniform Scramble which was introduced in Owen (1995).
-- `MatousekScramble`: Linear Matrix Scramble which was introduced in Matousek (1998).
+The scramble methods implementer are
+
+  - `DigitalShift`.
+  - `OwenScramble`: Nested Uniform Scramble which was introduced in Owen (1995).
+  - `MatousekScramble`: Linear Matrix Scramble which was introduced in Matousek (1998).
 """
 abstract type ScrambleMethod <: RandomizationMethod end
 
-""" 
+"""
     randomize(x, R::ScrambleMethod)
-Return a scrambled version of `x`. 
-The scramble methods implemented are 
-- `DigitalShift`.
-- `OwenScramble`: Nested Uniform Scramble which was introduced in Owen (1995).
-- `MatousekScramble`: Linear Matrix Scramble which was introduced in Matousek (1998).
+
+Return a scrambled version of `x`.
+The scramble methods implemented are
+
+  - `DigitalShift`.
+  - `OwenScramble`: Nested Uniform Scramble which was introduced in Owen (1995).
+  - `MatousekScramble`: Linear Matrix Scramble which was introduced in Matousek (1998).
 """
 function randomize(x, R::ScrambleMethod)
     random_x = permutedims(copy(x))
@@ -34,9 +37,9 @@ OwenScramble <: ScrambleMethod
 
 Nested Uniform Scramble aka Owen' scramble.
 
-`randomize(x, R::OwenScramble)` returns a scrambled version of `x`. 
+`randomize(x, R::OwenScramble)` returns a scrambled version of `x`.
 The scramble method is Nested Uniform Scramble which was introduced in Owen (1995).
-`pad` is the number of bits used for each points. One needs `pad ≥ log(base, n)`. 
+`pad` is the number of bits used for each points. One needs `pad ≥ log(base, n)`.
 
 References: Owen, A. B. (1995). Randomly permuted (t, m, s)-nets and (t, s)-sequences. In Monte Carlo and Quasi-Monte Carlo Methods in Scientific Computing: Proceedings of a conference at the University of Nevada, Las Vegas, Nevada, USA, June 23–25, 1994 (pp. 299-317). Springer New York.
 """
@@ -59,9 +62,10 @@ function randomize!(random_points::AbstractMatrix{T},
     end
 end
 
-""" 
+"""
     randomize_bits!(random_bits::AbstractArray{T, 3}, origin_bits::AbstractArray{T, 3}, R::ScrambleMethod) where {T <: Integer}
-In place version of a `OwenScramble` (Nested Uniform Scramble) for the "bit" array. 
+
+In place version of a `OwenScramble` (Nested Uniform Scramble) for the "bit" array.
 This is faster to use this functions for multiple scramble of the same array (use `generate_design_matrices`).
 """
 function randomize_bits!(random_bits::AbstractArray{T, 3},
@@ -104,10 +108,11 @@ getpermset(m::Integer, b::Integer) = getpermset(Random.GLOBAL_RNG, m, b)
 
 """
     which_permutation(bits::AbstractArray{<:Integer,3}, b)
-This function is used in Nested Uniform Scramble. 
+
+This function is used in Nested Uniform Scramble.
 It assigns for each points (in every dimensions) `m` number corresponding to its location on the slices 1, 1/b, 1/b², ..., 1/bᵐ⁻¹ of the axes [0,1[.
 This also can be used to verify some equidistribution prorepreties.
-Here we create the `indices` array `m`, and not `pad`. Indeed `(t,m,d)-net` in base `b` are scrambled up to the `1/bᵐ` component. 
+Here we create the `indices` array `m`, and not `pad`. Indeed `(t,m,d)-net` in base `b` are scrambled up to the `1/bᵐ` component.
 Higher order components are just used i.i.d `Uₖ ∼ 𝐔({0:b-1})` in `owen_scramble_bit!`.
 """
 function which_permutation(bits::AbstractArray, b)
@@ -140,9 +145,9 @@ MatousekScramble <: ScrambleMethod
 
 Linear Matrix Scramble aka Matousek' scramble.
 
-`randomize(x, R::MatousekScramble)` returns a scrambled version of `x`. 
+`randomize(x, R::MatousekScramble)` returns a scrambled version of `x`.
 The scramble method is Linear Matrix Scramble which was introduced in Matousek (1998).
-`pad` is the number of bits used for each points. One need `pad ≥ log(base, n)`. 
+`pad` is the number of bits used for each points. One need `pad ≥ log(base, n)`.
 
 References: Matoušek, J. (1998). On thel2-discrepancy for anchored boxes. Journal of Complexity, 14(4), 527-556.
 """
@@ -165,9 +170,10 @@ function randomize!(random_points::AbstractMatrix{T},
 end
 
 #? Weird it should be faster than nested uniform Scramble but here it is not at all.-> look for other implementation and paper
-""" 
+"""
     randomize_bits!(random_bits::AbstractArray{T, 3}, origin_bits::AbstractArray{T, 3}, R::ScrambleMethod) where {T <: Integer}
-In place version of a ScrambleMethod (`MatousekScramble` or `DigitalShift`) for the "bit" array. 
+
+In place version of a ScrambleMethod (`MatousekScramble` or `DigitalShift`) for the "bit" array.
 This is faster to use this functions for multiple scramble of the same array (use `generate_design_matrices`).
 """
 function randomize_bits!(random_bits::AbstractArray{T, 3},
@@ -196,8 +202,9 @@ function randomize_bits!(random_bits::AbstractArray{T, 3},
     end
 end
 
-""" 
+"""
     getmatousek(rng::AbstractRNG, m::Integer, b::Integer)
+
 Genereate the Matousek linear scramble in base b for one of the d components
 It produces a m x m bit matrix matousek_M and a length m bit vector matousek_C
 """
@@ -219,11 +226,11 @@ getmatousek(m::Integer, b::Integer) = getmatousek(Random.GLOBAL_RNG, m, b)
 DigitalShift <: ScrambleMethod
 ```
 
-Digital shift. 
-`randomize(x, R::DigitalShift)` returns a scrambled version of `x`. 
+Digital shift.
+`randomize(x, R::DigitalShift)` returns a scrambled version of `x`.
 
 The scramble method is Digital Shift.
-It scramble each corrdinate in base `b` as `yₖ = (xₖ + Uₖ) mod b` where `Uₖ ∼ 𝕌({0:b-1})`. 
+It scramble each corrdinate in base `b` as `yₖ = (xₖ + Uₖ) mod b` where `Uₖ ∼ 𝕌({0:b-1})`.
 `U` is the same for every point `points` but i.i.d along every dimensions.
 """
 Base.@kwdef struct DigitalShift <: ScrambleMethod
