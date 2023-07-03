@@ -2,14 +2,14 @@
 
 Most of the methods presented in [Sampler](@ref Samplers) are deterministic, i.e. `X = sample(n, d, ::DeterministicSamplingAlgorithm)` will always produce the same sequence $X = (X_1, \dots, X_n)$.
 
-The main issue with deterministic Quasi Monte Carlo sampling is that it does not allow easy error estimation as opposed to plain Monte Carlo where the variance can be estimated.
+The main issue with deterministic Quasi Monte Carlo sampling is that it does not allow easy error estimation as opposed to plain Monte Carlo, where the variance can be estimated.
 
 A Randomized Quasi Monte Carlo method must respect the two following criteria:
 
  1. Have $X_i\sim \mathbb{U}([0,1]^d)$ for each $i\in \{1,\cdots, n\}$.
  2. Preserve the QMC properties, i.e. the randomized $X$ still has low discrepancy.
 
-This randomized version is unbiased and can be used to obtain confidence interval or to do sensitivity analysis.
+This randomized version is unbiased and can be used to obtain a confidence interval or to do sensitivity analysis.
 
 A good reference is the [book by A. Owen](https://artowen.su.domains/mc/qmcstuff.pdf), especially the Chapters 15, 16 and 17.
 
@@ -34,18 +34,18 @@ The default method of `DeterministicSamplingAlgorithm` is `NoRand`
 NoRand
 ```
 
-To obtain multiple independent randomization of a sequence, i.e. Design Matrices, look at the [Design Matrices section](@ref DesignMatrices).
+To obtain multiple independent randomizations of a sequence, i.e. Design Matrices, look at the [Design Matrices section](@ref DesignMatrices).
 
 !!! note
     
-    In most other QMC packages, randomization is performed "online" as the points are samples. Here, randomization is performed after the deterministic sequence is generated. Both methods are useful in different contexts, the former is generally faster to produce one randomized sequence, while the latter is faster to produce independent realization of the sequence.
+    In most other QMC packages, randomization is performed "online" as the points are samples. Here, randomization is performed after the deterministic sequence is generated. Both methods are useful in different contexts. The former is generally faster to produce one randomized sequence, while the latter is faster to produce independent realizations of the sequence.
     
     **PRs are welcomed** to add "online" version of the sequence! See [this comment for inspiration](https://github.com/SciML/QuasiMonteCarlo.jl/pull/57#issuecomment-1326662016).
     
     Another way to view the two approaches is: given a computational budget of $N$ points, one can
     
      1. Put all of it into a sequence of size, $N$, thus having the best estimator $\hat{\mu}_N$. The price to pay is that this estimation is not associated with a variance estimation.
-     2. Divided your computational budget into $N = n\times M$ to get $M$ independent estimator $\hat{\mu}_n$. From there one can compute an empirical variance of the estimator.
+     2. Divide your computational budget into $N = n\times M$ to get $M$ independent estimator $\hat{\mu}_n$. From there, one can compute the empirical variance of the estimator.
 
 ## Scrambling methods
 
@@ -65,11 +65,11 @@ The `pad` is generally chosen as $\gtrsim \log_b(n)$.
     
     In principle, the base `b` used for scrambling methods `ScramblingMethods(b, pad, rng)` can be an arbitrary integer.
     However, to preserve good Quasi Monte Carlo properties, it must match the base of the sequence to scramble.
-    For example, (deterministic) Sobol' sequence are base $b=2$, $(t,m,d)$ sequences while (deterministic) Faure sequences are $(t,m,d)$ sequences in prime base i.e. $b$ is an arbitrary prime number.
+    For example, (deterministic) Sobol sequences are base $b=2$, $(t,m,d)$ sequences while (deterministic) Faure sequences are $(t,m,d)$ sequences in prime base i.e. $b$ is an arbitrary prime number.
 
 The implemented `ScramblingMethods` are
 
-  - `DigitalShift` the simplest and faster method. For a point $x\in [0,1]^d$ it does $y_k = (x_k + U_k) \mod b$ where $U_k \sim \mathbb{U}(\{0, \cdots, b-1\})$
+  - `DigitalShift` the simplest and fastest method. For a point $x\in [0,1]^d$ it does $y_k = (x_k + U_k) \mod b$ where $U_k \sim \mathbb{U}(\{0, \cdots, b-1\})$
 
 ```@docs
 DigitalShift
@@ -81,7 +81,7 @@ DigitalShift
 MatousekScramble
 ```
 
-  - `OwenScramble` a.k.a. Nested Uniform Scramble is the most understood theoretically but is more costly to operate.
+  - `OwenScramble` a.k.a. Nested Uniform Scramble is the most understood theoretically, but is more costly to operate.
 
 ```@docs
 OwenScramble
@@ -89,7 +89,7 @@ OwenScramble
 
 ## Other methods
 
-`Shift(rng)` a.k.a. Cranley-Patterson Rotation. It is by far the fastest method, it is used in `LatticeRuleScramble` for example.
+`Shift(rng)` a.k.a. Cranley-Patterson Rotation. It is by far the fastest method; it is used in `LatticeRuleScramble` for example.
 
 ```@docs
 Shift
@@ -163,9 +163,9 @@ plot(p..., size = (800, 600))
 
 ### $(t,m,d)$-net visualization
 
-Faure nets and its scrambled versions are digital $(t,m,d)$-net, it means that they have strong equipartition properties.
+Faure nets and their scrambled versions are digital $(t,m,d)$-net, which means they have strong equipartition properties.
 On the following plot, we can (visually) verify that with Nested Uniform Scrambling, it also works with Linear Matrix Scrambling and Digital Shift.
-You must see one point per rectangle of volume $1/b^m$. Points on the "left" border of rectangles are included while those on the "right" are excluded. See [Chapter 15.7](https://artowen.su.domains/mc/qmcstuff.pdf) and Figure 15.10 for more details.
+You must see one point per rectangle of volume $1/b^m$. Points on the "left" border of rectangles are included, while those on the "right" are excluded. See [Chapter 15.7](https://artowen.su.domains/mc/qmcstuff.pdf) and Figure 15.10 for more details.
 
 ```@example 1
 d1 = 1

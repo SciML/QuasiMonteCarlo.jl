@@ -63,7 +63,7 @@ m_max_Faure = 8
 N = b^m_max
 
 # Generate sequences
-seq_MC = QuasiMonteCarlo.sample(N, d, Uniform()) # Monte Carlo i.i.d Uniform sampling
+seq_MC = QuasiMonteCarlo.sample(N, d, Uniform()) # Monte Carlo i.i.d. Uniform sampling
 seq_QMC_Sobol = QuasiMonteCarlo.sample(N, d, SobolSample()) # Sobol net
 seq_RQMC_Sobol = QuasiMonteCarlo.sample(N,
     d,

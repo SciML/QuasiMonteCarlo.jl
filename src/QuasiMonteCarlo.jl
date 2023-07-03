@@ -105,13 +105,13 @@ generate_design_matrices(n, lb, ub, sample_method,
     num_mats = 2)
 ```
 
-Create `num_mats` matrices each containing a QMC point set, where:
+Create `num_mats` matrices, each containing a QMC point set, where:
 
   - `n` is the number of points to sample.
   - `d` is the dimensionality of the point set in `[0, 1)ᵈ`,
   - `sample_method` is the quasi-Monte Carlo sampling strategy used to create a deterministic point set `out`.
   - `T` is the `eltype` of the point sets. For some QMC methods (Faure, Sobol) this can be `Rational`
-    If the bound `lb` and `ub` are specified instead of `d`, the samples will be transformed into the box `[lb, ub]`.
+    If the bounds `lb` and `ub` are specified instead of `d`, the samples will be transformed into the box `[lb, ub]`.
 """
 function generate_design_matrices(n, d, sampler::DeterministicSamplingAlgorithm, num_mats,
     T = Float64)
@@ -155,7 +155,7 @@ include("Section.jl")
 NoRand <: RandomizationMethod
 ```
 
-No Randomization is performed on the sampled sequence.
+No randomization is performed on the sampled sequence.
 """
 struct NoRand <: RandomizationMethod end
 randomize(x, S::NoRand) = x
@@ -163,9 +163,9 @@ randomize(x, S::NoRand) = x
 """
     generate_design_matrices(n, d, sampler, R::NoRand, num_mats, T = Float64)
 
-`R = NoRand()` produces `num_mats` matrices each containing a different deterministic point set in `[0, 1)ᵈ`.
-Note that this is an ad hoc way to produce i.i.d sequence as it creates a deterministic point in dimension `d × num_mats` and split it in `num_mats` point set of dimension `d`.
-This does not have any QMC garantuees.
+`R = NoRand()` produces `num_mats` matrices, each containing a different deterministic point set in `[0, 1)ᵈ`.
+Note that this is an ad hoc way to produce i.i.d. sequences, as it creates a deterministic point in dimension `d × num_mats` and splits it in `num_mats` point set of dimension `d`.
+This does not have any QMC guarantuees.
 """
 function generate_design_matrices(n, d, sampler, R::NoRand, num_mats, T = Float64)
     out = sample(n, num_mats * d, sampler, T)

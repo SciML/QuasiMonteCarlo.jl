@@ -84,7 +84,7 @@ Sampling methods `SamplingAlgorithm` are divided into two subtypes
   - `DeterministicSamplingAlgorithm`
     
       + `GridSample` for samples on a regular grid.
-      + `SobolSample` for the Sobol' sequence.
+      + `SobolSample` for the Sobol sequence.
       + `FaureSample` for the Faure sequence.
       + `LatticeRuleSample` for a randomly-shifted rank-1 lattice rule.
       + `HaltonSample` for the Halton sequence.

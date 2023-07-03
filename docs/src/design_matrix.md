@@ -2,9 +2,9 @@
 
 ## API
 
-It is often convenient to generate multiple independent sequence, for error estimation (uncertainty quantification).
+It is often convenient to generate multiple independent sequences, for error estimation (uncertainty quantification).
 The resulting sequences can be stored in what is often called a design matrix.
-In this package, this is achieved with the `generate_design_matrices(n, d, ::DeterministicSamplingAlgorithm), ::RandomizationMethod, num_mats)` function. `num_mats` is the number of independent realization. The resulting design matrix is a vector of matrix of length `num_mats`.
+In this package, this is achieved with the `generate_design_matrices(n, d, ::DeterministicSamplingAlgorithm), ::RandomizationMethod, num_mats)` function. `num_mats` is the number of independent realizations. The resulting design matrix is a vector of matrix of length `num_mats`.
 
 ```@docs
 QuasiMonteCarlo.generate_design_matrices
