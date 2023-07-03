@@ -29,6 +29,7 @@ SobolSample
 ```
 
 !!! warning
+    
     The QuasiMonteCarlo.jl package relies on the [Sobol.jl](https://github.com/JuliaMath/Sobol.jl) package to sample Sobol nets. The choice, there is to NOT start the sequence at `0`. This is debatable, see this [issue](https://github.com/JuliaMath/Sobol.jl/issues/31#issuecomment-1528136486) and ref therein for more context.
 
 ```@docs
