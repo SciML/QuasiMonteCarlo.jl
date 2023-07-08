@@ -19,6 +19,7 @@ makedocs(sitename = "QuasiMonteCarlo.jl",
     ],
     linkcheck_ignore = [
         "https://www.sciencedirect.com/science/article/pii/S0010465509003087",
+        "https://artowen.su.domains/mc/qmcstuff.pdf",
     ],
     format = Documenter.HTML(analytics = "UA-90474609-3",
         assets = ["assets/favicon.ico"],
