@@ -1,6 +1,7 @@
 """
     unif2bits(x<:AbstractArray, b::Integer; pad=32)
-Return the b-ary decomposition of all element y of an array y = ∑ₖ yₖ/bᵏ a number yₖ∈[0,1[ -> [y₁, ⋯, yₘ] 
+
+Return the b-ary decomposition of all element y of an array y = ∑ₖ yₖ/bᵏ a number yₖ∈[0,1[ -> [y₁, ⋯, yₘ]
 """
 function unif2bits(x::AbstractArray, b::Integer; pad = 32)
     bits = zeros(Int, pad, size(x)...)
@@ -17,7 +18,8 @@ end
 
 """
     unif2bits(y<:Real, b::Integer; pad=32)
-Return the b-ary decomposition y = ∑ₖ yₖ/bᵏ a number y∈[0,1[ -> [y₁, ⋯, yₘ] 
+
+Return the b-ary decomposition y = ∑ₖ yₖ/bᵏ a number y∈[0,1[ -> [y₁, ⋯, yₘ]
 """
 function unif2bits(y::Real, b::Integer; pad = 32)
     bits = zeros(Int, pad)
@@ -40,6 +42,7 @@ end
 """
     bits2unif(::Type{T}, bits::AbstractVector{<:Integer},
                    b::Integer)
+
 Convert a vector of pad "bits" in base b into a number y∈[0,1[.
 """
 function bits2unif(::Type{T}, bits::AbstractVector{<:Integer},
@@ -76,6 +79,7 @@ end
 #?   13.113 ns (0 allocations: 0 bytes)  
 """
     bits2int(bit::AbstractMatrix{<:Integer}, b::Integer)
+
 Convert a vector of pad "bits" in base b into an integer.
 """
 function bits2int(bit::AbstractVector, b::Integer)
