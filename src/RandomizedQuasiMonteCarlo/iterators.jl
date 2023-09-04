@@ -4,8 +4,6 @@ abstract type AbstractDesignMatrix end
 Base.length(s::AbstractDesignMatrix) = s.count
 Base.iterate(s::AbstractDesignMatrix, state=1) = state > s.count ? nothing : (next!(s), state+1)
 
-
-
 mutable struct OwenDesignMat{T<:Real, I<:Integer, F<:Integer} <: AbstractDesignMatrix
     X::Array{T,2} #array of size (N, d)
     random_bits::Array{I,3} #array of size (pad, N, d)
@@ -69,7 +67,7 @@ next!(DM::ScrambleDesignMat) = scramble!(DM.X, DM.random_bits, DM.bits, DM.R)
 next!(DM::ShiftDesignMat) = randomize!(DM.X, DM.R)
 next!(DM::DistributionDesignMat) = rand!(DM.D, DM.X)
 
-# Owen 
+## OwenScramble
 function initialize(n, d, sampler, R::OwenScramble, T = Float64)
     # Generate unrandomized sequence
     no_rand_sampler = @set sampler.R = NoRand()
@@ -92,7 +90,8 @@ function scramble!(random_points::AbstractArray{T}, random_bits, bits, indices, 
     return permutedims(random_points)
 end
 
-# Other scramble
+## Other scramble
+
 function initialize(n, d, sampler, R::ScrambleMethod, T = Float64)
     # Generate unrandomized sequence
     no_rand_sampler = @set sampler.R = NoRand()
@@ -113,7 +112,7 @@ function scramble!(random_points::AbstractArray{T}, random_bits, bits, R::Scramb
     return permutedims(random_points)
 end
 
-# Shift
+## Shift
 function initialize(n, d, sampler, R::Shift, T = Float64)
     # Generate unrandomized sequence
     no_rand_sampler = @set sampler.R = NoRand()
@@ -121,9 +120,137 @@ function initialize(n, d, sampler, R::Shift, T = Float64)
     return points
 end
 
-# Distribution
+## Distribution
 function initialize(n, d, D::Distributions.Sampleable, T = Float64)
     # Generate unrandomized sequence
     X = zeros(T, d, n)
     return X
+end
+
+# generate_design_matrices
+
+## Generic function 
+
+"""
+```julia
+generate_design_matrices(n, d, sample_method::DeterministicSamplingAlgorithm,
+num_mats, T = Float64)
+generate_design_matrices(n, d, sample_method::RandomSamplingAlgorithm,
+num_mats, T = Float64)
+generate_design_matrices(n, lb, ub, sample_method,
+num_mats = 2)
+```
+Create `num_mats` matrices each containing a QMC point set, where:
+- `n` is the number of points to sample.
+- `d` is the dimensionality of the point set in `[0, 1)ᵈ`,
+- `sample_method` is the quasi-Monte Carlo sampling strategy used to create a deterministic point set `out`.
+- `T` is the `eltype` of the point sets. For some QMC methods (Faure, Sobol) this can be `Rational`
+If the bound `lb` and `ub` are specified instead of `d`, the samples will be transformed into the box `[lb, ub]`.
+"""
+function generate_design_matrices(n, d, sampler::DeterministicSamplingAlgorithm, num_mats,
+    T = Float64)
+    return generate_design_matrices(n, d, sampler, sampler.R, num_mats, T)
+end
+
+function generate_design_matrices(n, d, sampler::RandomSamplingAlgorithm, num_mats,
+    T = Float64)
+    return [sample(n, d, sampler, T) for j in 1:num_mats]
+end
+
+function generate_design_matrices(n, lb, ub, sampler,
+    num_mats = 2)
+    if n <= 0
+        throw(ZeroSamplesError())
+    end
+    @assert length(lb) == length(ub)
+
+    # Generate a vector of num_mats independent "randomized" version of the QMC sequence
+    out = generate_design_matrices(n, length(lb), sampler, num_mats, eltype(lb))
+
+    # Scaling
+    for j in eachindex(out)
+        out[j] = (ub .- lb) .* out[j] .+ lb
+    end
+    return out
+end
+
+## NoRand()
+
+"""
+    generate_design_matrices(n, d, sampler, R::NoRand, num_mats, T = Float64)
+`R = NoRand()` produces `num_mats` matrices each containing a different deterministic point set in `[0, 1)ᵈ`.
+Note that this is an ad hoc way to produce i.i.d sequence as it creates a deterministic point in dimension `d × num_mats` and split it in `num_mats` point set of dimension `d`. 
+This does not have any QMC garantuees.
+"""
+function generate_design_matrices(n, d, sampler, R::NoRand, num_mats, T = Float64)
+    out = sample(n, num_mats * d, sampler, T)
+    return [out[(j * d + 1):((j + 1) * d), :] for j in 0:(num_mats - 1)]
+end
+
+## ScrambleMethod
+
+function generate_design_matrices(n, d, sampler, R::ScrambleMethod, num_mats, T = Float64)
+
+    # Generate unrandomized sequence
+    no_rand_sampler = @set sampler.R = NoRand()
+    points = permutedims(sample(n, d, no_rand_sampler, T))
+
+    b = R.base
+    unrandomized_bits = unif2bits(points, b, pad = R.pad)
+    out_bit = [similar(unrandomized_bits) for j in 1:num_mats]
+
+    # Core of the method, the unrandomized_bits are scrambled several times independtly
+    for j in 1:num_mats
+        randomize_bits!(out_bit[j], unrandomized_bits, R)
+    end
+
+    # Conversion back to point∈[0,1)ᵈ
+    random_points = [similar(points) for j in 1:num_mats]
+    for j in 1:num_mats
+        for i in CartesianIndices(points)
+            random_points[j][i] = bits2unif(T, @view(out_bit[j][:, i]), b)
+        end
+    end
+
+    return permutedims.(random_points)
+end
+
+function generate_design_matrices(n, d, sampler, R::OwenScramble, num_mats, T = Float64)
+
+    # Generate unrandomized sequence
+    no_rand_sampler = @set sampler.R = NoRand()
+    points = permutedims(sample(n, d, no_rand_sampler, T))
+
+    # Conversion from point∈[0,1)ᵈ to b-ary decomposition 
+    b = R.base
+    unrandomized_bits = unif2bits(points, b, pad = R.pad)
+    out_bit = [similar(unrandomized_bits) for j in 1:num_mats]
+    # OwenScramble the indices argument 
+    indices = which_permutation(unrandomized_bits, b)
+
+    # Core of the method, the unrandomized_bits are scrambled several times independtly
+    for j in 1:num_mats
+        randomize_bits!(out_bit[j], unrandomized_bits, indices, R)
+    end
+
+    # Conversion back to point∈[0,1)ᵈ
+    random_points = [similar(points) for j in 1:num_mats]
+    for j in 1:num_mats
+        for i in CartesianIndices(points)
+            random_points[j][i] = bits2unif(T, @view(out_bit[j][:, i]), b)
+        end
+    end
+
+    return permutedims.(random_points)
+end
+
+## Shift
+
+function generate_design_matrices(n, d, sampler, R::Shift, num_mats, T = Float64)
+    # Generate unrandomized sequence
+    no_rand_sampler = @set sampler.R = NoRand()
+    out = sample(n, d, no_rand_sampler, T)
+
+    # randomize (shift) num_mats times
+    return [randomize!(out, R) for j in 1:num_mats]
 end

@@ -45,12 +45,3 @@ function shift!(rng::AbstractRNG, points::AbstractMatrix{T},
 end
 
 frac(y) = y - floor(y)
-
-function generate_design_matrices(n, d, sampler, R::Shift, num_mats, T = Float64)
-    # Generate unrandomized sequence
-    no_rand_sampler = @set sampler.R = NoRand()
-    out = sample(n, d, no_rand_sampler, T)
-
-    # randomize (shift) num_mats times
-    return [randomize!(out, R) for j in 1:num_mats]
-end
