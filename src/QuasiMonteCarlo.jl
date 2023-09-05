@@ -81,7 +81,7 @@ function sample(n::Integer, d::Integer, D::Distributions.Sampleable, T = eltype(
 end
 
 # See https://discourse.julialang.org/t/is-there-a-dedicated-function-computing-m-int-log-b-b-m/89776/10
-function logi(b::Int, n::Int)
+function logi(b::Integer, n::Integer)
     m = round(Int, log(b, n))
     b^m == n || throw(ArgumentError("$n is not a power of $b"))
     return m
