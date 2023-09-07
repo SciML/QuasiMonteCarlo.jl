@@ -4,6 +4,10 @@ abstract type AbstractDesignMatrix end
 Base.length(s::AbstractDesignMatrix) = s.count
 Base.iterate(s::AbstractDesignMatrix, state=1) = state > s.count ? nothing : (next!(s), state+1)
 
+"""
+    OwenDesignMat{T<:Real, I<:Integer, F<:Integer} <: AbstractDesignMatrix
+Owen scrambling iterator. 
+"""
 mutable struct OwenDesignMat{T<:Real, I<:Integer, F<:Integer} <: AbstractDesignMatrix
     X::Array{T,2} #array of size (N, d)
     random_bits::Array{I,3} #array of size (pad, N, d)
@@ -13,6 +17,10 @@ mutable struct OwenDesignMat{T<:Real, I<:Integer, F<:Integer} <: AbstractDesignM
     count::Int
 end
 
+"""
+    ScrambleDesignMat{T<:Real, I<:Integer} <: AbstractDesignMatrix
+Scrambling iterator used in Digital Shift and Matousek scrambling. 
+"""
 mutable struct ScrambleDesignMat{T<:Real, I<:Integer} <: AbstractDesignMatrix
     X::Array{T,2} #array of size (N, d)
     random_bits::Array{I,3} #array of size (pad, N, d)
@@ -21,6 +29,10 @@ mutable struct ScrambleDesignMat{T<:Real, I<:Integer} <: AbstractDesignMatrix
     count::Int
 end
 
+"""
+    ShiftDesignMat{T<:Real} <: AbstractDesignMatrix
+Scrambling iterator used in shift method. 
+"""
 mutable struct ShiftDesignMat{T<:Real} <: AbstractDesignMatrix
     X::Array{T,2} #array of size (N, d)
     R::Shift
@@ -44,6 +56,18 @@ Base.eltype(::Type{ShiftDesignMat{T}}) where {T} = Matrix{T}
 Base.eltype(::Type{DistributionDesignMat{T}}) where {T} = Matrix{T}
 Base.eltype(::Type{RandomDesignMat{T}}) where {T} = Matrix{T} # TODO one could create a type for AbstractDistribution to include RandomDesignMat and DistributionDesignMat
 
+"""
+```julia
+DesignMatrix(n, d, sample_method::DeterministicSamplingAlgorithm, num_mats, T = Float64)
+```
+Create an iterator for doing mutliple randomization over QMC sequences where
+- `num_mats` is the lenght of the iterator
+- `n` is the number of points to sample.
+- `d` is the dimensionality of the point set in `[0, 1)ᵈ`,
+- `sample_method` is the quasi-Monte Carlo sampling strategy used to create a deterministic point set `out`.
+- `T` is the `eltype` of the point sets. For some QMC methods (Faure, Sobol) this can be `Rational`
+It is now compatible with all scrambling methods and shifting. One can also use it with `Distributions.Sampleable` or `RandomSample`.
+"""
 function DesignMatrix(N, d, S::DeterministicSamplingAlgorithm, num_mats, T = Float64)
     return DesignMatrix(N, d, S, S.R, num_mats, T)
 end
