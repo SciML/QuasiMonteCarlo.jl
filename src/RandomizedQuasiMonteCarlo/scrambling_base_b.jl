@@ -41,7 +41,7 @@ The scramble method is Nested Uniform Scramble which was introduced in Owen (199
 
 References: Owen, A. B. (1995). Randomly permuted (t, m, s)-nets and (t, s)-sequences. In Monte Carlo and Quasi-Monte Carlo Methods in Scientific Computing: Proceedings of a conference at the University of Nevada, Las Vegas, Nevada, USA, June 23–25, 1994 (pp. 299-317). Springer New York.
 """
-Base.@kwdef struct OwenScramble{I<:Integer} <: ScrambleMethod
+Base.@kwdef struct OwenScramble{I <: Integer} <: ScrambleMethod
     base::I
     pad::I = 32
     rng::AbstractRNG = Random.GLOBAL_RNG
@@ -80,11 +80,12 @@ function randomize_bits!(random_bits::AbstractArray{T, 3},
     for s in 1:d
         theperms = getpermset(rng, m, b)         # Permutations to apply to bits 1:m
         for k in 1:m                             # Here is where we want m > 0 so the loop works ok
-            @views random_bits[k, :, s] .= (origin_bits[k, :, s] .+ theperms[k, indices[k, :, s]]) .%
-                                   b   # permutation by adding a bit modulo b
+            @views random_bits[k, :, s] .= (origin_bits[k, :, s] .+
+                                            theperms[k, indices[k, :, s]]) .%
+                                           b   # permutation by adding a bit modulo b
         end
     end
-    
+
     # Paste in random entries for bits after m'th one
     if pad > m
         # random_bits[(m + 1):pad, :, :] = rand(rng, 0:(b - 1), n * d * (pad - m))
@@ -92,7 +93,7 @@ function randomize_bits!(random_bits::AbstractArray{T, 3},
     end
 end
 
-function getpermset(rng::AbstractRNG, m::Integer, b::I) where I<:Integer
+function getpermset(rng::AbstractRNG, m::Integer, b::I) where {I <: Integer}
     # Get b^(k-1) random binary permutations for k=1 ... m
     # m will ordinarily be m when there are n=b^m points
     #
@@ -114,7 +115,7 @@ This also can be used to verify some equidistribution prorepreties.
 Here we create the `indices` array `m`, and not `pad`. Indeed `(t,m,d)-net` in base `b` are scrambled up to the `1/bᵐ` component. 
 Higher order components are just used i.i.d `Uₖ ∼ 𝐔({0:b-1})` in `owen_scramble_bit!`.
 """
-function which_permutation(bits::AbstractArray, b::I) where I<:Integer
+function which_permutation(bits::AbstractArray, b::I) where {I <: Integer}
     n, d = size(bits)[2:end]
     m = logi(b, n)
 
@@ -136,7 +137,6 @@ function which_permutation!(indices::AbstractMatrix{<:Integer},
     end
     indices .+= 1 # array indexing starts at 1
 end
-
 
 function randomize!(random_points::AbstractMatrix{T},
     points::AbstractMatrix{T}, R::ScrambleMethod) where {T <: Real}
@@ -163,7 +163,7 @@ The scramble method is Linear Matrix Scramble which was introduced in Matousek (
 
 References: Matoušek, J. (1998). On thel2-discrepancy for anchored boxes. Journal of Complexity, 14(4), 527-556.
 """
-Base.@kwdef struct MatousekScramble{I<:Integer} <: ScrambleMethod
+Base.@kwdef struct MatousekScramble{I <: Integer} <: ScrambleMethod
     base::I
     pad::I = 32
     rng::AbstractRNG = Random.GLOBAL_RNG
@@ -192,7 +192,8 @@ function randomize_bits!(random_bits::AbstractArray{T, 3},
 
         # xₖ = (∑ₗ Mₖₗ aₗ + Cₖ) mod b where xₖ is the k element in base b
         # matousek_M (m×m) * origin_bits (m×n) .+ matousek_C (m×1) 
-        @views random_bits[1:m, :, s] .= (matousek_M * origin_bits[1:m, :, s] .+ matousek_C) .% b
+        @views random_bits[1:m, :, s] .= (matousek_M * origin_bits[1:m, :, s] .+
+                                          matousek_C) .% b
     end
 
     # Paste in random entries for bits after m'th one
@@ -207,7 +208,7 @@ end
 Genereate the Matousek linear scramble in base b for one of the d components
 It produces a m x m bit matrix matousek_M and a length m bit vector matousek_C
 """
-function getmatousek(rng::AbstractRNG, m::Integer, b::I) where I<:Integer
+function getmatousek(rng::AbstractRNG, m::Integer, b::I) where {I <: Integer}
     matousek_M = LowerTriangular(zeros(I, m, m)) + Diagonal(rand(rng, 1:(b - 1), m)) # Mₖₖ ∼ U{1, ⋯, b-1}
     matousek_C = rand(rng, 0:(b - 1), m)
     for i in 2:m
@@ -232,7 +233,7 @@ The scramble method is Digital Shift.
 It scramble each corrdinate in base `b` as `yₖ = (xₖ + Uₖ) mod b` where `Uₖ ∼ 𝕌({0:b-1})`. 
 `U` is the same for every point `points` but i.i.d along every dimensions.
 """
-Base.@kwdef struct DigitalShift{I<:Integer} <: ScrambleMethod
+Base.@kwdef struct DigitalShift{I <: Integer} <: ScrambleMethod
     base::I
     pad::I = 32
     rng::AbstractRNG = Random.GLOBAL_RNG
