@@ -1,6 +1,6 @@
 abstract type AbstractDesignMatrix end
 
-# Make an iterator so that we can do "for X in design_mat(...)"
+# Make an iterator so that we can do "for X in DesignMatrix(...)"
 Base.length(s::AbstractDesignMatrix) = s.count
 Base.iterate(s::AbstractDesignMatrix, state=1) = state > s.count ? nothing : (next!(s), state+1)
 
@@ -33,10 +33,16 @@ mutable struct DistributionDesignMat{T<:Real} <: AbstractDesignMatrix
     count::Int
 end
 
+mutable struct RandomDesignMat{T<:Real} <: AbstractDesignMatrix
+    X::Array{T,2} #array of size (N, d)
+    count::Int
+end
+
 Base.eltype(::Type{OwenDesignMat{T, I, F}}) where {T, I, F} = Matrix{T}
 Base.eltype(::Type{ScrambleDesignMat{T, I}}) where {T, I} = Matrix{T}
 Base.eltype(::Type{ShiftDesignMat{T}}) where {T} = Matrix{T}
 Base.eltype(::Type{DistributionDesignMat{T}}) where {T} = Matrix{T}
+Base.eltype(::Type{RandomDesignMat{T}}) where {T} = Matrix{T} # TODO one could create a type for AbstractDistribution to include RandomDesignMat and DistributionDesignMat
 
 function DesignMatrix(N, d, S::DeterministicSamplingAlgorithm, num_mats, T = Float64)
     return DesignMatrix(N, d, S, S.R, num_mats, T)
@@ -62,10 +68,16 @@ function DesignMatrix(N, d, D::Distributions.Sampleable, num_mats, T = Float64)
     return DistributionDesignMat(X, D, num_mats)
 end
 
+function DesignMatrix(N, d, D::RandomSample, num_mats, T = Float64)
+    X = initialize(N, d, D, T)
+    return RandomDesignMat(X, num_mats)
+end
+
 next!(DM::OwenDesignMat) = scramble!(DM.X, DM.random_bits, DM.bits, DM.indices, DM.R)
 next!(DM::ScrambleDesignMat) = scramble!(DM.X, DM.random_bits, DM.bits, DM.R)
 next!(DM::ShiftDesignMat) = randomize!(DM.X, DM.R)
 next!(DM::DistributionDesignMat) = rand!(DM.D, DM.X)
+next!(DM::RandomDesignMat) = rand!(DM.X)
 
 ## OwenScramble
 function initialize(n, d, sampler, R::OwenScramble, T = Float64)
@@ -86,7 +98,6 @@ function scramble!(random_points::AbstractArray{T}, random_bits, bits, indices, 
     for i in CartesianIndices(random_points)
         random_points[i] = bits2unif(T, @view(random_bits[:, i]), R.base)
     end
-
     return permutedims(random_points)
 end
 
@@ -121,7 +132,7 @@ function initialize(n, d, sampler, R::Shift, T = Float64)
 end
 
 ## Distribution
-function initialize(n, d, D::Distributions.Sampleable, T = Float64)
+function initialize(n, d, D::Union{Distributions.Sampleable,RandomSample}, T = Float64)
     # Generate unrandomized sequence
     X = zeros(T, d, n)
     return X
