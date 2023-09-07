@@ -409,6 +409,63 @@ end
     end
 end
 
+@testset "iterators" begin
+    d = 4
+    m = 12
+    n = 2^m
+    num_mat = 4
+    
+    f(x) = prod(x)*2^length(x) # test function ∫f(x)dᵈx = 1
+
+    algorithms = [
+        RandomSample(),
+        Beta(0.2,0.8),
+        # LatticeRuleSample(R = Shift()), # TODO add support for LatticeRule
+        SobolSample(R = OwenScramble(base = 2, pad = m)),
+        SobolSample(R = MatousekScramble(base = 2, pad = m)),
+        SobolSample(R = DigitalShift(base = 2, pad = m))
+    ]
+    for algorithm in algorithms
+        @show algorithm
+        iterator = DesignMatrix(n, d, algorithm, num_mat)
+        X = QuasiMonteCarlo.next!(iterator)
+        @test isa(X, Matrix{eltype(X)}) == true
+        μ = [mean(f(c) for c in eachcol(X)) for X in iterator] # Check that iterator do work!
+        if !isa(algorithm, Beta) # The Beta distribution is not Uniform hence we do not expect the μ to be close to 1. We could compute the expected results but it would involve a β function dependency.
+            @test μ ≈ ones(num_mat) atol = 5e-2 # the results for different randomization should all be close to 1. Arbitrarily we allow 5% error. 
+        end
+    end
+end
+
+@testset "Types of output and intermediate arrays" begin
+    # Scrambling methods use intermediate array for the bits scrambling. It is in general uncessary to have this large array stored as Int64. 
+    #TODO test other randomization methods (here just scrambling) and QMC sequence (here just Sobol)
+    #TODO here we test output and constructions of intermediate array, we could test that all operation are type stables
+    d = 4
+    m = 12
+    n = 2^m
+    
+    for type in [Float32, Float64]
+        for Int_type in [Int32, Int64]
+            b, pad = Int_type(2), Int_type(32) 
+            scramblings = [
+                OwenScramble(base=b, pad=pad)
+                MatousekScramble(base=b, pad=pad)
+                DigitalShift(base=b, pad=pad)
+            ]
+            for scrambling in scramblings
+                output, other_arrays... = QuasiMonteCarlo.initialize(n, d, SobolSample(), scrambling, type)
+                @test output isa Matrix{type}
+                @test all([other_array isa Array{Int_type, 3} for other_array in other_arrays])
+
+                iterator = DesignMatrix(n, d, SobolSample(), scrambling, 1, type)
+                scrambled_output = QuasiMonteCarlo.next!(iterator)
+                @test scrambled_output isa Matrix{type}
+            end
+        end
+    end
+end
+
 @testset "Randomized Quasi Monte Carlo: conversion functions" begin
     b = 2
     x = (0 // 16):(1 // 16):(15 // 16)
