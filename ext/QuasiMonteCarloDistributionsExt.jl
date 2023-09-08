@@ -20,8 +20,8 @@ Return a point set from a distribution `D`:
   - `lb` is the lower bound for each variable. Its length fixes the dimensionality of the sample.
   - `ub` is the upper bound. Its dimension must match `length(lb)`.
 """
-function sample(n::Integer, d::Integer, D::Distributions.Sampleable, T = eltype(D))
-    @assert n>0 ZERO_SAMPLES_MESSAGE
+function QuasiMonteCarlo.sample(n::Integer, d::Integer, D::Distributions.Sampleable, T = eltype(D))
+    @assert n>0 QuasiMonteCarlo.ZERO_SAMPLES_MESSAGE
     x = [[rand(D) for j in 1:d] for i in 1:n]
     return reduce(hcat, x)
 end
@@ -46,13 +46,13 @@ Return a QMC point set where:
 
 In the first method the type of the point set is specified by `T` while in the second method the output type is infered from the bound types.
 """
-function sample(n::Integer, lb::T, ub::T,
+function v.sample(n::Integer, lb::T, ub::T,
     S::D) where {T <: Union{Base.AbstractVecOrTuple, Number},
     D <: Distributions.Sampleable}
-    _check_sequence(lb, ub, n)
+    QuasiMonteCarlo._check_sequence(lb, ub, n)
     lb = float.(lb)
     ub = float.(ub)
-    out = sample(n, length(lb), S, eltype(lb))
+    out = QuasiMonteCarlo.sample(n, length(lb), S, eltype(lb))
     return (ub .- lb) .* out .+ lb
 end
 
