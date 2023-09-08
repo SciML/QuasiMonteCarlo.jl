@@ -43,7 +43,6 @@ using UnsafeArrays
 ### MC vs QMC
 
 We illustrate the gain of QMC methods over plain Monte Carlo using the 5-dimensional example from Section 15.9 in the [book by A. Owen](https://artowen.su.domains/mc/qmcstuff.pdf).
-
 ```@example MCvsQMC; continued = true
 f₁(𝐱) = prod(1 + √(12) / 5 * (xⱼ - 1 / 2) for xⱼ in 𝐱)
 μ_exact = 1 # = ∫ f₁(𝐱) d⁵𝐱
