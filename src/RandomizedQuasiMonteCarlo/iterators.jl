@@ -233,6 +233,8 @@ This does not have any QMC garantuees.
 """
 function generate_design_matrices(n, d, sampler, R::NoRand, num_mats, T = Float64)
     out = sample(n, num_mats * d, sampler, T)
+    @warn "The `generate_design_matrices(n, d, sampler, R = NoRand(), num_mats)` method does not produces true and independent QMC matrices, see [this doc warning](https://docs.sciml.ai/QuasiMonteCarlo/stable/design_matrix/) for more context. 
+    Prefer using randomization methods such as `R = Shift()`, `R = MatousekScrambling()`, etc., see [documentation](https://docs.sciml.ai/QuasiMonteCarlo/stable/randomization/)"
     return [out[(j * d + 1):((j + 1) * d), :] for j in 0:(num_mats - 1)]
 end
 

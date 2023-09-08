@@ -18,8 +18,9 @@ QuasiMonteCarlo.DesignMatrix
 
 !!! warning
     
-    The method `generate_design_matrices(n, d, sampler, R::NoRand, num_mats, T = Float64)` is an ad hoc way to produce a Design Matrix. Indeed, it creates a deterministic point set in dimension `d × num_mats` and splits it into `num_mats` point set of dimension `d`. The resulting sequences have no QMC guarantees.
-    This seems to have been proposed in Section 5.1 of [*Saltelli, A. et al. (2010)*](https://www.sciencedirect.com/science/article/pii/S0010465509003087)[^1] to do uncertainty quantification.
+    The method `generate_design_matrices(n, d, sampler, R::NoRand, num_mats, T = Float64)` is an ad hoc way to produce a Design Matrix. Indeed, it creates a deterministic point set in dimension `d × num_mats` and splits it into `num_mats` point set of dimension `d`. The resulting sequences have no QMC guarantees. 
+    This seems to have been proposed in Section 5.1 of [*Saltelli, A. et al. (2010)*](https://www.sciencedirect.com/science/article/pii/S0010465509003087)[^1] to do uncertainty quantification. 
+    See [this discussion](https://github.com/SciML/QuasiMonteCarlo.jl/pull/79#discussion_r1222946133) for a visual proof.
 
 [^1]: Saltelli, A., Annoni, P., Azzini, I., Campolongo, F., Ratto, M., & Tarantola, S. (2010). Variance based sensitivity analysis of model output. Design and estimator for the total sensitivity index. Computer physics communications, 181(2), 259-270.
 ## Example
