@@ -6,7 +6,8 @@ Base.iterate(s::AbstractDesignMatrix, state=1) = state > s.count ? nothing : (ne
 
 """
     OwenDesignMat{T<:Real, I<:Integer, F<:Integer} <: AbstractDesignMatrix
-Owen scrambling iterator. 
+Create an Owen scrambling iterator for doing multiple i.i.d. [`OwenScrambling`](@ref) randomization.
+One can use the commun [`DesignMatrix`](@ref) interface to create the iterator.
 """
 mutable struct OwenDesignMat{T<:Real, I<:Integer, F<:Integer} <: AbstractDesignMatrix
     X::Array{T,2} #array of size (N, d)
@@ -19,7 +20,8 @@ end
 
 """
     ScrambleDesignMat{T<:Real, I<:Integer} <: AbstractDesignMatrix
-Scrambling iterator used in Digital Shift and Matousek scrambling. 
+Create a scrambling iterator (Digital Shift or Matousek depending on the `R` field) for doing multiple i.i.d. [`DigitalShift`](@ref) or [`MatousekScrambling`](@ref) randomization.
+One can use the commun [`DesignMatrix`](@ref) interface to create the iterator.
 """
 mutable struct ScrambleDesignMat{T<:Real, I<:Integer} <: AbstractDesignMatrix
     X::Array{T,2} #array of size (N, d)
@@ -31,7 +33,8 @@ end
 
 """
     ShiftDesignMat{T<:Real} <: AbstractDesignMatrix
-Scrambling iterator used in shift method. 
+Create a Shift iterator for doing multiple i.i.d [`Shift`](@ref) randomization.
+One can use the commun [`DesignMatrix`](@ref) interface to create the iterator.
 """
 mutable struct ShiftDesignMat{T<:Real} <: AbstractDesignMatrix
     X::Array{T,2} #array of size (N, d)
@@ -39,12 +42,23 @@ mutable struct ShiftDesignMat{T<:Real} <: AbstractDesignMatrix
     count::Int
 end
 
+"""
+    DistributionDesignMat{T<:Real} <: AbstractDesignMatrix
+Create an iterator for mutiple distribution randomization. The distribution is chosen with the field `D`.
+This is equivalent to using `rand!(D, X)` for some matrix `X`.
+One can use the commun [`DesignMatrix`](@ref) interface to create the iterator.
+"""
 mutable struct DistributionDesignMat{T<:Real} <: AbstractDesignMatrix
     X::Array{T,2} #array of size (N, d)
     D::Distributions.Sampleable
     count::Int
 end
 
+"""
+    RandomDesignMat{T<:Real} <: AbstractDesignMatrix
+Create an iterator for mutiple uniform randomization. This it similar to [`DistributionDesignMat`](@ref) with the field `D = Uniform()`
+One can use the commun [`DesignMatrix`](@ref) interface to create the iterator.
+"""
 mutable struct RandomDesignMat{T<:Real} <: AbstractDesignMatrix
     X::Array{T,2} #array of size (N, d)
     count::Int
@@ -60,7 +74,7 @@ Base.eltype(::Type{RandomDesignMat{T}}) where {T} = Matrix{T} # TODO one could c
 ```julia
 DesignMatrix(n, d, sample_method::DeterministicSamplingAlgorithm, num_mats, T = Float64)
 ```
-Create an iterator for doing multiple randomization over QMC sequences where
+Create an iterator for doing multiple i.i.d. randomization over QMC sequences where
 - `num_mats` is the lenght of the iterator
 - `n` is the number of points to sample.
 - `d` is the dimensionality of the point set in `[0, 1)ᵈ`,
