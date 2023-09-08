@@ -39,7 +39,7 @@ QuasiMonteCarlo.sample(N, d, FaureSample(R = NoRand()), Rational) # Exact Ration
 ## Intermediate bits array type
 
 For scrambling methods, large bit arrays with values in `0:base` are created.
-Again, the default for storing is `Int64` which can dramatically affect memory usage when doing multiple large computations.
+Again, the default for storing is `Int` (i.e. generally `Int64` as 64-bit Julia is the common installation) which can dramatically affect memory usage when doing multiple large computations.
 To avoid this, one can define the `ScrambleMethod` with `Int32` (or else) like `OwenScramble(base = Int32(b), pad = Int32(m))`.[^1]
 
 [^1]: Currently, both `pad` and `base` must be of the same type. This might change.
