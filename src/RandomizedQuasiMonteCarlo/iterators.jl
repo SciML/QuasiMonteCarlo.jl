@@ -60,7 +60,7 @@ Base.eltype(::Type{RandomDesignMat{T}}) where {T} = Matrix{T} # TODO one could c
 ```julia
 DesignMatrix(n, d, sample_method::DeterministicSamplingAlgorithm, num_mats, T = Float64)
 ```
-Create an iterator for doing mutliple randomization over QMC sequences where
+Create an iterator for doing multiple randomization over QMC sequences where
 - `num_mats` is the lenght of the iterator
 - `n` is the number of points to sample.
 - `d` is the dimensionality of the point set in `[0, 1)ᵈ`,
