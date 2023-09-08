@@ -95,6 +95,13 @@ include("RandomizedQuasiMonteCarlo/shifting.jl")
 include("RandomizedQuasiMonteCarlo/scrambling_base_b.jl")
 include("RandomizedQuasiMonteCarlo/iterators.jl")
 
+import Requires
+@static if !isdefined(Base, :get_extension)
+    function __init__()
+        Requires.@require Distributions="31c24e10-a181-5473-b8eb-7969acd0382f" begin include("../ext/QuasiMonteCarloDistributions.jl") end
+    end
+end
+
 export SamplingAlgorithm,
     GridSample,
     SobolSample,
