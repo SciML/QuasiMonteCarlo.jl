@@ -413,7 +413,7 @@ end
 
 @testset "iterators" begin
     d = 4
-    m = 12
+    m = 14
     n = 2^m
     num_mat = 4
     
