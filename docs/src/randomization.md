@@ -21,8 +21,8 @@ abstract type RandomizationMethod end
 
 There are two ways to obtain a randomized sequence:
 
-- Either directly use `QuasiMonteCarlo.sample(n, d, DeterministicSamplingAlgorithm(R = SomeRandomizationMethod()))` or `sample(n, lb, up, DeterministicSamplingAlgorithm(R = RandomizationMethod()))`.
-- Or, given $n$ points $d$-dimensional points, all in $[0,1]^d$ one can do `randomize(X, SomeRandomizationMethod())` where $X$ is a $d\times n$-matrix.
+  - Either directly use `QuasiMonteCarlo.sample(n, d, DeterministicSamplingAlgorithm(R = SomeRandomizationMethod()))` or `sample(n, lb, up, DeterministicSamplingAlgorithm(R = RandomizationMethod()))`.
+  - Or, given $n$ points $d$-dimensional points, all in $[0,1]^d$ one can do `randomize(X, SomeRandomizationMethod())` where $X$ is a $d\times n$-matrix.
 
 ```@docs
 randomize
@@ -37,7 +37,7 @@ NoRand
 To obtain multiple independent randomizations of a sequence, i.e. Design Matrices, look at the [Design Matrices section](@ref DesignMatrices).
 
 !!! note
-
+    
     In most other QMC packages, randomization is performed "online" as the points are samples. Here, randomization is performed after the deterministic sequence is generated. Both methods are useful in different contexts. The former is generally faster to produce one randomized sequence, while the latter is faster to produce independent realizations of the sequence.
     
     **PRs are welcomed** to add "online" version of the sequence! See [this comment for inspiration](https://github.com/SciML/QuasiMonteCarlo.jl/pull/57#issuecomment-1326662016).
@@ -62,26 +62,26 @@ ScrambleMethod
 The `pad` is generally chosen as $\gtrsim \log_b(n)$.
 
 !!! warning
-
+    
     In principle, the base `b` used for scrambling methods `ScramblingMethods(b, pad, rng)` can be an arbitrary integer.
     However, to preserve good Quasi Monte Carlo properties, it must match the base of the sequence to scramble.
     For example, (deterministic) Sobol sequences are base $b=2$, $(t,m,d)$ sequences while (deterministic) Faure sequences are $(t,m,d)$ sequences in prime base i.e. $b$ is an arbitrary prime number.
 
 The implemented `ScramblingMethods` are
 
-- `DigitalShift` the simplest and fastest method. For a point $x\in [0,1]^d$ it does $y_k = (x_k + U_k) \mod b$ where $U_k \sim \mathbb{U}(\{0, \cdots, b-1\})$
+  - `DigitalShift` the simplest and fastest method. For a point $x\in [0,1]^d$ it does $y_k = (x_k + U_k) \mod b$ where $U_k \sim \mathbb{U}(\{0, \cdots, b-1\})$
 
 ```@docs
 DigitalShift
 ```
 
-- `MatousekScramble` a.k.a. Linear Matrix Scramble is what people use in practice. Indeed, the observed performances are similar to `OwenScramble` for a lesser numerical cost.
+  - `MatousekScramble` a.k.a. Linear Matrix Scramble is what people use in practice. Indeed, the observed performances are similar to `OwenScramble` for a lesser numerical cost.
 
 ```@docs
 MatousekScramble
 ```
 
-- `OwenScramble` a.k.a. Nested Uniform Scramble is the most understood theoretically, but is more costly to operate.
+  - `OwenScramble` a.k.a. Nested Uniform Scramble is the most understood theoretically, but is more costly to operate.
 
 ```@docs
 OwenScramble
@@ -188,5 +188,6 @@ plot(p..., size = (800, 600))
 ```
 
 !!! note
+    
     To check if a point set is a $(t,m,d)$-net, you can use the function `istmsnet` defined in the [tests file](https://github.com/SciML/QuasiMonteCarlo.jl/blob/2dce9905e564a85e1280115cc8af071674fc7d80/test/runtests.jl#L34) of this package.
     It uses the excellent [IntervalArithmetic.jl](https://github.com/JuliaIntervals/IntervalArithmetic.jl) package.
