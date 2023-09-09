@@ -1,4 +1,5 @@
 # * The scrambling codes were first inspired from Owen's `R` implementation that can be found [here](https://artowen.su.domains/code/rsobol.R). * #
+#TODO the typing could probably improved, resulting in more type stable (important for QMC computation to be able to use Float32, Float64, Rational, ... for points, and Int64, Int32, Int16 etc for bits etc.)
 
 """
 ```julia
@@ -43,9 +44,9 @@ The scramble method is Nested Uniform Scramble which was introduced in Owen (199
 
 References: Owen, A. B. (1995). Randomly permuted (t, m, s)-nets and (t, s)-sequences. In Monte Carlo and Quasi-Monte Carlo Methods in Scientific Computing: Proceedings of a conference at the University of Nevada, Las Vegas, Nevada, USA, June 23–25, 1994 (pp. 299-317). Springer New York.
 """
-Base.@kwdef struct OwenScramble <: ScrambleMethod
-    base::Int
-    pad::Int = 32
+Base.@kwdef struct OwenScramble{I<:Integer} <: ScrambleMethod
+    base::I
+    pad::I = 32
     rng::AbstractRNG = Random.GLOBAL_RNG
 end
 
@@ -83,20 +84,23 @@ function randomize_bits!(random_bits::AbstractArray{T, 3},
     for s in 1:d
         theperms = getpermset(rng, m, b)         # Permutations to apply to bits 1:m
         for k in 1:m                             # Here is where we want m > 0 so the loop works ok
-            random_bits[k, :, s] = (origin_bits[k, :, s] + theperms[k, indices[k, :, s]]) .%
+            @views random_bits[k, :, s] .= (origin_bits[k, :, s] .+ theperms[k, indices[k, :, s]]) .%
                                    b   # permutation by adding a bit modulo b
         end
     end
-    if pad > m     # Paste in random entries for bits after m'th one
-        random_bits[(m + 1):pad, :, :] = rand(rng, 0:(b - 1), n * d * (pad - m))
+    
+    # Paste in random entries for bits after m'th one
+    if pad > m
+        # random_bits[(m + 1):pad, :, :] = rand(rng, 0:(b - 1), n * d * (pad - m))
+        rand!(rng, @view(random_bits[(m + 1):pad, :, :]), 0:(b - 1))
     end
 end
 
-function getpermset(rng::AbstractRNG, m::Integer, b::Integer)
+function getpermset(rng::AbstractRNG, m::Integer, b::I) where I<:Integer
     # Get b^(k-1) random binary permutations for k=1 ... m
     # m will ordinarily be m when there are n=b^m points
     #
-    y = zeros(Int, m, b^(m - 1))
+    y = zeros(I, m, b^(m - 1))
     for k in 1:m
         nₖ = b^(k - 1)
         y[k, 1:nₖ] = rand(rng, 0:(b - 1), nₖ)
@@ -115,11 +119,11 @@ This also can be used to verify some equidistribution prorepreties.
 Here we create the `indices` array `m`, and not `pad`. Indeed `(t,m,d)-net` in base `b` are scrambled up to the `1/bᵐ` component.
 Higher order components are just used i.i.d. `Uₖ ∼ 𝐔({0:b-1})` in `owen_scramble_bit!`.
 """
-function which_permutation(bits::AbstractArray, b)
+function which_permutation(bits::AbstractArray, b::I) where I<:Integer
     n, d = size(bits)[2:end]
     m = logi(b, n)
 
-    indices = zeros(Int, m, n, d)
+    indices = zeros(I, m, n, d)
     for j in axes(bits, 3)
         which_permutation!(@view(indices[:, :, j]), bits[:, :, j], b)
     end
@@ -138,6 +142,19 @@ function which_permutation!(indices::AbstractMatrix{<:Integer},
     indices .+= 1 # array indexing starts at 1
 end
 
+
+function randomize!(random_points::AbstractMatrix{T},
+    points::AbstractMatrix{T}, R::ScrambleMethod) where {T <: Real}
+    @assert size(points) == size(random_points)
+    b = R.base
+    unrandomized_bits = unif2bits(points, b, pad = R.pad)
+    random_bits = similar(unrandomized_bits)
+    randomize_bits!(random_bits, unrandomized_bits, R)
+    for i in CartesianIndices(random_points)
+        random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
+    end
+end
+
 """
 ```julia
 MatousekScramble <: ScrambleMethod
@@ -151,22 +168,10 @@ The scramble method is Linear Matrix Scramble which was introduced in Matousek (
 
 References: Matoušek, J. (1998). On thel2-discrepancy for anchored boxes. Journal of Complexity, 14(4), 527-556.
 """
-Base.@kwdef struct MatousekScramble <: ScrambleMethod
-    base::Int
-    pad::Int = 32
+Base.@kwdef struct MatousekScramble{I<:Integer} <: ScrambleMethod
+    base::I
+    pad::I = 32
     rng::AbstractRNG = Random.GLOBAL_RNG
-end
-
-function randomize!(random_points::AbstractMatrix{T},
-    points::AbstractMatrix{T}, R::MatousekScramble) where {T <: Real}
-    @assert size(points) == size(random_points)
-    b = R.base
-    unrandomized_bits = unif2bits(points, b, pad = R.pad)
-    random_bits = similar(unrandomized_bits)
-    randomize_bits!(random_bits, unrandomized_bits, R)
-    for i in CartesianIndices(random_points)
-        random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
-    end
 end
 
 #? Weird it should be faster than nested uniform Scramble but here it is not at all.-> look for other implementation and paper
@@ -192,13 +197,14 @@ function randomize_bits!(random_bits::AbstractArray{T, 3},
         matousek_M, matousek_C = getmatousek(rng, m, b)
 
         # xₖ = (∑ₗ Mₖₗ aₗ + Cₖ) mod b where xₖ is the k element in base b
-        # matousek_M (m×m) * origin_bits (m×n) .+ matousek_C (m×1)
-        random_bits[1:m, :, s] = (matousek_M * origin_bits[1:m, :, s] .+ matousek_C) .% b
+        # matousek_M (m×m) * origin_bits (m×n) .+ matousek_C (m×1) 
+        @views random_bits[1:m, :, s] .= (matousek_M * origin_bits[1:m, :, s] .+ matousek_C) .% b
     end
 
     # Paste in random entries for bits after m'th one
     if pad > m
-        random_bits[(m + 1):pad, :, :] = rand(rng, 0:(b - 1), n * d * (pad - m))
+        # random_bits[(m + 1):pad, :, :] = rand(rng, 0:(b - 1), n * d * (pad - m))
+        rand!(rng, @view(random_bits[(m + 1):pad, :, :]), 0:(b - 1))
     end
 end
 
@@ -208,8 +214,8 @@ end
 Genereate the Matousek linear scramble in base b for one of the d components
 It produces a m x m bit matrix matousek_M and a length m bit vector matousek_C
 """
-function getmatousek(rng::AbstractRNG, m::Integer, b::Integer)
-    matousek_M = LowerTriangular(zeros(Int, m, m)) + Diagonal(rand(rng, 1:(b - 1), m)) # Mₖₖ ∼ U{1, ⋯, b-1}
+function getmatousek(rng::AbstractRNG, m::Integer, b::I) where I<:Integer
+    matousek_M = LowerTriangular(zeros(I, m, m)) + Diagonal(rand(rng, 1:(b - 1), m)) # Mₖₖ ∼ U{1, ⋯, b-1}
     matousek_C = rand(rng, 0:(b - 1), m)
     for i in 2:m
         for j in 1:(i - 1)
@@ -233,23 +239,10 @@ The scramble method is Digital Shift.
 It scrambles each coordinate in base `b` as `yₖ = (xₖ + Uₖ) mod b` where `Uₖ ∼ 𝕌({0:b-1})`.
 `U` is the same for every point `points` but i.i.d. along every dimension.
 """
-Base.@kwdef struct DigitalShift <: ScrambleMethod
-    base::Int
-    pad::Int = 32
+Base.@kwdef struct DigitalShift{I<:Integer} <: ScrambleMethod
+    base::I
+    pad::I = 32
     rng::AbstractRNG = Random.GLOBAL_RNG
-end
-
-function randomize!(random_points::AbstractMatrix{T},
-    points::AbstractMatrix{T}, R::DigitalShift) where {T <: Real}
-    @assert size(points) == size(random_points)
-    b = R.base
-    unrandomized_bits = unif2bits(points, b, pad = R.pad)
-    random_bits = similar(unrandomized_bits)
-
-    randomize_bits!(random_bits, unrandomized_bits, R)
-    for i in CartesianIndices(random_points)
-        random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
-    end
 end
 
 function randomize_bits!(random_bits::AbstractArray{T, 3},
@@ -268,67 +261,13 @@ function randomize_bits!(random_bits::AbstractArray{T, 3},
         DS = rand(rng, 0:(b - 1), m)
 
         # xₖ = (aₖ + Cₖ) mod b where xₖ is the k element in base b
-        # origin_bits (m×n) .+ DS (m×1)
-        random_bits[1:m, :, s] = (origin_bits[1:m, :, s] .+ DS) .% b
+        # origin_bits (m×n) .+ DS (m×1) 
+        @views random_bits[1:m, :, s] .= (origin_bits[1:m, :, s] .+ DS) .% b
     end
 
     # Paste in random entries for bits after m'th one
     if pad > m
-        random_bits[(m + 1):pad, :, :] = rand(rng, 0:(b - 1), n * d * (pad - m))
+        # random_bits[(m + 1):pad, :, :] = rand(rng, 0:(b - 1), n * d * (pad - m))
+        rand!(rng, @view(random_bits[(m + 1):pad, :, :]), 0:(b - 1))
     end
-end
-
-function generate_design_matrices(n, d, sampler, R::ScrambleMethod, num_mats, T = Float64)
-
-    # Generate unrandomized sequence
-    no_rand_sampler = @set sampler.R = NoRand()
-    points = permutedims(sample(n, d, no_rand_sampler, T))
-
-    b = R.base
-    unrandomized_bits = unif2bits(points, b, pad = R.pad)
-    out_bit = [similar(unrandomized_bits) for j in 1:num_mats]
-
-    # Core of the method, the unrandomized_bits are scrambled several times independtly
-    for j in 1:num_mats
-        randomize_bits!(out_bit[j], unrandomized_bits, R)
-    end
-
-    # Conversion back to point∈[0,1)ᵈ
-    random_points = [similar(points) for j in 1:num_mats]
-    for j in 1:num_mats
-        for i in CartesianIndices(points)
-            random_points[j][i] = bits2unif(T, @view(out_bit[j][:, i]), b)
-        end
-    end
-
-    return permutedims.(random_points)
-end
-
-function generate_design_matrices(n, d, sampler, R::OwenScramble, num_mats, T = Float64)
-
-    # Generate unrandomized sequence
-    no_rand_sampler = @set sampler.R = NoRand()
-    points = permutedims(sample(n, d, no_rand_sampler, T))
-
-    # Conversion from point∈[0,1)ᵈ to b-ary decomposition
-    b = R.base
-    unrandomized_bits = unif2bits(points, b, pad = R.pad)
-    out_bit = [similar(unrandomized_bits) for j in 1:num_mats]
-    # OwenScramble the indices argument
-    indices = which_permutation(unrandomized_bits, b)
-
-    # Core of the method, the unrandomized_bits are scrambled several times independtly
-    for j in 1:num_mats
-        randomize_bits!(out_bit[j], unrandomized_bits, indices, R)
-    end
-
-    # Conversion back to point∈[0,1)ᵈ
-    random_points = [similar(points) for j in 1:num_mats]
-    for j in 1:num_mats
-        for i in CartesianIndices(points)
-            random_points[j][i] = bits2unif(T, @view(out_bit[j][:, i]), b)
-        end
-    end
-
-    return permutedims.(random_points)
 end

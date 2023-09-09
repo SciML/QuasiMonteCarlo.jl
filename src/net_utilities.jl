@@ -3,8 +3,8 @@
 
 Return the b-ary decomposition of all element y of an array y = ∑ₖ yₖ/bᵏ a number yₖ∈[0,1[ -> [y₁, ⋯, yₘ]
 """
-function unif2bits(x::AbstractArray, b::Integer; pad = 32)
-    bits = zeros(Int, pad, size(x)...)
+function unif2bits(x::AbstractArray, b::I; pad = 32) where I<:Integer
+    bits = zeros(I, pad, size(x)...)
     unif2bits!(bits, x, b)
     return bits
 end
@@ -21,8 +21,8 @@ end
 
 Return the b-ary decomposition y = ∑ₖ yₖ/bᵏ a number y∈[0,1[ -> [y₁, ⋯, yₘ]
 """
-function unif2bits(y::Real, b::Integer; pad = 32)
-    bits = zeros(Int, pad)
+function unif2bits(y::Real, b::I; pad = 32) where I<:Integer
+    bits = zeros(I, pad)
     unif2bits!(bits, y, b)
     return bits
 end
@@ -82,9 +82,9 @@ end
 
 Convert a vector of pad "bits" in base b into an integer.
 """
-function bits2int(bit::AbstractVector, b::Integer)
+function bits2int(bit::AbstractVector, b::I) where I<:Integer
     m = length(bit)
-    y = 0
+    y = zero(I)
     for k in m:-1:1
         y = y * b + bit[k]
     end

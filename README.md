@@ -50,28 +50,29 @@ using UnsafeArrays
 Everything has the same interface:
 
 ```julia
-A = QuasiMonteCarlo.sample(n, lb, ub, sample_method)
+A = QuasiMonteCarlo.sample(n,lb,ub,sample_method, output_type = Float64)
 ```
 
 or to generate points directly in the unit box $[0,1]^d$
 
 ```julia
-A = QuasiMonteCarlo.sample(n, d, sample_method) # = QuasiMonteCarlo.sample(n,zeros(d),ones(d),sample_method)
+A = QuasiMonteCarlo.sample(n,d,sample_method, output_type = Float64) # = QuasiMonteCarlo.sample(n,zeros(d),ones(d),sample_method)
 ```
 
 where:
 
-  - `n` is the number of points to sample.
-  - `lb` is the lower bound for each variable. The length determines the dimensionality.
-  - `ub` is the upper bound.
-  - `d` is the dimension of the unit box.
-  - `sample_method` is the quasi-Monte Carlo sampling strategy.
+- `n` is the number of points to sample.
+- `lb` is the lower bound for each variable. The length determines the dimensionality.
+- `ub` is the upper bound.
+- `d` is the dimension of the unit box.
+- `sample_method` is the quasi-Monte Carlo sampling strategy.
+- `output_type` controls the output type, `Float64`, `Float32`, `Rational` (for exact digital net representation), etc. This feature does not yet work with every QMC sequence.
 
 Additionally, there is a helper function for generating design matrices:
 
 ```julia
-k = 2
-As = QuasiMonteCarlo.generate_design_matrices(n, lb, ub, sample_method, k)
+k=2
+As = QuasiMonteCarlo.generate_design_matrices(n,lb,ub,sample_method,k, output_type = Float64)
 ```
 
 which returns `As` which is an array of `k` design matrices `A[i]` that are
@@ -209,4 +210,4 @@ end
 plot(p..., size = (1500, 900))
 ```
 
-![Different randomize methods of the same initial set of points](img/various_randomization.svg)
+![Different randomization methods of the same initial set of points](img/various_randomization.svg)
