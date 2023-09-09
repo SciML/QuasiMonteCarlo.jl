@@ -57,4 +57,16 @@ function v.sample(n::Integer, lb::T, ub::T,
     return (ub .- lb) .* out .+ lb
 end
 
+function DesignMatrix(N, d, D::Distributions.Sampleable, num_mats, T = Float64)
+  X = initialize(N, d, D, T)
+  return DistributionDesignMat(X, D, num_mats)
+end
+
+function initialize(n, d, D::Distributions.Sampleable, T = Float64)
+  # Generate unrandomized sequence
+  X = zeros(T, d, n)
+  return X
+end
+
+
 end
