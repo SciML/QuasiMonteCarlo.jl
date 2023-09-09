@@ -1,6 +1,6 @@
 module QuasiMonteCarlo
 
-using Sobol, LatticeRules, Distributions, Primes, LinearAlgebra, Random
+using Sobol, LatticeRules, Primes, LinearAlgebra, Random
 using ConcreteStructs, Accessors
 
 abstract type SamplingAlgorithm end
@@ -56,36 +56,12 @@ In the first method the type of the point set is specified by `T` while in the s
 """
 function sample(n::Integer, lb::T, ub::T,
     S::D) where {T <: Union{Base.AbstractVecOrTuple, Number},
-    D <: Union{SamplingAlgorithm, Distributions.Sampleable}}
+    D <: SamplingAlgorithm}
     _check_sequence(lb, ub, n)
     lb = float.(lb)
     ub = float.(ub)
     out = sample(n, length(lb), S, eltype(lb))
     return (ub .- lb) .* out .+ lb
-end
-
-"""
-```julia
-sample(n::Integer, lb::T, ub::T, D::Distributions.Sampleable, T = eltype(D))
-sample(n::Integer,
-    lb::T,
-    ub::T,
-    D::Distributions.Sampleable) where {T <: Union{Base.AbstractVecOrTuple, Number}}
-```
-
-Return a point set from a distribution `D`:
-
-  - `n` is the number of points to sample.
-  - `D` is a `Distributions.Sampleable` from Distributions.jl.
-    The point set is in a `d`-dimensional unit box `[0, 1]^d`.
-    If the bounds are specified instead of just `d`, the sample is transformed (translation + scaling) into a box `[lb, ub]` where:
-  - `lb` is the lower bound for each variable. Its length fixes the dimensionality of the sample.
-  - `ub` is the upper bound. Its dimension must match `length(lb)`.
-"""
-function sample(n::Integer, d::Integer, D::Distributions.Sampleable, T = eltype(D))
-    @assert n>0 ZERO_SAMPLES_MESSAGE
-    x = [[rand(D) for j in 1:d] for i in 1:n]
-    return reduce(hcat, x)
 end
 
 # See https://discourse.julialang.org/t/is-there-a-dedicated-function-computing-m-int-log-b-b-m/89776/10
@@ -118,6 +94,13 @@ randomize(x, S::NoRand) = x
 include("RandomizedQuasiMonteCarlo/shifting.jl")
 include("RandomizedQuasiMonteCarlo/scrambling_base_b.jl")
 include("RandomizedQuasiMonteCarlo/iterators.jl")
+
+import Requires
+@static if !isdefined(Base, :get_extension)
+    function __init__()
+        Requires.@require Distributions="31c24e10-a181-5473-b8eb-7969acd0382f" begin include("../ext/QuasiMonteCarloDistributionsExt.jl") end
+    end
+end
 
 export SamplingAlgorithm,
     GridSample,

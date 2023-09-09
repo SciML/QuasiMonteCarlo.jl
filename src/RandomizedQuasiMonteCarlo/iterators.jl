@@ -48,9 +48,9 @@ Create an iterator for mutiple distribution randomization. The distribution is c
 This is equivalent to using `rand!(D, X)` for some matrix `X`.
 One can use the commun [`DesignMatrix`](@ref) interface to create the iterator.
 """
-mutable struct DistributionDesignMat{T<:Real} <: AbstractDesignMatrix
+mutable struct DistributionDesignMat{T<:Real, T2} <: AbstractDesignMatrix
     X::Array{T,2} #array of size (N, d)
-    D::Distributions.Sampleable
+    D::T2#::Distributions.Sampleable
     count::Int
 end
 
@@ -99,11 +99,6 @@ end
 function DesignMatrix(N, d, S::DeterministicSamplingAlgorithm, R::Shift, num_mats, T = Float64)
     X = initialize(N, d, S, R, T)
     return ShiftDesignMat(X, R, num_mats)
-end
-
-function DesignMatrix(N, d, D::Distributions.Sampleable, num_mats, T = Float64)
-    X = initialize(N, d, D, T)
-    return DistributionDesignMat(X, D, num_mats)
 end
 
 function DesignMatrix(N, d, D::RandomSample, num_mats, T = Float64)
@@ -170,7 +165,7 @@ function initialize(n, d, sampler, R::Shift, T = Float64)
 end
 
 ## Distribution
-function initialize(n, d, D::Union{Distributions.Sampleable,RandomSample}, T = Float64)
+function initialize(n, d, D::RandomSample, T = Float64)
     # Generate unrandomized sequence
     X = zeros(T, d, n)
     return X
