@@ -1,6 +1,7 @@
 module QuasiMonteCarloDistributionsExt
 
-using QuasiMonteCarlo, Distributions
+using QuasiMonteCarlo, 
+isdefined(Base, :get_extension) ? (import Distributions) : (import ..Distributions)
 
 """
 ```julia
