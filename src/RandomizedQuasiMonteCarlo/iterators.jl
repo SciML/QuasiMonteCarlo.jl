@@ -2,18 +2,20 @@ abstract type AbstractDesignMatrix end
 
 # Make an iterator so that we can do "for X in DesignMatrix(...)"
 Base.length(s::AbstractDesignMatrix) = s.count
-Base.iterate(s::AbstractDesignMatrix, state=1) = state > s.count ? nothing : (next!(s), state+1)
+function Base.iterate(s::AbstractDesignMatrix, state = 1)
+    state > s.count ? nothing : (next!(s), state + 1)
+end
 
 """
     OwenDesignMat{T<:Real, I<:Integer, F<:Integer} <: AbstractDesignMatrix
 Create an Owen scrambling iterator for doing multiple i.i.d. [`OwenScrambling`](@ref) randomization.
 One can use the commun [`DesignMatrix`](@ref) interface to create the iterator.
 """
-mutable struct OwenDesignMat{T<:Real, I<:Integer, F<:Integer} <: AbstractDesignMatrix
-    X::Array{T,2} #array of size (N, d)
-    random_bits::Array{I,3} #array of size (pad, N, d)
-    bits::Array{I,3} #array of size (pad, N, d)
-    indices::Array{F,3} #array of size (m, N, d)
+mutable struct OwenDesignMat{T <: Real, I <: Integer, F <: Integer} <: AbstractDesignMatrix
+    X::Array{T, 2} #array of size (N, d)
+    random_bits::Array{I, 3} #array of size (pad, N, d)
+    bits::Array{I, 3} #array of size (pad, N, d)
+    indices::Array{F, 3} #array of size (m, N, d)
     R::OwenScramble
     count::Int
 end
@@ -23,10 +25,10 @@ end
 Create a scrambling iterator (Digital Shift or Matousek depending on the `R` field) for doing multiple i.i.d. [`DigitalShift`](@ref) or [`MatousekScrambling`](@ref) randomization.
 One can use the commun [`DesignMatrix`](@ref) interface to create the iterator.
 """
-mutable struct ScrambleDesignMat{T<:Real, I<:Integer} <: AbstractDesignMatrix
-    X::Array{T,2} #array of size (N, d)
-    random_bits::Array{I,3} #array of size (pad, N, d)
-    bits::Array{I,3} #array of size (pad, N, d)
+mutable struct ScrambleDesignMat{T <: Real, I <: Integer} <: AbstractDesignMatrix
+    X::Array{T, 2} #array of size (N, d)
+    random_bits::Array{I, 3} #array of size (pad, N, d)
+    bits::Array{I, 3} #array of size (pad, N, d)
     R::ScrambleMethod
     count::Int
 end
@@ -36,8 +38,8 @@ end
 Create a Shift iterator for doing multiple i.i.d [`Shift`](@ref) randomization.
 One can use the commun [`DesignMatrix`](@ref) interface to create the iterator.
 """
-mutable struct ShiftDesignMat{T<:Real} <: AbstractDesignMatrix
-    X::Array{T,2} #array of size (N, d)
+mutable struct ShiftDesignMat{T <: Real} <: AbstractDesignMatrix
+    X::Array{T, 2} #array of size (N, d)
     R::Shift
     count::Int
 end
@@ -48,8 +50,8 @@ Create an iterator for mutiple distribution randomization. The distribution is c
 This is equivalent to using `rand!(D, X)` for some matrix `X`.
 One can use the commun [`DesignMatrix`](@ref) interface to create the iterator.
 """
-mutable struct DistributionDesignMat{T<:Real, T2} <: AbstractDesignMatrix
-    X::Array{T,2} #array of size (N, d)
+mutable struct DistributionDesignMat{T <: Real, T2} <: AbstractDesignMatrix
+    X::Array{T, 2} #array of size (N, d)
     D::T2#::Distributions.Sampleable
     count::Int
 end
@@ -59,8 +61,8 @@ end
 Create an iterator for mutiple uniform randomization. This it similar to [`DistributionDesignMat`](@ref) with the field `D = Uniform()`
 One can use the commun [`DesignMatrix`](@ref) interface to create the iterator.
 """
-mutable struct RandomDesignMat{T<:Real} <: AbstractDesignMatrix
-    X::Array{T,2} #array of size (N, d)
+mutable struct RandomDesignMat{T <: Real} <: AbstractDesignMatrix
+    X::Array{T, 2} #array of size (N, d)
     count::Int
 end
 
@@ -86,17 +88,32 @@ function DesignMatrix(N, d, S::DeterministicSamplingAlgorithm, num_mats, T = Flo
     return DesignMatrix(N, d, S, S.R, num_mats, T)
 end
 
-function DesignMatrix(N, d, S::DeterministicSamplingAlgorithm, R::OwenScramble, num_mats, T = Float64)
+function DesignMatrix(N,
+    d,
+    S::DeterministicSamplingAlgorithm,
+    R::OwenScramble,
+    num_mats,
+    T = Float64)
     X, random_bits, bits, indices = initialize(N, d, S, R, T)
     return OwenDesignMat(X, random_bits, bits, indices, R, num_mats)
 end
 
-function DesignMatrix(N, d, S::DeterministicSamplingAlgorithm, R::ScrambleMethod, num_mats, T = Float64)
+function DesignMatrix(N,
+    d,
+    S::DeterministicSamplingAlgorithm,
+    R::ScrambleMethod,
+    num_mats,
+    T = Float64)
     X, random_bits, bits = initialize(N, d, S, R, T)
     return ScrambleDesignMat(X, random_bits, bits, R, num_mats)
 end
 
-function DesignMatrix(N, d, S::DeterministicSamplingAlgorithm, R::Shift, num_mats, T = Float64)
+function DesignMatrix(N,
+    d,
+    S::DeterministicSamplingAlgorithm,
+    R::Shift,
+    num_mats,
+    T = Float64)
     X = initialize(N, d, S, R, T)
     return ShiftDesignMat(X, R, num_mats)
 end
@@ -121,12 +138,16 @@ function initialize(n, d, sampler, R::OwenScramble, T = Float64)
     b = R.base
     bits = unif2bits(points, b, pad = R.pad)
     random_bits = similar(bits)
-	random_points = similar(points)
-	indices = which_permutation(bits, R.base)
+    random_points = similar(points)
+    indices = which_permutation(bits, R.base)
     return random_points, random_bits, bits, indices
 end
 
-function scramble!(random_points::AbstractArray{T}, random_bits, bits, indices, R::OwenScramble) where T<:Real
+function scramble!(random_points::AbstractArray{T},
+    random_bits,
+    bits,
+    indices,
+    R::OwenScramble) where {T <: Real}
     randomize_bits!(random_bits, bits, indices, R)
     for i in CartesianIndices(random_points)
         random_points[i] = bits2unif(T, @view(random_bits[:, i]), R.base)
@@ -144,11 +165,14 @@ function initialize(n, d, sampler, R::ScrambleMethod, T = Float64)
     b = R.base
     bits = unif2bits(points, b, pad = R.pad)
     random_bits = similar(bits)
-	random_points = similar(points)
+    random_points = similar(points)
     return random_points, random_bits, bits
 end
 
-function scramble!(random_points::AbstractArray{T}, random_bits, bits, R::ScrambleMethod) where T<:Real
+function scramble!(random_points::AbstractArray{T},
+    random_bits,
+    bits,
+    R::ScrambleMethod) where {T <: Real}
     randomize_bits!(random_bits, bits, R)
     for i in CartesianIndices(random_points)
         random_points[i] = bits2unif(T, @view(random_bits[:, i]), R.base)
@@ -233,6 +257,11 @@ function generate_design_matrices(n, d, sampler, R::NoRand, num_mats, T = Float6
     return [out[(j * d + 1):((j + 1) * d), :] for j in 0:(num_mats - 1)]
 end
 
-function generate_design_matrices(n, d, sampler, R::RandomizationMethod, num_mats, T = Float64)
+function generate_design_matrices(n,
+    d,
+    sampler,
+    R::RandomizationMethod,
+    num_mats,
+    T = Float64)
     return collect(DesignMatrix(n, d, sampler, R, num_mats, T))
 end
