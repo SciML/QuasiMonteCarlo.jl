@@ -21,7 +21,10 @@ Return a point set from a distribution `D`:
   - `lb` is the lower bound for each variable. Its length fixes the dimensionality of the sample.
   - `ub` is the upper bound. Its dimension must match `length(lb)`.
 """
-function QuasiMonteCarlo.sample(n::Integer, d::Integer, D::Distributions.Sampleable, T = eltype(D))
+function QuasiMonteCarlo.sample(n::Integer,
+    d::Integer,
+    D::Distributions.Sampleable,
+    T = eltype(D))
     @assert n>0 QuasiMonteCarlo.ZERO_SAMPLES_MESSAGE
     x = [[rand(D) for j in 1:d] for i in 1:n]
     return reduce(hcat, x)
@@ -57,16 +60,19 @@ function QuasiMonteCarlo.sample(n::Integer, lb::T, ub::T,
     return (ub .- lb) .* out .+ lb
 end
 
-function QuasiMonteCarlo.DesignMatrix(N, d, D::Distributions.Sampleable, num_mats, T = Float64)
-  X = QuasiMonteCarlo.initialize(N, d, D, T)
-  return QuasiMonteCarlo.DistributionDesignMat(X, D, num_mats)
+function QuasiMonteCarlo.DesignMatrix(N,
+    d,
+    D::Distributions.Sampleable,
+    num_mats,
+    T = Float64)
+    X = QuasiMonteCarlo.initialize(N, d, D, T)
+    return QuasiMonteCarlo.DistributionDesignMat(X, D, num_mats)
 end
 
 function QuasiMonteCarlo.initialize(n, d, D::Distributions.Sampleable, T = Float64)
-  # Generate unrandomized sequence
-  X = zeros(T, d, n)
-  return X
+    # Generate unrandomized sequence
+    X = zeros(T, d, n)
+    return X
 end
-
 
 end
