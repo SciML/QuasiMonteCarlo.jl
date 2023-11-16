@@ -65,49 +65,49 @@ function sample(n, lb, ub, ::NewAmazingSamplingAlgorithm)
     end
 end</code></pre><h2 id="Contributing"><a class="docs-heading-anchor" href="#Contributing">Contributing</a><a id="Contributing-1"></a><a class="docs-heading-anchor-permalink" href="#Contributing" title="Permalink"></a></h2><ul><li><p>Please refer to the <a href="https://github.com/SciML/ColPrac/blob/master/README.md">SciML ColPrac: Contributor&#39;s Guide on Collaborative Practices for Community Packages</a> for guidance on PRs, issues, and other matters relating to contributing to SciML.</p></li><li><p>See the <a href="https://github.com/SciML/SciMLStyle">SciML Style Guide</a> for common coding practices and other style decisions.</p></li><li><p>There are a few community forums:</p><ul><li>The #diffeq-bridged and #sciml-bridged channels in the <a href="https://julialang.org/slack/">Julia Slack</a></li><li>The #diffeq-bridged and #sciml-bridged channels in the <a href="https://julialang.zulipchat.com/#narrow/stream/279055-sciml-bridged">Julia Zulip</a></li><li>On the <a href="https://discourse.julialang.org">Julia Discourse forums</a></li><li>See also <a href="https://sciml.ai/community/">SciML Community page</a></li></ul></li></ul><h2 id="Reproducibility"><a class="docs-heading-anchor" href="#Reproducibility">Reproducibility</a><a id="Reproducibility-1"></a><a class="docs-heading-anchor-permalink" href="#Reproducibility" title="Permalink"></a></h2><details><summary>The documentation of this SciML package was built using these direct dependencies,</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Status `~/work/QuasiMonteCarlo.jl/QuasiMonteCarlo.jl/docs/Project.toml`
   [6e4b80f9] BenchmarkTools v1.3.2
-  [31c24e10] Distributions v0.25.100
-  [e30172f5] Documenter v1.0.1
+  [31c24e10] Distributions v0.25.103
+  [e30172f5] Documenter v1.1.2
   [91a5bcdd] Plots v1.39.0
   [8a4e6c94] QuasiMonteCarlo v0.3.2 `~/work/QuasiMonteCarlo.jl/QuasiMonteCarlo.jl`
-  [2913bbd2] StatsBase v0.34.0
-  [9a3f8284] Random</code></pre></details><details><summary>and using this machine and Julia version.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Julia Version 1.9.3
-Commit bed2cd540a1 (2023-08-24 14:43 UTC)
+  [2913bbd2] StatsBase v0.34.2
+  [9a3f8284] Random</code></pre></details><details><summary>and using this machine and Julia version.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Julia Version 1.9.4
+Commit 8e5136fa297 (2023-11-14 08:46 UTC)
 Build Info:
   Official https://julialang.org/ release
 Platform Info:
   OS: Linux (x86_64-linux-gnu)
-  CPU: 2 × Intel(R) Xeon(R) Platinum 8370C CPU @ 2.80GHz
+  CPU: 4 × AMD EPYC 7763 64-Core Processor
   WORD_SIZE: 64
   LIBM: libopenlibm
-  LLVM: libLLVM-14.0.6 (ORCJIT, icelake-server)
-  Threads: 1 on 2 virtual cores</code></pre></details><details><summary>A more complete overview of all dependencies and their versions is also provided.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Status `~/work/QuasiMonteCarlo.jl/QuasiMonteCarlo.jl/docs/Manifest.toml`
+  LLVM: libLLVM-14.0.6 (ORCJIT, znver3)
+  Threads: 1 on 4 virtual cores</code></pre></details><details><summary>A more complete overview of all dependencies and their versions is also provided.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Status `~/work/QuasiMonteCarlo.jl/QuasiMonteCarlo.jl/docs/Manifest.toml`
   [a4c015fc] ANSIColoredPrinters v0.0.1
   [1520ce14] AbstractTrees v0.4.4
-  [7d9f7c33] Accessors v0.1.32
+  [7d9f7c33] Accessors v0.1.33
   [6e4b80f9] BenchmarkTools v1.3.2
-  [d1d4a3ce] BitFlags v0.1.7
+  [d1d4a3ce] BitFlags v0.1.8
   [49dc2e85] Calculus v0.5.1
-  [944b1d66] CodecZlib v0.7.2
+  [944b1d66] CodecZlib v0.7.3
   [35d6a980] ColorSchemes v3.24.0
   [3da002f7] ColorTypes v0.11.4
   [c3611d14] ColorVectorSpace v0.10.0
   [5ae59095] Colors v0.12.10
-  [34da2185] Compat v4.9.0
+  [34da2185] Compat v4.10.0
   [a33af91c] CompositionsBase v0.1.2
   [2569d6c7] ConcreteStructs v0.2.3
-  [f0e56b4a] ConcurrentUtilities v2.2.1
+  [f0e56b4a] ConcurrentUtilities v2.3.0
   [187b0558] ConstructionBase v1.5.4
   [d38c429a] Contour v0.6.2
   [9a962f9c] DataAPI v1.15.0
   [864edb3b] DataStructures v0.18.15
   [8bb1440f] DelimitedFiles v1.9.1
-  [31c24e10] Distributions v0.25.100
+  [31c24e10] Distributions v0.25.103
   [ffbed154] DocStringExtensions v0.9.3
-  [e30172f5] Documenter v1.0.1
+  [e30172f5] Documenter v1.1.2
   [fa6b7ba4] DualNumbers v0.6.8
   [460bff9d] ExceptionUnwrapping v0.1.9
   [c87230d0] FFMPEG v0.4.1
-  [1a297f60] FillArrays v1.6.1
+  [1a297f60] FillArrays v1.7.0
   [53c48c17] FixedPointNumbers v0.8.4
   [59287772] Formatting v0.4.2
   [28b8d3ca] GR v0.72.10
@@ -118,62 +118,62 @@ Platform Info:
   [18e54dd8] IntegerMathUtils v0.1.2
   [3587e190] InverseFunctions v0.1.12
   [92d709cd] IrrationalConstants v0.2.2
-  [1019f520] JLFzf v0.1.5
+  [1019f520] JLFzf v0.1.6
   [692b3bcd] JLLWrappers v1.5.0
   [682c06a0] JSON v0.21.4
-  [b964fa9f] LaTeXStrings v1.3.0
+  [b964fa9f] LaTeXStrings v1.3.1
   [23fbe1c1] Latexify v0.16.1
   [73f95e8e] LatticeRules v0.0.1
-  [0e77f7df] LazilyInitializedFields v1.2.1
+  [0e77f7df] LazilyInitializedFields v1.2.2
   [2ab3a3ac] LogExpFunctions v0.3.26
-  [e6f89c97] LoggingExtras v1.0.2
+  [e6f89c97] LoggingExtras v1.0.3
   [1914dd2f] MacroTools v0.5.11
-  [d0879d2d] MarkdownAST v0.1.1
-  [739be429] MbedTLS v1.1.7
+  [d0879d2d] MarkdownAST v0.1.2
+  [739be429] MbedTLS v1.1.8
   [442fdcdd] Measures v0.3.2
   [e1d29d7a] Missings v1.1.0
   [77ba4419] NaNMath v1.0.2
   [4d8831e6] OpenSSL v1.4.1
   [bac558e1] OrderedCollections v1.6.2
-  [90014a1f] PDMats v0.11.18
-  [69de0a69] Parsers v2.7.2
+  [90014a1f] PDMats v0.11.29
+  [69de0a69] Parsers v2.8.0
   [b98c9c47] Pipe v1.3.0
   [ccf2f8ad] PlotThemes v3.1.0
   [995b91a9] PlotUtils v1.3.5
   [91a5bcdd] Plots v1.39.0
   [aea7be01] PrecompileTools v1.2.0
   [21216c6a] Preferences v1.4.1
-  [27ebfcd6] Primes v0.5.4
-  [1fd47b50] QuadGK v2.9.0
+  [27ebfcd6] Primes v0.5.5
+  [1fd47b50] QuadGK v2.9.1
   [8a4e6c94] QuasiMonteCarlo v0.3.2 `~/work/QuasiMonteCarlo.jl/QuasiMonteCarlo.jl`
   [3cdcf5f2] RecipesBase v1.3.4
   [01d81517] RecipesPipeline v0.6.12
   [189a3867] Reexport v1.2.2
   [2792f1a3] RegistryInstances v0.1.0
-  [05181044] RelocatableFolders v1.0.0
+  [05181044] RelocatableFolders v1.0.1
   [ae029012] Requires v1.3.0
   [79098fc4] Rmath v0.7.1
-  [6c6a2e73] Scratch v1.2.0
+  [6c6a2e73] Scratch v1.2.1
   [992d4aef] Showoff v1.0.3
   [777ac1f9] SimpleBufferStream v1.1.0
   [ed01d8cd] Sobol v1.5.0
-  [a2af1166] SortingAlgorithms v1.1.1
+  [a2af1166] SortingAlgorithms v1.2.0
   [276daf66] SpecialFunctions v2.3.1
   [82ae8749] StatsAPI v1.7.0
-  [2913bbd2] StatsBase v0.34.0
+  [2913bbd2] StatsBase v0.34.2
   [4c63d2b9] StatsFuns v1.3.0
   [62fd8b95] TensorCore v0.1.1
-  [3bb67fe8] TranscodingStreams v0.9.13
-  [5c2747f8] URIs v1.5.0
+  [3bb67fe8] TranscodingStreams v0.10.2
+  [5c2747f8] URIs v1.5.1
   [1cfade01] UnicodeFun v0.4.1
-  [1986cc42] Unitful v1.17.0
+  [1986cc42] Unitful v1.18.0
   [45397f5d] UnitfulLatexify v1.6.3
   [41fe7b60] Unzip v0.2.0
   [6e34b625] Bzip2_jll v1.0.8+0
   [83423d85] Cairo_jll v1.16.1+1
   [2702e6a9] EpollShim_jll v0.0.20230411+0
   [2e619515] Expat_jll v2.5.0+0
-⌃ [b22a6f82] FFMPEG_jll v4.4.2+2
+  [b22a6f82] FFMPEG_jll v4.4.4+1
   [a3f928ae] Fontconfig_jll v2.13.93+0
   [d7e528f0] FreeType2_jll v2.13.1+0
   [559328eb] FriBidi_jll v1.0.10+0
@@ -197,18 +197,18 @@ Platform Info:
   [89763e89] Libtiff_jll v4.5.1+1
   [38a345b3] Libuuid_jll v2.36.0+0
   [e7412a2a] Ogg_jll v1.3.5+1
-⌅ [458c3c95] OpenSSL_jll v1.1.23+0
+  [458c3c95] OpenSSL_jll v3.0.12+0
   [efe28fd5] OpenSpecFun_jll v0.5.5+0
   [91d4177d] Opus_jll v1.3.2+0
   [30392449] Pixman_jll v0.42.2+0
-  [c0090381] Qt6Base_jll v6.5.2+2
+  [c0090381] Qt6Base_jll v6.5.3+1
   [f50d1b31] Rmath_jll v0.4.0+0
   [a44049a8] Vulkan_Loader_jll v1.3.243+0
   [a2964d1f] Wayland_jll v1.21.0+1
   [2381bf8a] Wayland_protocols_jll v1.25.0+0
-  [02c8fc9c] XML2_jll v2.10.4+0
+  [02c8fc9c] XML2_jll v2.11.5+0
   [aed1982a] XSLT_jll v1.1.34+0
-  [ffd25f8a] XZ_jll v5.4.4+0
+  [ffd25f8a] XZ_jll v5.4.5+0
   [f67eecfb] Xorg_libICE_jll v1.0.10+1
   [c834827a] Xorg_libSM_jll v1.2.3+0
   [4f6342f7] Xorg_libX11_jll v1.8.6+0
@@ -235,7 +235,7 @@ Platform Info:
   [c5fb5394] Xorg_xtrans_jll v1.5.0+0
   [3161d3a3] Zstd_jll v1.5.5+0
   [35ca27e7] eudev_jll v3.2.9+0
-⌅ [214eeab7] fzf_jll v0.29.0+0
+⌅ [214eeab7] fzf_jll v0.35.1+0
   [1a1c6b14] gperf_jll v3.1.1+0
   [a4ae2306] libaom_jll v3.4.0+0
   [0ac62f75] libass_jll v0.15.1+0
@@ -255,7 +255,7 @@ Platform Info:
   [f43a241f] Downloads v1.6.0
   [7b1f6079] FileWatching
   [b77e0a4c] InteractiveUtils
-  [b27032c2] LibCURL v0.6.3
+  [b27032c2] LibCURL v0.6.4
   [76f85450] LibGit2
   [8f399da3] Libdl
   [37e2e46d] LinearAlgebra
@@ -280,8 +280,8 @@ Platform Info:
   [cf7118a7] UUIDs
   [4ec0a83e] Unicode
   [e66e0078] CompilerSupportLibraries_jll v1.0.5+0
-  [deac9b47] LibCURL_jll v7.84.0+0
-  [29816b5a] LibSSH2_jll v1.10.2+0
+  [deac9b47] LibCURL_jll v8.4.0+0
+  [29816b5a] LibSSH2_jll v1.11.0+1
   [c8ffd9c3] MbedTLS_jll v2.28.2+0
   [14a3606d] MozillaCACerts_jll v2022.10.11
   [4536629a] OpenBLAS_jll v0.3.21+4
@@ -290,6 +290,6 @@ Platform Info:
   [bea87d4a] SuiteSparse_jll v5.10.1+6
   [83775a58] Zlib_jll v1.2.13+0
   [8e850b90] libblastrampoline_jll v5.8.0+0
-  [8e850ede] nghttp2_jll v1.48.0+0
+  [8e850ede] nghttp2_jll v1.52.0+1
   [3f19e933] p7zip_jll v17.4.0+0
-Info Packages marked with ⌃ and ⌅ have new versions available, but those with ⌅ are restricted by compatibility constraints from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.3.2/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.3.2/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="samplers/">Sampler APIs »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.0.1 on <span class="colophon-date" title="Saturday 23 September 2023 05:31">Saturday 23 September 2023</span>. Using Julia version 1.9.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+Info Packages marked with ⌅ have new versions available but compatibility constraints restrict them from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.3.2/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.3.2/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="samplers/">Sampler APIs »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.1.2 on <span class="colophon-date" title="Thursday 16 November 2023 13:19">Thursday 16 November 2023</span>. Using Julia version 1.9.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
