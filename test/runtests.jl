@@ -145,7 +145,8 @@ end
     s = QuasiMonteCarlo.sample(n, lb, ub, GridSample())
     s = sortslices(s; dims = 2)
     differences = diff(s; dims = 2)
-    @test all(≈(differences[1]), differences)
+    # test for grid
+    @test all(x -> all(y -> y in 0.0:1/n:1.0, x), eachrow(s))
     μ = mean(s; dims = 2)
     variance = var(s; corrected = false, dims = 2)
     for i in eachindex(μ)

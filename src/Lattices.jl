@@ -1,7 +1,7 @@
 """
     GridSample(R::RandomizationMethod = NoRand()) <: DeterministicSamplingAlgorithm
 
-A simple rectangular grid lattice.
+A simple rectangular grid lattice. Samples `n` random samples from a grid with `dx = (ub -lb)/n``
 
 In more than 2 dimensions, grids have worse discrepancy than simple Monte Carlo. As a
 result, they should almost never be used for multivariate integration; their use is as
@@ -12,8 +12,8 @@ Base.@kwdef @concrete struct GridSample <: DeterministicSamplingAlgorithm
 end
 
 function sample(n::Integer, d::Integer, S::GridSample, T = Float64)
-    n = convert(T, n)
-    return randomize([(i - convert(T, 0.5)) / n for _ in 1:d, i in 1:n], S.R)
+    samples = rand.(range.(zeros(T, d), ones(T,d); length = n+1), Ref(n))
+    randomize(mapreduce(permutedims, vcat, samples), S.R)
 end
 
 """
