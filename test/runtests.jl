@@ -493,7 +493,7 @@ end
     N = b^m # Number of points
     pad = 2m
 
-    # Unrandomized low discrepency sequence
+    # Unrandomized low discrepancy sequence
     u_faure = QuasiMonteCarlo.sample(N, d, FaureSample())
 
     # Randomized version
@@ -513,7 +513,7 @@ end
     N = b^m # Number of points
     pad = m
 
-    # Unrandomized low discrepency sequence
+    # Unrandomized low discrepancy sequence
     u_sobol = Rational.(QuasiMonteCarlo.sample(N, d, SobolSample()))
     # Randomized version
     u_nus = randomize(u_sobol, OwenScramble(base = b, pad = pad))

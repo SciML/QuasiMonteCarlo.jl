@@ -212,7 +212,7 @@ end
 """
     getmatousek(rng::AbstractRNG, m::Integer, b::Integer)
 
-Genereate the Matousek linear scramble in base b for one of the d components
+Generate the Matousek linear scramble in base b for one of the d components
 It produces a m x m bit matrix matousek_M and a length m bit vector matousek_C
 """
 function getmatousek(rng::AbstractRNG, m::Integer, b::I) where {I <: Integer}

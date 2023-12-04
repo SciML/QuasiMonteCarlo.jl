@@ -52,7 +52,7 @@ Return a QMC point set where:
   - `lb` is the lower bound for each variable. Its length fixes the dimensionality of the sample.
   - `ub` is the upper bound. Its dimension must match `length(lb)`.
 
-In the first method the type of the point set is specified by `T` while in the second method the output type is infered from the bound types.
+In the first method the type of the point set is specified by `T` while in the second method the output type is inferred from the bound types.
 """
 function sample(n::Integer, lb::T, ub::T,
     S::D) where {T <: Union{Base.AbstractVecOrTuple, Number},
