@@ -9,7 +9,7 @@ end
 """
     OwenDesignMat{T<:Real, I<:Integer, F<:Integer} <: AbstractDesignMatrix
 Create an Owen scrambling iterator for doing multiple i.i.d. [`OwenScrambling`](@ref) randomization.
-One can use the commun [`DesignMatrix`](@ref) interface to create the iterator.
+One can use the common[`DesignMatrix`](@ref) interface to create the iterator.
 """
 mutable struct OwenDesignMat{T <: Real, I <: Integer, F <: Integer} <: AbstractDesignMatrix
     X::Array{T, 2} #array of size (N, d)
@@ -23,7 +23,7 @@ end
 """
     ScrambleDesignMat{T<:Real, I<:Integer} <: AbstractDesignMatrix
 Create a scrambling iterator (Digital Shift or Matousek depending on the `R` field) for doing multiple i.i.d. [`DigitalShift`](@ref) or [`MatousekScrambling`](@ref) randomization.
-One can use the commun [`DesignMatrix`](@ref) interface to create the iterator.
+One can use the common[`DesignMatrix`](@ref) interface to create the iterator.
 """
 mutable struct ScrambleDesignMat{T <: Real, I <: Integer} <: AbstractDesignMatrix
     X::Array{T, 2} #array of size (N, d)
@@ -36,7 +36,7 @@ end
 """
     ShiftDesignMat{T<:Real} <: AbstractDesignMatrix
 Create a Shift iterator for doing multiple i.i.d [`Shift`](@ref) randomization.
-One can use the commun [`DesignMatrix`](@ref) interface to create the iterator.
+One can use the common[`DesignMatrix`](@ref) interface to create the iterator.
 """
 mutable struct ShiftDesignMat{T <: Real} <: AbstractDesignMatrix
     X::Array{T, 2} #array of size (N, d)
@@ -46,9 +46,9 @@ end
 
 """
     DistributionDesignMat{T<:Real} <: AbstractDesignMatrix
-Create an iterator for mutiple distribution randomization. The distribution is chosen with the field `D`.
+Create an iterator for multiple distribution randomization. The distribution is chosen with the field `D`.
 This is equivalent to using `rand!(D, X)` for some matrix `X`.
-One can use the commun [`DesignMatrix`](@ref) interface to create the iterator.
+One can use the common[`DesignMatrix`](@ref) interface to create the iterator.
 """
 mutable struct DistributionDesignMat{T <: Real, T2} <: AbstractDesignMatrix
     X::Array{T, 2} #array of size (N, d)
@@ -58,8 +58,8 @@ end
 
 """
     RandomDesignMat{T<:Real} <: AbstractDesignMatrix
-Create an iterator for mutiple uniform randomization. This it similar to [`DistributionDesignMat`](@ref) with the field `D = Uniform()`
-One can use the commun [`DesignMatrix`](@ref) interface to create the iterator.
+Create an iterator for multiple uniform randomization. This it similar to [`DistributionDesignMat`](@ref) with the field `D = Uniform()`
+One can use the common[`DesignMatrix`](@ref) interface to create the iterator.
 """
 mutable struct RandomDesignMat{T <: Real} <: AbstractDesignMatrix
     X::Array{T, 2} #array of size (N, d)
@@ -77,7 +77,7 @@ Base.eltype(::Type{RandomDesignMat{T}}) where {T} = Matrix{T} # TODO one could c
 DesignMatrix(n, d, sample_method::DeterministicSamplingAlgorithm, num_mats, T = Float64)
 ```
 Create an iterator for doing multiple i.i.d. randomization over QMC sequences where
-- `num_mats` is the lenght of the iterator
+- `num_mats` is the length of the iterator
 - `n` is the number of points to sample.
 - `d` is the dimensionality of the point set in `[0, 1)ᵈ`,
 - `sample_method` is the quasi-Monte Carlo sampling strategy used to create a deterministic point set `out`.
@@ -197,7 +197,7 @@ end
 
 # generate_design_matrices
 
-## Generic function 
+## Generic function
 
 """
 ```julia
@@ -247,12 +247,12 @@ end
 """
     generate_design_matrices(n, d, sampler, R::NoRand, num_mats, T = Float64)
 `R = NoRand()` produces `num_mats` matrices each containing a different deterministic point set in `[0, 1)ᵈ`.
-Note that this is an ad hoc way to produce i.i.d sequence as it creates a deterministic point in dimension `d × num_mats` and split it in `num_mats` point set of dimension `d`. 
+Note that this is an ad hoc way to produce i.i.d sequence as it creates a deterministic point in dimension `d × num_mats` and split it in `num_mats` point set of dimension `d`.
 This does not have any QMC garantuees.
 """
 function generate_design_matrices(n, d, sampler, R::NoRand, num_mats, T = Float64)
     out = sample(n, num_mats * d, sampler, T)
-    @warn "The `generate_design_matrices(n, d, sampler, R = NoRand(), num_mats)` method does not produces true and independent QMC matrices, see [this doc warning](https://docs.sciml.ai/QuasiMonteCarlo/stable/design_matrix/) for more context. 
+    @warn "The `generate_design_matrices(n, d, sampler, R = NoRand(), num_mats)` method does not produces true and independent QMC matrices, see [this doc warning](https://docs.sciml.ai/QuasiMonteCarlo/stable/design_matrix/) for more context.
     Prefer using randomization methods such as `R = Shift()`, `R = MatousekScrambling()`, etc., see [documentation](https://docs.sciml.ai/QuasiMonteCarlo/stable/randomization/)"
     return [out[(j * d + 1):((j + 1) * d), :] for j in 0:(num_mats - 1)]
 end
