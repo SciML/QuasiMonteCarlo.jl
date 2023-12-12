@@ -28,7 +28,7 @@ function unif2bits(y::Real, b::I; pad = 32) where {I <: Integer}
 end
 
 # Inspired by digits!(a::AbstractVector{T}, n::Integer; base) where T<:Integer in Base at intfuncs.jl:926
-function unif2bits!(bits::AbstractVector{<:Integer}, y, b::Integer; kwargs...)
+function unif2bits!(bits::AbstractVector{<:Integer}, y::Real, b::Integer; kwargs...)
     invbase = inv(b)
     for i in eachindex(bits)
         r, y = divrem(y, invbase^i)
@@ -36,9 +36,9 @@ function unif2bits!(bits::AbstractVector{<:Integer}, y, b::Integer; kwargs...)
     end
 end
 
-#? Apparently this is not ideal to explicitly state the Type. 
+#? Apparently this is not ideal to explicitly state the Type.
 #? See https://github.com/SciML/QuasiMonteCarlo.jl/issues/44#issuecomment-1328156825
-#? Not sure how to do otherwise in this case though. 
+#? Not sure how to do otherwise in this case though.
 """
     bits2unif(::Type{T}, bits::AbstractVector{<:Integer},
                    b::Integer)
@@ -76,7 +76,7 @@ end
 #? @btime @evalpoly(3, $bi...)
 #?   500.515 ns (1 allocation: 272 bytes)
 #? @btime QuasiMonteCarlo.bits2int($bi, 3)
-#?   13.113 ns (0 allocations: 0 bytes)  
+#?   13.113 ns (0 allocations: 0 bytes)
 """
     bits2int(bit::AbstractMatrix{<:Integer}, b::Integer)
 
