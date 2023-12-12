@@ -84,7 +84,7 @@ Create an iterator for doing multiple i.i.d. randomization over QMC sequences wh
 - `T` is the `eltype` of the point sets. For some QMC methods (Faure, Sobol) this can be `Rational`
 It is now compatible with all scrambling methods and shifting. One can also use it with `Distributions.Sampleable` or `RandomSample`.
 """
-function DesignMatrix(N, d, S::DeterministicSamplingAlgorithm, num_mats, T = Float64)
+function DesignMatrix(N, d, S::DeterministicSamplingAlgorithm, num_mats::Integer, T::DataType = Float64)
     return DesignMatrix(N, d, S, S.R, num_mats, T)
 end
 
@@ -92,8 +92,8 @@ function DesignMatrix(N,
     d,
     S::DeterministicSamplingAlgorithm,
     R::OwenScramble,
-    num_mats,
-    T = Float64)
+    num_mats::Integer,
+    T::DataType = Float64)
     X, random_bits, bits, indices = initialize(N, d, S, R, T)
     return OwenDesignMat(X, random_bits, bits, indices, R, num_mats)
 end
@@ -102,7 +102,7 @@ function DesignMatrix(N,
     d,
     S::DeterministicSamplingAlgorithm,
     R::ScrambleMethod,
-    num_mats,
+    num_mats::Integer,
     T = Float64)
     X, random_bits, bits = initialize(N, d, S, R, T)
     return ScrambleDesignMat(X, random_bits, bits, R, num_mats)
@@ -113,12 +113,12 @@ function DesignMatrix(N,
     S::DeterministicSamplingAlgorithm,
     R::Shift,
     num_mats,
-    T = Float64)
+    T::DataType = Float64)
     X = initialize(N, d, S, R, T)
     return ShiftDesignMat(X, R, num_mats)
 end
 
-function DesignMatrix(N, d, D::RandomSample, num_mats, T = Float64)
+function DesignMatrix(N, d, D::RandomSample, num_mats, T::DataType = Float64)
     X = initialize(N, d, D, T)
     return RandomDesignMat(X, num_mats)
 end
@@ -130,7 +130,7 @@ next!(DM::DistributionDesignMat) = rand!(DM.D, DM.X)
 next!(DM::RandomDesignMat) = rand!(DM.X)
 
 ## OwenScramble
-function initialize(n, d, sampler, R::OwenScramble, T = Float64)
+function initialize(n, d, sampler, R::OwenScramble, T::DataType = Float64)
     # Generate unrandomized sequence
     no_rand_sampler = @set sampler.R = NoRand()
     points = permutedims(sample(n, d, no_rand_sampler, T))
@@ -157,7 +157,7 @@ end
 
 ## Other scramble
 
-function initialize(n, d, sampler, R::ScrambleMethod, T = Float64)
+function initialize(n, d, sampler, R::ScrambleMethod, T::DataType = Float64)
     # Generate unrandomized sequence
     no_rand_sampler = @set sampler.R = NoRand()
     points = permutedims(sample(n, d, no_rand_sampler, T))
@@ -181,7 +181,7 @@ function scramble!(random_points::AbstractArray{T},
 end
 
 ## Shift
-function initialize(n, d, sampler, R::Shift, T = Float64)
+function initialize(n, d, sampler, R::Shift, T::DataType = Float64)
     # Generate unrandomized sequence
     no_rand_sampler = @set sampler.R = NoRand()
     points = sample(n, d, no_rand_sampler, T)
@@ -189,7 +189,7 @@ function initialize(n, d, sampler, R::Shift, T = Float64)
 end
 
 ## Distribution
-function initialize(n, d, D::RandomSample, T = Float64)
+function initialize(n, d, D::RandomSample, T::DataType = Float64)
     # Generate unrandomized sequence
     X = zeros(T, d, n)
     return X
@@ -215,13 +215,13 @@ Create `num_mats` matrices each containing a QMC point set, where:
 - `T` is the `eltype` of the point sets. For some QMC methods (Faure, Sobol) this can be `Rational`
 If the bound `lb` and `ub` are specified instead of `d`, the samples will be transformed into the box `[lb, ub]`.
 """
-function generate_design_matrices(n, d, sampler::DeterministicSamplingAlgorithm, num_mats,
-    T = Float64)
+function generate_design_matrices(n, d, sampler::DeterministicSamplingAlgorithm, num_mats::Integer,
+    T::DataType = Float64)
     return generate_design_matrices(n, d, sampler, sampler.R, num_mats, T)
 end
 
-function generate_design_matrices(n, d, sampler::RandomSamplingAlgorithm, num_mats,
-    T = Float64)
+function generate_design_matrices(n, d, sampler::RandomSamplingAlgorithm, num_mats::Integer,
+    T::DataType = Float64)
     return [sample(n, d, sampler, T) for j in 1:num_mats]
 end
 
@@ -250,7 +250,7 @@ end
 Note that this is an ad hoc way to produce i.i.d sequence as it creates a deterministic point in dimension `d × num_mats` and split it in `num_mats` point set of dimension `d`.
 This does not have any QMC garantuees.
 """
-function generate_design_matrices(n, d, sampler, R::NoRand, num_mats, T = Float64)
+function generate_design_matrices(n, d, sampler, R::NoRand, num_mats::Integer, T::DataType = Float64)
     out = sample(n, num_mats * d, sampler, T)
     @warn "The `generate_design_matrices(n, d, sampler, R = NoRand(), num_mats)` method does not produces true and independent QMC matrices, see [this doc warning](https://docs.sciml.ai/QuasiMonteCarlo/stable/design_matrix/) for more context.
     Prefer using randomization methods such as `R = Shift()`, `R = MatousekScrambling()`, etc., see [documentation](https://docs.sciml.ai/QuasiMonteCarlo/stable/randomization/)"
@@ -261,7 +261,7 @@ function generate_design_matrices(n,
     d,
     sampler,
     R::RandomizationMethod,
-    num_mats,
-    T = Float64)
+    num_mats::Integer,
+    T::DataType = Float64)
     return collect(DesignMatrix(n, d, sampler, R, num_mats, T))
 end

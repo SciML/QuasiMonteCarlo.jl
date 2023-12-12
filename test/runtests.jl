@@ -1,6 +1,6 @@
 using QuasiMonteCarlo
-using Aqua, Test
-# Aqua.test_all(QuasiMonteCarlo)
+using Test
+include("qa.jl")
 
 using Compat
 using Statistics, LinearAlgebra, StatsBase, Random
@@ -435,13 +435,13 @@ end
         @test isa(X, Matrix{eltype(X)}) == true
         μ = [mean(f(c) for c in eachcol(X)) for X in iterator] # Check that iterator do work!
         if !isa(algorithm, Beta) # The Beta distribution is not Uniform hence we do not expect the μ to be close to 1. We could compute the expected results but it would involve a β function dependency.
-            @test μ≈ones(num_mat) atol=5e-2 # the results for different randomization should all be close to 1. Arbitrarily we allow 5% error. 
+            @test μ≈ones(num_mat) atol=5e-2 # the results for different randomization should all be close to 1. Arbitrarily we allow 5% error.
         end
     end
 end
 
 @testset "Types of output and intermediate arrays" begin
-    # Scrambling methods use intermediate array for the bits scrambling. It is in general uncessary to have this large array stored as Int64. 
+    # Scrambling methods use intermediate array for the bits scrambling. It is in general uncessary to have this large array stored as Int64.
     #TODO test other randomization methods (here just scrambling) and QMC sequence (here just Sobol)
     #TODO here we test output and constructions of intermediate array, we could test that all operation are type stables
     d = 4
