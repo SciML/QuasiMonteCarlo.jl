@@ -1,6 +1,5 @@
 #CI TRIGGER
-using QuasiMonteC
-arlo
+using QuasiMonteCarlo
 using Test
 include("qa.jl")
 
