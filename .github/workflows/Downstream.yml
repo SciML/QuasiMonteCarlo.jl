@@ -1,32 +1,49 @@
 
 name: IntegrationTest
 on:
-  push:
-    branches: [master]
-    tags: [v*]
   pull_request:
+    branches:
+      - master
+    paths-ignore:
+      - 'docs/**'
+  push:
+    branches:
+      - master
+    tags:
+      - v*
+    paths-ignore:
+      - 'docs/**'
+  schedule:
+      - cron: '24 22 * * 0'
 
 jobs:
   test:
-    name: ${{ matrix.package.repo }}/${{ matrix.package.group }}/${{ matrix.julia-version }}
+    name: ${{ matrix.package.repo }}/${{ matrix.package.group }}/${{ matrix.version }}
     runs-on: ${{ matrix.os }}
     env:
       GROUP: ${{ matrix.package.group }}
     strategy:
       fail-fast: false
       matrix:
-        julia-version: [1]
-        os: [ubuntu-latest]
         package:
           - {user: SciML, repo: Surrogates.jl, group: All}
           - {user: SciML, repo: NeuralPDE.jl, group: NNPDE1}
           - {user: SciML, repo: NeuralPDE.jl, group: NNPDE2}
+        version:
+          - '1'
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@v2
         with:
-          version: ${{ matrix.julia-version }}
+          version: ${{ matrix.version }}
           arch: x64
+      - uses: julia-actions/cache@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: julia-actions/julia-buildpkg@latest
       - name: Clone Downstream
         uses: actions/checkout@v4
