@@ -2,9 +2,8 @@ using QuasiMonteCarlo
 using Test
 include("qa.jl")
 
-using Compat
 using Statistics, LinearAlgebra, StatsBase, Random
-using Primes, Combinatorics, Distributions, InvertedIndices, IntervalArithmetic
+using Primes, Combinatorics, Distributions, IntervalArithmetic
 using HypothesisTests
 
 # struct InertSampler <: Random.AbstractRNG end
