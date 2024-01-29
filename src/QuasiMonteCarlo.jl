@@ -55,8 +55,8 @@ Return a QMC point set where:
 In the first method the type of the point set is specified by `T` while in the second method the output type is inferred from the bound types.
 """
 function sample(n::Integer, lb::T, ub::T,
-    S::D) where {T <: Union{Base.AbstractVecOrTuple, Number},
-    D <: SamplingAlgorithm}
+        S::D) where {T <: Union{Base.AbstractVecOrTuple, Number},
+        D <: SamplingAlgorithm}
     _check_sequence(lb, ub, n)
     lb = float.(lb)
     ub = float.(ub)
@@ -78,6 +78,7 @@ include("Kronecker.jl")
 include("Halton.jl")
 include("Sobol.jl")
 include("LatinHypercube.jl")
+include("RandomizedHalton.jl")
 include("Lattices.jl")
 include("Section.jl")
 
@@ -99,6 +100,7 @@ export SamplingAlgorithm,
     GridSample,
     SobolSample,
     LatinHypercubeSample,
+    RandomizedHaltonSample,
     LatticeRuleSample,
     RandomSample,
     HaltonSample,

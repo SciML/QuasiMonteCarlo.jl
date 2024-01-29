@@ -43,7 +43,7 @@ The test is exact if the element of `net` are of type `Rational`. Indeed, in tha
 The conversion `Float` to `Rational` is usually possible with usual nets, e.g., Sobol, Faure (may require `Rational{BigInt}.(net)`).
 """
 function istmsnet(net::AbstractMatrix{T}; λ::I, t::I, m::I, s::I,
-    base::I) where {I <: Integer, T <: Real}
+        base::I) where {I <: Integer, T <: Real}
     pass = true
 
     @assert size(net, 2)==λ * (base^m) "Number of points must be as size(net, 2) = $(size(net, 2)) == λ * (base^m) = $(λ * (base^m))"
@@ -145,7 +145,7 @@ end
     s = sortslices(s; dims = 2)
     differences = diff(s; dims = 2)
     # test for grid
-    @test all(x -> all(y -> y in 0.0:1/n:1.0, x), eachrow(s))
+    @test all(x -> all(y -> y in 0.0:(1 / n):1.0, x), eachrow(s))
     μ = mean(s; dims = 2)
     variance = var(s; corrected = false, dims = 2)
     for i in eachindex(μ)
@@ -192,6 +192,40 @@ end
     # A LHS is a scrambled `(λ=1, t=0, m=1, s=d)`-net in base `n`
     # See Cororollary 17.1 of [Monte Carlo theory, methods, and examples](https://artowen.su.domains/mc/qmcstuff.pdf).
     @test istmsnet(s, λ = 1, t = 0, m = 1, s = d, base = n)
+end
+
+@testset "RandomizedHaltonSample" begin
+    d = 4
+    lb = zeros(d)
+    ub = ones(d)
+    bases = nextprimes(1, d)
+    n = prod(bases)^2
+    s = QuasiMonteCarlo.sample(n, lb, ub, RandomizedHaltonSample())
+    @test isa(s, Matrix)
+    @test size(s) == (d, n)
+    sorted = reduce(vcat, sort.(eachslice(s; dims = 1))')
+    each_dim = eachrow(sorted)
+
+    # each 1d sequence should have base b stratification property
+    # (property inherited from van der Corput)
+    @test all(zip(each_dim, bases)) do (seq, base)
+        theoretical_count = n ÷ base
+        part = Iterators.partition(seq, theoretical_count)
+        all(enumerate(part)) do (i, subseq)
+            all(subseq) do x
+                i - 1 ≤ base * x ≤ i
+            end
+        end
+    end
+    μ = mean(s; dims = 2)
+    variance = var(s; dims = 2)
+    for i in eachindex(μ)
+        @test μ[i]≈0.5 atol=1 / sqrt(n)
+        @test variance[i]≈1 / 12 rtol=1 / sqrt(n)
+    end
+    for (i, j) in combinations(1:d, 2)
+        @test pvalue(SignedRankTest(s[i, :], s[j, :])) > 0.0001
+    end
 end
 
 @testset "Van der Corput Sequence" begin
