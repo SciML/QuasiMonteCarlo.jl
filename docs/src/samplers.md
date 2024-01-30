@@ -44,4 +44,5 @@ KroneckerSample
 
 ```@docs
 LatinHypercubeSample
+RandomizedHaltonSample
 ```
