@@ -194,40 +194,6 @@ end
     @test istmsnet(s, λ = 1, t = 0, m = 1, s = d, base = n)
 end
 
-@testset "RandomizedHaltonSample" begin
-    d = 4
-    lb = zeros(d)
-    ub = ones(d)
-    bases = nextprimes(1, d)
-    n = prod(bases)^2
-    s = QuasiMonteCarlo.sample(n, lb, ub, RandomizedHaltonSample())
-    @test isa(s, Matrix)
-    @test size(s) == (d, n)
-    sorted = reduce(vcat, sort.(eachslice(s; dims = 1))')
-    each_dim = eachrow(sorted)
-
-    # each 1d sequence should have base b stratification property
-    # (property inherited from van der Corput)
-    @test all(zip(each_dim, bases)) do (seq, base)
-        theoretical_count = n ÷ base
-        part = Iterators.partition(seq, theoretical_count)
-        all(enumerate(part)) do (i, subseq)
-            all(subseq) do x
-                i - 1 ≤ base * x ≤ i
-            end
-        end
-    end
-    μ = mean(s; dims = 2)
-    variance = var(s; dims = 2)
-    for i in eachindex(μ)
-        @test μ[i]≈0.5 atol=1 / sqrt(n)
-        @test variance[i]≈1 / 12 rtol=1 / sqrt(n)
-    end
-    for (i, j) in combinations(1:d, 2)
-        @test pvalue(SignedRankTest(s[i, :], s[j, :])) > 0.0001
-    end
-end
-
 @testset "Van der Corput Sequence" begin
     lb = 0
     ub = 1
@@ -319,37 +285,39 @@ end
     end
 end
 
-@testset "Halton Sequence" begin
+@testset "(Randomized) Halton Sequence" begin
     d = 4
     lb = zeros(d)
     ub = ones(d)
     bases = nextprimes(1, d)
     n = prod(bases)^2
-    s = QuasiMonteCarlo.sample(n, lb, ub, HaltonSample())
-    @test isa(s, Matrix)
-    @test size(s) == (d, n)
-    sorted = reduce(vcat, sort.(eachslice(s; dims = 1))')
-    each_dim = eachrow(sorted)
+    for sample_type in [HaltonSample(), RandomizedHaltonSample()]
+        s = QuasiMonteCarlo.sample(n, lb, ub, sample_type)
+        @test isa(s, Matrix)
+        @test size(s) == (d, n)
+        sorted = reduce(vcat, sort.(eachslice(s; dims = 1))')
+        each_dim = eachrow(sorted)
 
-    # each 1d sequence should have base b stratification property
-    # (property inherited from van der Corput)
-    @test all(zip(each_dim, bases)) do (seq, base)
-        theoretical_count = n ÷ base
-        part = Iterators.partition(seq, theoretical_count)
-        all(enumerate(part)) do (i, subseq)
-            all(subseq) do x
-                i - 1 ≤ base * x ≤ i
+        # each 1d sequence should have base b stratification property
+        # (property inherited from van der Corput)
+        @test all(zip(each_dim, bases)) do (seq, base)
+            theoretical_count = n ÷ base
+            part = Iterators.partition(seq, theoretical_count)
+            all(enumerate(part)) do (i, subseq)
+                all(subseq) do x
+                    i - 1 ≤ base * x ≤ i
+                end
             end
         end
-    end
-    μ = mean(s; dims = 2)
-    variance = var(s; dims = 2)
-    for i in eachindex(μ)
-        @test μ[i]≈0.5 atol=1 / sqrt(n)
-        @test variance[i]≈1 / 12 rtol=1 / sqrt(n)
-    end
-    for (i, j) in combinations(1:d, 2)
-        @test pvalue(SignedRankTest(s[i, :], s[j, :])) > 0.0001
+        μ = mean(s; dims = 2)
+        variance = var(s; dims = 2)
+        for i in eachindex(μ)
+            @test μ[i]≈0.5 atol=1 / sqrt(n)
+            @test variance[i]≈1 / 12 rtol=1 / sqrt(n)
+        end
+        for (i, j) in combinations(1:d, 2)
+            @test pvalue(SignedRankTest(s[i, :], s[j, :])) > 0.0001
+        end
     end
 end
 
