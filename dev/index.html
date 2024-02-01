@@ -11,7 +11,8 @@ s = QuasiMonteCarlo.sample(n, lb, ub, Uniform())
 s = QuasiMonteCarlo.sample(n, lb, ub, SobolSample())
 s = QuasiMonteCarlo.sample(n, lb, ub, LatinHypercubeSample())
 s = QuasiMonteCarlo.sample(n, lb, ub, LatticeRuleSample())
-s = QuasiMonteCarlo.sample(n, lb, ub, HaltonSample())</code></pre><p>The output <code>s</code> is a matrix, so one can use things like <code>@uview</code> from <a href="https://github.com/oschulz/UnsafeArrays.jl">UnsafeArrays.jl</a> for a stack-allocated view of the <code>i</code>th point:</p><pre><code class="language-julia hljs">using UnsafeArrays
+s = QuasiMonteCarlo.sample(n, lb, ub, HaltonSample())
+s = QuasiMonteCarlo.sample(n, lb, ub, RandomizedHaltonSample())</code></pre><p>The output <code>s</code> is a matrix, so one can use things like <code>@uview</code> from <a href="https://github.com/oschulz/UnsafeArrays.jl">UnsafeArrays.jl</a> for a stack-allocated view of the <code>i</code>th point:</p><pre><code class="language-julia hljs">using UnsafeArrays
 @uview s[:, i]</code></pre><h3 id="MC-vs-QMC"><a class="docs-heading-anchor" href="#MC-vs-QMC">MC vs QMC</a><a id="MC-vs-QMC-1"></a><a class="docs-heading-anchor-permalink" href="#MC-vs-QMC" title="Permalink"></a></h3><p>We illustrate the gain of QMC methods over plain Monte Carlo using the 5-dimensional example from Section 15.9 in the <a href="https://artowen.su.domains/mc/qmcstuff.pdf">book by A. Owen</a>.</p><pre><code class="language-julia hljs">f₁(𝐱) = prod(1 + √(12) / 5 * (xⱼ - 1 / 2) for xⱼ in 𝐱)
 μ_exact = 1 # = ∫ f₁(𝐱) d⁵𝐱</code></pre><p>One can estimate the integral <span>$\mu$</span> using plain Monte Carlo, or Quasi Monte Carlo or Randomized Quasi Monte Carlo. See the other section of this documentation for more information on the functions used in the example.</p><pre><code class="language-julia hljs">using QuasiMonteCarlo, Random, Distributions
 using Plots;
@@ -53,7 +54,7 @@ ylims!(1e-9, 1)
 xaxis!(:log10)
 yaxis!(:log10)
 xlabel!(&quot;n&quot;, legend = :bottomleft)
-ylabel!(&quot;|μ̂-μ|&quot;)</code></pre><img src="index-076032b5.svg" alt="Example block output"/><h2 id="Adding-a-new-sampling-method"><a class="docs-heading-anchor" href="#Adding-a-new-sampling-method">Adding a new sampling method</a><a id="Adding-a-new-sampling-method-1"></a><a class="docs-heading-anchor-permalink" href="#Adding-a-new-sampling-method" title="Permalink"></a></h2><p>Adding a new sampling method is a two-step process:</p><ol><li>Add a new SamplingAlgorithm type.</li><li>Overload the sample function with the new type.</li></ol><p>All sampling methods are expected to return a matrix with dimension <code>d</code> by <code>n</code>, where <code>d</code> is the dimension of the sample space and <code>n</code> is the number of samples.</p><p><strong>Example</strong></p><pre><code class="language-julia hljs">struct NewAmazingSamplingAlgorithm{OPTIONAL} &lt;: SamplingAlgorithm end
+ylabel!(&quot;|μ̂-μ|&quot;)</code></pre><img src="index-eb5aeed1.svg" alt="Example block output"/><h2 id="Adding-a-new-sampling-method"><a class="docs-heading-anchor" href="#Adding-a-new-sampling-method">Adding a new sampling method</a><a id="Adding-a-new-sampling-method-1"></a><a class="docs-heading-anchor-permalink" href="#Adding-a-new-sampling-method" title="Permalink"></a></h2><p>Adding a new sampling method is a two-step process:</p><ol><li>Add a new SamplingAlgorithm type.</li><li>Overload the sample function with the new type.</li></ol><p>All sampling methods are expected to return a matrix with dimension <code>d</code> by <code>n</code>, where <code>d</code> is the dimension of the sample space and <code>n</code> is the number of samples.</p><p><strong>Example</strong></p><pre><code class="language-julia hljs">struct NewAmazingSamplingAlgorithm{OPTIONAL} &lt;: SamplingAlgorithm end
 
 function sample(n, lb, ub, ::NewAmazingSamplingAlgorithm)
     if lb isa Number
@@ -87,7 +88,7 @@ Platform Info:
   [6e4b80f9] BenchmarkTools v1.4.0
   [d1d4a3ce] BitFlags v0.1.8
   [49dc2e85] Calculus v0.5.1
-  [944b1d66] CodecZlib v0.7.3
+  [944b1d66] CodecZlib v0.7.4
   [35d6a980] ColorSchemes v3.24.0
   [3da002f7] ColorTypes v0.11.4
   [c3611d14] ColorVectorSpace v0.10.0
@@ -110,7 +111,7 @@ Platform Info:
   [1a297f60] FillArrays v1.9.3
   [53c48c17] FixedPointNumbers v0.8.4
   [59287772] Formatting v0.4.2
-  [28b8d3ca] GR v0.73.1
+  [28b8d3ca] GR v0.73.2
   [d7ba0133] Git v1.3.0
   [42e2da0e] Grisu v1.0.2
   [cd3eb016] HTTP v1.10.1
@@ -179,7 +180,7 @@ Platform Info:
   [d7e528f0] FreeType2_jll v2.13.1+0
   [559328eb] FriBidi_jll v1.0.10+0
   [0656b61e] GLFW_jll v3.3.9+0
-  [d2c73de3] GR_jll v0.73.1+0
+  [d2c73de3] GR_jll v0.73.2+0
   [78b55507] Gettext_jll v0.21.0+0
   [f8c6e375] Git_jll v2.43.0+0
   [7746bdde] Glib_jll v2.76.5+0
@@ -199,7 +200,7 @@ Platform Info:
 ⌅ [89763e89] Libtiff_jll v4.5.1+1
   [38a345b3] Libuuid_jll v2.36.0+0
   [e7412a2a] Ogg_jll v1.3.5+1
-  [458c3c95] OpenSSL_jll v3.0.12+0
+  [458c3c95] OpenSSL_jll v3.0.13+0
   [efe28fd5] OpenSpecFun_jll v0.5.5+0
   [91d4177d] Opus_jll v1.3.2+0
   [30392449] Pixman_jll v0.42.2+0
@@ -295,4 +296,4 @@ Platform Info:
   [8e850b90] libblastrampoline_jll v5.8.0+1
   [8e850ede] nghttp2_jll v1.52.0+1
   [3f19e933] p7zip_jll v17.4.0+2
-Info Packages marked with ⌅ have new versions available but compatibility constraints restrict them from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.3.3/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.3.3/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="samplers/">Sampler APIs »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.2.1 on <span class="colophon-date" title="Sunday 28 January 2024 22:32">Sunday 28 January 2024</span>. Using Julia version 1.10.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+Info Packages marked with ⌅ have new versions available but compatibility constraints restrict them from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.3.3/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.3.3/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="samplers/">Sampler APIs »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="auto">Automatic (OS)</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.2.1 on <span class="colophon-date" title="Thursday 1 February 2024 14:28">Thursday 1 February 2024</span>. Using Julia version 1.10.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
