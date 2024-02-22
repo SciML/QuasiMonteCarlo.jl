@@ -46,7 +46,7 @@ end
 Convert a vector of pad "bits" in base b into a number y∈[0,1[.
 """
 function bits2unif(::Type{T}, bits::AbstractVector{<:Integer},
-    b::Integer) where {T <: Rational}
+        b::Integer) where {T <: Rational}
     # Turn sequence of bits into a point in [0,1)
     # First bits are highest order
     y = zero(T)
@@ -57,7 +57,7 @@ function bits2unif(::Type{T}, bits::AbstractVector{<:Integer},
 end
 
 function bits2unif(::Type{T}, bits::AbstractVector{<:Integer},
-    b::Integer) where {T <: AbstractFloat}
+        b::Integer) where {T <: AbstractFloat}
     # Turn sequence of bits into a point in [0,1)
     # First bits are highest order
     y = zero(T)

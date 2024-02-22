@@ -36,7 +36,7 @@ function sample(n::Integer, d::Integer, S::KroneckerSample{Missing}, T = Float64
 end
 
 function sample(n::Integer, d::Integer, k::KroneckerSample{V},
-    T) where {V <: AbstractVector}
+        T) where {V <: AbstractVector}
     @assert eltype(V)==T "Sample type must match generator type."
     return randomize(sample(n, d, k), k.R)
 end

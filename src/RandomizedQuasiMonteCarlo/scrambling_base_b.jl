@@ -51,7 +51,7 @@ Base.@kwdef struct OwenScramble{I <: Integer} <: ScrambleMethod
 end
 
 function randomize!(random_points::AbstractMatrix{T},
-    points::AbstractMatrix{T}, R::OwenScramble) where {T <: Real}
+        points::AbstractMatrix{T}, R::OwenScramble) where {T <: Real}
     @assert size(points) == size(random_points)
     b = R.base
     unrandomized_bits = unif2bits(points, b, pad = R.pad)
@@ -70,9 +70,9 @@ In place version of a `OwenScramble` (Nested Uniform Scramble) for the "bit" arr
 This is faster to use this functions for multiple scramble of the same array (use `generate_design_matrices`).
 """
 function randomize_bits!(random_bits::AbstractArray{T, 3},
-    origin_bits::AbstractArray{T, 3},
-    indices::AbstractArray{F, 3},
-    R::OwenScramble) where {T <: Integer, F <: Integer}
+        origin_bits::AbstractArray{T, 3},
+        indices::AbstractArray{F, 3},
+        R::OwenScramble) where {T <: Integer, F <: Integer}
     # in place nested uniform Scramble.
     #
     m, n, d = size(indices)
@@ -132,7 +132,7 @@ function which_permutation(bits::AbstractArray, b::I) where {I <: Integer}
 end
 
 function which_permutation!(indices::AbstractMatrix{<:Integer},
-    bits::AbstractMatrix{<:Integer}, b::Integer)
+        bits::AbstractMatrix{<:Integer}, b::Integer)
     @assert size(indices)[2:end]==size(bits)[2:end] "You need size(indices) = $(size(indices)) equal size(bits) = $(size(bits))"
     indices[1, :] .= 0 # same permutation for all observations i
     for i in axes(indices, 2)                     # Here is where we want m > 0 so the loop works ok
@@ -144,7 +144,7 @@ function which_permutation!(indices::AbstractMatrix{<:Integer},
 end
 
 function randomize!(random_points::AbstractMatrix{T},
-    points::AbstractMatrix{T}, R::ScrambleMethod) where {T <: Real}
+        points::AbstractMatrix{T}, R::ScrambleMethod) where {T <: Real}
     @assert size(points) == size(random_points)
     b = R.base
     unrandomized_bits = unif2bits(points, b, pad = R.pad)
@@ -182,8 +182,8 @@ In place version of a ScrambleMethod (`MatousekScramble` or `DigitalShift`) for 
 This is faster to use this functions for multiple scramble of the same array (use `generate_design_matrices`).
 """
 function randomize_bits!(random_bits::AbstractArray{T, 3},
-    origin_bits::AbstractArray{T, 3},
-    R::MatousekScramble) where {T <: Integer}
+        origin_bits::AbstractArray{T, 3},
+        R::MatousekScramble) where {T <: Integer}
     # https://statweb.stanford.edu/~owen/mc/ Chapter 17.6 around equation (17.15).
     #
     pad, n, d = size(origin_bits)
@@ -247,8 +247,8 @@ Base.@kwdef struct DigitalShift{I <: Integer} <: ScrambleMethod
 end
 
 function randomize_bits!(random_bits::AbstractArray{T, 3},
-    origin_bits::AbstractArray{T, 3},
-    R::DigitalShift) where {T <: Integer}
+        origin_bits::AbstractArray{T, 3},
+        R::DigitalShift) where {T <: Integer}
     # https://statweb.stanford.edu/~owen/mc/ Chapter 17.6 around equation (17.15).
     #
     pad, n, d = size(origin_bits)
