@@ -11,7 +11,7 @@ end
 
 # raise a Pascal matrix to a given power.
 @fastmath function pascal_power!(result::UpperTriangular, pascal::UpperTriangular,
-    power::Integer, base::Integer)
+        power::Integer, base::Integer)
     @inbounds @simd for idx in eachindex(pascal)
         i, j = Tuple(idx)
         i ≤ j ? (result[idx] = powermod(power, j - i, base) * pascal[idx]) : result[idx]
@@ -45,7 +45,7 @@ Base.@kwdef struct FaureSample <: DeterministicSamplingAlgorithm
 end
 
 @fastmath function sample(n::Integer, dimension::Integer, S::FaureSample, T = Float64;
-    skipchecks = false)
+        skipchecks = false)
     base = nextprime(dimension)
     n_digits = ceil(Int, log(base, n))
     power = n_digits - 1
@@ -60,7 +60,7 @@ end
 end
 
 @fastmath @views function _faure_samples(n_samples::I, n_digits::I, dimension::I,
-    ::Type{F} = Float64) where {I <: Integer, F}
+        ::Type{F} = Float64) where {I <: Integer, F}
     base = nextprime(dimension)
     inv_base = inv(base)
 

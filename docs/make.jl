@@ -12,7 +12,7 @@ makedocs(sitename = "QuasiMonteCarlo.jl",
     warnonly = [:missing_docs],
     linkcheck_ignore = [
         "https://www.sciencedirect.com/science/article/pii/S0010465509003087",
-        "https://artowen.su.domains/mc/qmcstuff.pdf",
+        "https://artowen.su.domains/mc/qmcstuff.pdf"
     ],
     format = Documenter.HTML(assets = ["assets/favicon.ico"],
         canonical = "https://docs.sciml.ai/QuasiMonteCarlo/stable/"),

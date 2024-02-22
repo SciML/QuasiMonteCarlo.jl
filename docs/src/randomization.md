@@ -143,7 +143,7 @@ names = [
     "Shift",
     "Digital Shift",
     "Matousek Scramble",
-    "Owen Scramble",
+    "Owen Scramble"
 ]
 p = [plot(thickness_scaling = 1.5, aspect_ratio = :equal) for i in sequences]
 for (i, x) in enumerate(sequences)

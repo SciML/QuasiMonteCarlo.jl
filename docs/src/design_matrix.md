@@ -48,7 +48,8 @@ Using `std(μ)` then gives you the estimated variance of your RQMC prediction.
 
 ```@example 2
 # Or using `generate_design_matrices`. Note that this is less memory efficient since it allocate space for 5 large big matrices.
-μ = [mean(f(c) for c in eachcol(X)) for X in QuasiMonteCarlo.generate_design_matrices(N,
+μ = [mean(f(c) for c in eachcol(X))
+     for X in QuasiMonteCarlo.generate_design_matrices(N,
     d,
     FaureSample(R = OwenScramble(base = b, pad = pad)),
     num_mats)]

@@ -92,7 +92,7 @@ for point_constructor in [
     LatinHypercubeSample(),
     LatticeRuleSample(),
     RandomSample(),
-    SobolSample(),
+    SobolSample()
 ]
     @show point_constructor
     s = QuasiMonteCarlo.sample(n, lb, ub, point_constructor)
@@ -399,7 +399,7 @@ end
         SobolSample(R = OwenScramble(base = 2, pad = m)),
         SobolSample(),
         LatticeRuleSample(R = Shift()),
-        SobolSample(R = MatousekScramble(base = 2, pad = m)),
+        SobolSample(R = MatousekScramble(base = 2, pad = m))
     ]
     for algorithm in algorithms
         Ms = QuasiMonteCarlo.generate_design_matrices(n, lb, ub, algorithm, num_mat)
@@ -427,7 +427,7 @@ end
         # LatticeRuleSample(R = Shift()), # TODO add support for LatticeRule
         SobolSample(R = OwenScramble(base = 2, pad = m)),
         SobolSample(R = MatousekScramble(base = 2, pad = m)),
-        SobolSample(R = DigitalShift(base = 2, pad = m)),
+        SobolSample(R = DigitalShift(base = 2, pad = m))
     ]
     for algorithm in algorithms
         @show algorithm
@@ -453,8 +453,8 @@ end
         for Int_type in [Int32, Int64]
             b, pad = Int_type(2), Int_type(32)
             scramblings = [OwenScramble(base = b, pad = pad)
-                MatousekScramble(base = b, pad = pad)
-                DigitalShift(base = b, pad = pad)]
+                           MatousekScramble(base = b, pad = pad)
+                           DigitalShift(base = b, pad = pad)]
             for scrambling in scramblings
                 output, other_arrays... = QuasiMonteCarlo.initialize(n,
                     d,
@@ -541,7 +541,7 @@ end
         NoRand(),
         OwenScramble(base = base, pad = m),
         MatousekScramble(base = base, pad = m),
-        DigitalShift(base = base, pad = m),
+        DigitalShift(base = base, pad = m)
     ]
     pass = Array{Bool}(undef, length(v), m)
     for (s, t) in enumerate(t_sobol[1:m])
@@ -568,7 +568,8 @@ end
             base = nextprime(s))
         pass[2, s] = istmsnet(randomize(net, OwenScramble(base = nextprime(s), pad = m));
             λ, t, m, s, base = nextprime(s))
-        pass[3, s] = istmsnet(randomize(net,
+        pass[3, s] = istmsnet(
+            randomize(net,
                 MatousekScramble(base = nextprime(s), pad = m));
             λ, t, m, s, base = nextprime(s))
         pass[4, s] = istmsnet(randomize(net, DigitalShift(base = nextprime(s), pad = m));

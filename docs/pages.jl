@@ -5,5 +5,5 @@ pages = [
     "samplers.md",
     "randomization.md",
     "design_matrix.md",
-    "types.md",
+    "types.md"
 ]
