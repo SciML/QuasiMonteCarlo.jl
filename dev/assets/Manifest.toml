@@ -35,6 +35,12 @@ version = "0.1.36"
     StructArrays = "09ab397b-f2b6-538f-b94a-2f83cf4a842a"
     Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
+[[deps.AliasTables]]
+deps = ["Random"]
+git-tree-sha1 = "ca95b2220ef440817963baa71525a8f2f4ae7f8f"
+uuid = "66dad0bd-aa9a-41b7-9441-69ab47430ed8"
+version = "1.0.0"
+
 [[deps.ArgTools]]
 uuid = "0dad84c5-d112-42e6-8d28-ef12dabb789f"
 version = "1.1.1"
@@ -169,9 +175,9 @@ version = "1.16.0"
 
 [[deps.DataStructures]]
 deps = ["Compat", "InteractiveUtils", "OrderedCollections"]
-git-tree-sha1 = "97d79461925cdb635ee32116978fc735b9463a39"
+git-tree-sha1 = "1d0a14036acb104d9e89698bd408f63ab58cdc82"
 uuid = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
-version = "0.18.19"
+version = "0.18.20"
 
 [[deps.Dates]]
 deps = ["Printf"]
@@ -184,10 +190,10 @@ uuid = "8bb1440f-4735-579b-a4ab-409b98df4dab"
 version = "1.9.1"
 
 [[deps.Distributions]]
-deps = ["FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns"]
-git-tree-sha1 = "7c302d7a5fec5214eb8a5a4c466dcf7a51fcf169"
+deps = ["AliasTables", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SpecialFunctions", "Statistics", "StatsAPI", "StatsBase", "StatsFuns"]
+git-tree-sha1 = "22c595ca4146c07b16bcf9c8bea86f731f7109d2"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.107"
+version = "0.25.108"
 
     [deps.Distributions.extensions]
     DistributionsChainRulesCoreExt = "ChainRulesCore"
@@ -452,9 +458,9 @@ version = "1.3.1"
 
 [[deps.Latexify]]
 deps = ["Format", "InteractiveUtils", "LaTeXStrings", "MacroTools", "Markdown", "OrderedCollections", "Requires"]
-git-tree-sha1 = "cad560042a7cc108f5a4c24ea1431a9221f22c1b"
+git-tree-sha1 = "e0b5cd21dc1b44ec6e64f351976f961e6f31d6c4"
 uuid = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
-version = "0.16.2"
+version = "0.16.3"
 
     [deps.Latexify.extensions]
     DataFramesExt = "DataFrames"
@@ -652,9 +658,9 @@ version = "0.8.1+2"
 
 [[deps.OpenSSL]]
 deps = ["BitFlags", "Dates", "MozillaCACerts_jll", "OpenSSL_jll", "Sockets"]
-git-tree-sha1 = "af81a32750ebc831ee28bdaaba6e1067decef51e"
+git-tree-sha1 = "38cb508d080d21dc1128f7fb04f20387ed4c0af4"
 uuid = "4d8831e6-92b7-49fb-bdf8-b643e874388c"
-version = "1.4.2"
+version = "1.4.3"
 
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl"]
