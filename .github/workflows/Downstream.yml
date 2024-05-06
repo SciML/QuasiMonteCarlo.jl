@@ -41,7 +41,7 @@ jobs:
         with:
           version: ${{ matrix.version }}
           arch: x64
-      - uses: julia-actions/cache@v1
+      - uses: julia-actions/cache@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - uses: julia-actions/julia-buildpkg@latest
