@@ -54,7 +54,7 @@ ylims!(1e-9, 1)
 xaxis!(:log10)
 yaxis!(:log10)
 xlabel!(&quot;n&quot;, legend = :bottomleft)
-ylabel!(&quot;|μ̂-μ|&quot;)</code></pre><img src="index-51581b7f.svg" alt="Example block output"/><h2 id="Adding-a-new-sampling-method"><a class="docs-heading-anchor" href="#Adding-a-new-sampling-method">Adding a new sampling method</a><a id="Adding-a-new-sampling-method-1"></a><a class="docs-heading-anchor-permalink" href="#Adding-a-new-sampling-method" title="Permalink"></a></h2><p>Adding a new sampling method is a two-step process:</p><ol><li>Add a new SamplingAlgorithm type.</li><li>Overload the sample function with the new type.</li></ol><p>All sampling methods are expected to return a matrix with dimension <code>d</code> by <code>n</code>, where <code>d</code> is the dimension of the sample space and <code>n</code> is the number of samples.</p><p><strong>Example</strong></p><pre><code class="language-julia hljs">struct NewAmazingSamplingAlgorithm{OPTIONAL} &lt;: SamplingAlgorithm end
+ylabel!(&quot;|μ̂-μ|&quot;)</code></pre><img src="index-a2b6e741.svg" alt="Example block output"/><h2 id="Adding-a-new-sampling-method"><a class="docs-heading-anchor" href="#Adding-a-new-sampling-method">Adding a new sampling method</a><a id="Adding-a-new-sampling-method-1"></a><a class="docs-heading-anchor-permalink" href="#Adding-a-new-sampling-method" title="Permalink"></a></h2><p>Adding a new sampling method is a two-step process:</p><ol><li>Add a new SamplingAlgorithm type.</li><li>Overload the sample function with the new type.</li></ol><p>All sampling methods are expected to return a matrix with dimension <code>d</code> by <code>n</code>, where <code>d</code> is the dimension of the sample space and <code>n</code> is the number of samples.</p><p><strong>Example</strong></p><pre><code class="language-julia hljs">struct NewAmazingSamplingAlgorithm{OPTIONAL} &lt;: SamplingAlgorithm end
 
 function sample(n, lb, ub, ::NewAmazingSamplingAlgorithm)
     if lb isa Number
@@ -68,7 +68,7 @@ end</code></pre><h2 id="Contributing"><a class="docs-heading-anchor" href="#Cont
   [6e4b80f9] BenchmarkTools v1.5.0
   [31c24e10] Distributions v0.25.109
   [e30172f5] Documenter v1.5.0
-  [91a5bcdd] Plots v1.40.4
+  [91a5bcdd] Plots v1.40.5
   [8a4e6c94] QuasiMonteCarlo v0.3.4 `~/work/QuasiMonteCarlo.jl/QuasiMonteCarlo.jl`
   [2913bbd2] StatsBase v0.34.3
   [9a3f8284] Random</code></pre></details><details><summary>and using this machine and Julia version.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Julia Version 1.10.4
@@ -89,7 +89,7 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [6e4b80f9] BenchmarkTools v1.5.0
   [d1d4a3ce] BitFlags v0.1.9
   [49dc2e85] Calculus v0.5.1
-  [944b1d66] CodecZlib v0.7.4
+  [944b1d66] CodecZlib v0.7.5
   [35d6a980] ColorSchemes v3.25.0
   [3da002f7] ColorTypes v0.11.5
   [c3611d14] ColorVectorSpace v0.10.0
@@ -97,7 +97,7 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [34da2185] Compat v4.15.0
   [a33af91c] CompositionsBase v0.1.2
   [2569d6c7] ConcreteStructs v0.2.3
-  [f0e56b4a] ConcurrentUtilities v2.4.1
+  [f0e56b4a] ConcurrentUtilities v2.4.2
   [187b0558] ConstructionBase v1.5.5
   [d38c429a] Contour v0.6.3
   [9a962f9c] DataAPI v1.16.0
@@ -125,7 +125,7 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [692b3bcd] JLLWrappers v1.5.0
   [682c06a0] JSON v0.21.4
   [b964fa9f] LaTeXStrings v1.3.1
-  [23fbe1c1] Latexify v0.16.3
+  [23fbe1c1] Latexify v0.16.4
   [73f95e8e] LatticeRules v0.0.1
   [0e77f7df] LazilyInitializedFields v1.2.2
   [2ab3a3ac] LogExpFunctions v0.3.28
@@ -143,7 +143,7 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [b98c9c47] Pipe v1.3.0
   [ccf2f8ad] PlotThemes v3.2.0
   [995b91a9] PlotUtils v1.4.1
-  [91a5bcdd] Plots v1.40.4
+  [91a5bcdd] Plots v1.40.5
   [aea7be01] PrecompileTools v1.2.1
   [21216c6a] Preferences v1.4.3
   [27ebfcd6] Primes v0.5.6
@@ -167,11 +167,11 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [2913bbd2] StatsBase v0.34.3
   [4c63d2b9] StatsFuns v1.3.1
   [62fd8b95] TensorCore v0.1.1
-  [3bb67fe8] TranscodingStreams v0.10.10
+  [3bb67fe8] TranscodingStreams v0.11.0
   [5c2747f8] URIs v1.5.1
   [1cfade01] UnicodeFun v0.4.1
   [1986cc42] Unitful v1.20.0
-  [45397f5d] UnitfulLatexify v1.6.3
+  [45397f5d] UnitfulLatexify v1.6.4
   [41fe7b60] Unzip v0.2.0
   [6e34b625] Bzip2_jll v1.0.8+1
   [83423d85] Cairo_jll v1.18.0+2
@@ -181,7 +181,7 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [a3f928ae] Fontconfig_jll v2.13.96+0
   [d7e528f0] FreeType2_jll v2.13.2+0
   [559328eb] FriBidi_jll v1.0.14+0
-  [0656b61e] GLFW_jll v3.3.9+0
+  [0656b61e] GLFW_jll v3.4.0+0
   [d2c73de3] GR_jll v0.73.6+0
   [78b55507] Gettext_jll v0.21.0+0
   [f8c6e375] Git_jll v2.44.0+2
@@ -298,4 +298,4 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [8e850b90] libblastrampoline_jll v5.8.0+1
   [8e850ede] nghttp2_jll v1.52.0+1
   [3f19e933] p7zip_jll v17.4.0+2
-Info Packages marked with ⌅ have new versions available but compatibility constraints restrict them from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.3.4/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.3.4/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="samplers/">Sampler APIs »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.5.0 on <span class="colophon-date" title="Sunday 7 July 2024 22:31">Sunday 7 July 2024</span>. Using Julia version 1.10.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+Info Packages marked with ⌅ have new versions available but compatibility constraints restrict them from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.3.4/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.3.4/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="samplers/">Sampler APIs »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.5.0 on <span class="colophon-date" title="Sunday 14 July 2024 22:31">Sunday 14 July 2024</span>. Using Julia version 1.10.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
