@@ -54,7 +54,7 @@ ylims!(1e-9, 1)
 xaxis!(:log10)
 yaxis!(:log10)
 xlabel!(&quot;n&quot;, legend = :bottomleft)
-ylabel!(&quot;|μ̂-μ|&quot;)</code></pre><img src="index-2a7cbfbd.svg" alt="Example block output"/><h2 id="Adding-a-new-sampling-method"><a class="docs-heading-anchor" href="#Adding-a-new-sampling-method">Adding a new sampling method</a><a id="Adding-a-new-sampling-method-1"></a><a class="docs-heading-anchor-permalink" href="#Adding-a-new-sampling-method" title="Permalink"></a></h2><p>Adding a new sampling method is a two-step process:</p><ol><li>Add a new SamplingAlgorithm type.</li><li>Overload the sample function with the new type.</li></ol><p>All sampling methods are expected to return a matrix with dimension <code>d</code> by <code>n</code>, where <code>d</code> is the dimension of the sample space and <code>n</code> is the number of samples.</p><p><strong>Example</strong></p><pre><code class="language-julia hljs">struct NewAmazingSamplingAlgorithm{OPTIONAL} &lt;: SamplingAlgorithm end
+ylabel!(&quot;|μ̂-μ|&quot;)</code></pre><img src="index-86ad9844.svg" alt="Example block output"/><h2 id="Adding-a-new-sampling-method"><a class="docs-heading-anchor" href="#Adding-a-new-sampling-method">Adding a new sampling method</a><a id="Adding-a-new-sampling-method-1"></a><a class="docs-heading-anchor-permalink" href="#Adding-a-new-sampling-method" title="Permalink"></a></h2><p>Adding a new sampling method is a two-step process:</p><ol><li>Add a new SamplingAlgorithm type.</li><li>Overload the sample function with the new type.</li></ol><p>All sampling methods are expected to return a matrix with dimension <code>d</code> by <code>n</code>, where <code>d</code> is the dimension of the sample space and <code>n</code> is the number of samples.</p><p><strong>Example</strong></p><pre><code class="language-julia hljs">struct NewAmazingSamplingAlgorithm{OPTIONAL} &lt;: SamplingAlgorithm end
 
 function sample(n, lb, ub, ::NewAmazingSamplingAlgorithm)
     if lb isa Number
@@ -66,7 +66,7 @@ function sample(n, lb, ub, ::NewAmazingSamplingAlgorithm)
     end
 end</code></pre><h2 id="Contributing"><a class="docs-heading-anchor" href="#Contributing">Contributing</a><a id="Contributing-1"></a><a class="docs-heading-anchor-permalink" href="#Contributing" title="Permalink"></a></h2><ul><li><p>Please refer to the <a href="https://github.com/SciML/ColPrac/blob/master/README.md">SciML ColPrac: Contributor&#39;s Guide on Collaborative Practices for Community Packages</a> for guidance on PRs, issues, and other matters relating to contributing to SciML.</p></li><li><p>See the <a href="https://github.com/SciML/SciMLStyle">SciML Style Guide</a> for common coding practices and other style decisions.</p></li><li><p>There are a few community forums:</p><ul><li>The #diffeq-bridged and #sciml-bridged channels in the <a href="https://julialang.org/slack/">Julia Slack</a></li><li>The #diffeq-bridged and #sciml-bridged channels in the <a href="https://julialang.zulipchat.com/#narrow/stream/279055-sciml-bridged">Julia Zulip</a></li><li>On the <a href="https://discourse.julialang.org">Julia Discourse forums</a></li><li>See also <a href="https://sciml.ai/community/">SciML Community page</a></li></ul></li></ul><h2 id="Reproducibility"><a class="docs-heading-anchor" href="#Reproducibility">Reproducibility</a><a id="Reproducibility-1"></a><a class="docs-heading-anchor-permalink" href="#Reproducibility" title="Permalink"></a></h2><details><summary>The documentation of this SciML package was built using these direct dependencies,</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Status `~/work/QuasiMonteCarlo.jl/QuasiMonteCarlo.jl/docs/Project.toml`
   [6e4b80f9] BenchmarkTools v1.5.0
-  [31c24e10] Distributions v0.25.114
+  [31c24e10] Distributions v0.25.115
   [e30172f5] Documenter v1.8.0
   [91a5bcdd] Plots v1.40.9
   [8a4e6c94] QuasiMonteCarlo v0.3.5 `~/work/QuasiMonteCarlo.jl/QuasiMonteCarlo.jl`
@@ -101,7 +101,7 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [9a962f9c] DataAPI v1.16.0
   [864edb3b] DataStructures v0.18.20
   [8bb1440f] DelimitedFiles v1.9.1
-  [31c24e10] Distributions v0.25.114
+  [31c24e10] Distributions v0.25.115
   [ffbed154] DocStringExtensions v0.9.3
   [e30172f5] Documenter v1.8.0
   [460bff9d] ExceptionUnwrapping v0.1.11
@@ -109,10 +109,10 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [1a297f60] FillArrays v1.13.0
   [53c48c17] FixedPointNumbers v0.8.5
   [1fa38f19] Format v1.3.7
-  [28b8d3ca] GR v0.73.9
+  [28b8d3ca] GR v0.73.10
   [d7ba0133] Git v1.3.1
   [42e2da0e] Grisu v1.0.2
-  [cd3eb016] HTTP v1.10.14
+  [cd3eb016] HTTP v1.10.15
   [34004b35] HypergeometricFunctions v0.3.25
   [b5f81e59] IOCapture v0.2.5
   [18e54dd8] IntegerMathUtils v0.1.2
@@ -180,23 +180,23 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
 ⌅ [b22a6f82] FFMPEG_jll v4.4.4+1
   [a3f928ae] Fontconfig_jll v2.15.0+0
   [d7e528f0] FreeType2_jll v2.13.3+1
-  [559328eb] FriBidi_jll v1.0.14+0
-  [0656b61e] GLFW_jll v3.4.0+1
-  [d2c73de3] GR_jll v0.73.9+0
+  [559328eb] FriBidi_jll v1.0.16+0
+  [0656b61e] GLFW_jll v3.4.0+2
+  [d2c73de3] GR_jll v0.73.10+0
   [78b55507] Gettext_jll v0.21.0+0
   [f8c6e375] Git_jll v2.47.1+0
-  [7746bdde] Glib_jll v2.82.2+1
+  [7746bdde] Glib_jll v2.82.4+0
   [3b182d85] Graphite2_jll v1.3.14+1
   [2e76f6c2] HarfBuzz_jll v8.5.0+0
-  [aacddb02] JpegTurbo_jll v3.0.4+0
+  [aacddb02] JpegTurbo_jll v3.1.0+0
   [c1c5ebd0] LAME_jll v3.100.2+0
-  [88015f11] LERC_jll v4.0.0+0
+  [88015f11] LERC_jll v4.0.0+1
   [1d63c593] LLVMOpenMP_jll v18.1.7+0
   [dd4b983a] LZO_jll v2.10.2+1
-⌅ [e9f186c6] Libffi_jll v3.2.2+1
+⌅ [e9f186c6] Libffi_jll v3.2.2+2
   [d4300ac3] Libgcrypt_jll v1.11.0+0
   [7e76a0d4] Libglvnd_jll v1.7.0+0
-  [7add5ba3] Libgpg_error_jll v1.50.0+0
+  [7add5ba3] Libgpg_error_jll v1.51.0+0
   [94ce4f54] Libiconv_jll v1.17.0+1
   [4b2f31a3] Libmount_jll v2.40.2+0
   [89763e89] Libtiff_jll v4.7.0+0
@@ -205,7 +205,7 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [458c3c95] OpenSSL_jll v3.0.15+1
   [efe28fd5] OpenSpecFun_jll v0.5.5+0
   [91d4177d] Opus_jll v1.3.3+0
-  [36c8627f] Pango_jll v1.54.1+0
+  [36c8627f] Pango_jll v1.55.5+0
 ⌅ [30392449] Pixman_jll v0.43.4+0
   [c0090381] Qt6Base_jll v6.7.1+1
   [629bc702] Qt6Declarative_jll v6.7.1+2
@@ -213,7 +213,7 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [e99dba38] Qt6Wayland_jll v6.7.1+1
   [f50d1b31] Rmath_jll v0.5.1+0
   [a44049a8] Vulkan_Loader_jll v1.3.243+0
-  [a2964d1f] Wayland_jll v1.21.0+1
+  [a2964d1f] Wayland_jll v1.21.0+2
   [2381bf8a] Wayland_protocols_jll v1.31.0+0
   [02c8fc9c] XML2_jll v2.13.5+0
   [aed1982a] XSLT_jll v1.1.42+0
@@ -222,11 +222,11 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [c834827a] Xorg_libSM_jll v1.2.4+0
   [4f6342f7] Xorg_libX11_jll v1.8.6+1
   [0c0b7dd1] Xorg_libXau_jll v1.0.11+1
-  [935fb764] Xorg_libXcursor_jll v1.2.0+4
+  [935fb764] Xorg_libXcursor_jll v1.2.3+0
   [a3789734] Xorg_libXdmcp_jll v1.1.4+1
   [1082639a] Xorg_libXext_jll v1.3.6+1
-  [d091e8ba] Xorg_libXfixes_jll v5.0.3+4
-  [a51aa0fd] Xorg_libXi_jll v1.7.10+4
+  [d091e8ba] Xorg_libXfixes_jll v6.0.0+0
+  [a51aa0fd] Xorg_libXi_jll v1.8.2+0
   [d1454406] Xorg_libXinerama_jll v1.1.5+0
   [ec84b674] Xorg_libXrandr_jll v1.5.4+0
   [ea2f1a96] Xorg_libXrender_jll v0.9.11+1
@@ -257,7 +257,7 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [009596ad] mtdev_jll v1.1.6+0
 ⌅ [1270edf5] x264_jll v2021.5.5+0
 ⌅ [dfaa095f] x265_jll v3.5.0+0
-  [d8fb68d0] xkbcommon_jll v1.4.1+1
+  [d8fb68d0] xkbcommon_jll v1.4.1+2
   [0dad84c5] ArgTools v1.1.2
   [56f22d72] Artifacts v1.11.0
   [2a0f44e3] Base64 v1.11.0
@@ -303,4 +303,4 @@ Threads: 1 default, 0 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   [8e850b90] libblastrampoline_jll v5.11.0+0
   [8e850ede] nghttp2_jll v1.59.0+0
   [3f19e933] p7zip_jll v17.4.0+2
-Info Packages marked with ⌅ have new versions available but compatibility constraints restrict them from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.3.5/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.3.5/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="samplers/">Sampler APIs »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Sunday 22 December 2024 22:32">Sunday 22 December 2024</span>. Using Julia version 1.11.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+Info Packages marked with ⌅ have new versions available but compatibility constraints restrict them from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.3.5/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.3.5/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="samplers/">Sampler APIs »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Sunday 29 December 2024 22:32">Sunday 29 December 2024</span>. Using Julia version 1.11.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
