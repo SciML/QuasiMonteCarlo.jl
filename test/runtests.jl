@@ -442,7 +442,7 @@ end
 end
 
 @testset "Types of output and intermediate arrays" begin
-    # Scrambling methods use intermediate array for the bits scrambling. It is in general uncessary to have this large array stored as Int64.
+    # Scrambling methods use intermediate array for the bits scrambling. It is in general unnecessary to have this large array stored as Int64.
     #TODO test other randomization methods (here just scrambling) and QMC sequence (here just Sobol)
     #TODO here we test output and constructions of intermediate array, we could test that all operation are type stables
     d = 4
