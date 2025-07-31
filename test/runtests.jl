@@ -456,7 +456,8 @@ end
                            MatousekScramble(base = b, pad = pad)
                            DigitalShift(base = b, pad = pad)]
             for scrambling in scramblings
-                output, other_arrays... = QuasiMonteCarlo.initialize(n,
+                output,
+                other_arrays... = QuasiMonteCarlo.initialize(n,
                     d,
                     SobolSample(),
                     scrambling,
