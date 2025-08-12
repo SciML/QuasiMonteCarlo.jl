@@ -464,9 +464,9 @@ version = "1.4.0"
 
 [[deps.Latexify]]
 deps = ["Format", "InteractiveUtils", "LaTeXStrings", "MacroTools", "Markdown", "OrderedCollections", "Requires"]
-git-tree-sha1 = "4f34eaabe49ecb3fb0d58d6015e32fd31a733199"
+git-tree-sha1 = "52e1296ebbde0db845b356abbbe67fb82a0a116c"
 uuid = "23fbe1c1-3f47-55db-b15f-69d7ec21a316"
-version = "0.16.8"
+version = "0.16.9"
 
     [deps.Latexify.extensions]
     DataFramesExt = "DataFrames"
@@ -834,7 +834,7 @@ version = "2.11.2"
 
 [[deps.QuasiMonteCarlo]]
 deps = ["Accessors", "ConcreteStructs", "LatticeRules", "LinearAlgebra", "Primes", "Random", "Sobol"]
-path = "/home/chrisrackauckas/github-runners/deepsea3-24/_work/QuasiMonteCarlo.jl/QuasiMonteCarlo.jl"
+path = "/home/runner/work/QuasiMonteCarlo.jl/QuasiMonteCarlo.jl"
 uuid = "8a4e6c94-4038-4cdc-81c3-7e6ffdb2a71b"
 version = "0.3.5"
 weakdeps = ["Distributions"]
