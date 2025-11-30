@@ -8,7 +8,7 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [sources]
-QuasiMonteCarlo = {path = "/home/chrisrackauckas/github-runners/deepsea4-13/_work/QuasiMonteCarlo.jl/QuasiMonteCarlo.jl"}
+QuasiMonteCarlo = {path = "/home/runner/work/QuasiMonteCarlo.jl/QuasiMonteCarlo.jl"}
 
 [compat]
 Documenter = "1"
