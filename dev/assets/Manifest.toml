@@ -2,7 +2,7 @@
 
 julia_version = "1.12.2"
 manifest_format = "2.0"
-project_hash = "f12874316166c45a568474b991a7326c738b5bbd"
+project_hash = "d4eb16a0e6bcd927b9fd8f81c26c174c66bbed70"
 
 [[deps.ANSIColoredPrinters]]
 git-tree-sha1 = "574baf8110975760d391c710b6341da1afa48d8c"
@@ -16,9 +16,9 @@ version = "0.4.5"
 
 [[deps.Accessors]]
 deps = ["CompositionsBase", "ConstructionBase", "Dates", "InverseFunctions", "MacroTools"]
-git-tree-sha1 = "3b86719127f50670efe356bc11073d84b4ed7a5d"
+git-tree-sha1 = "856ecd7cebb68e5fc87abecd2326ad59f0f911f3"
 uuid = "7d9f7c33-5ae7-4f3b-8dc6-eff91059b697"
-version = "0.1.42"
+version = "0.1.43"
 
     [deps.Accessors.extensions]
     AxisKeysExt = "AxisKeys"
@@ -868,7 +868,7 @@ version = "2.11.2"
 
 [[deps.QuasiMonteCarlo]]
 deps = ["Accessors", "ConcreteStructs", "LatticeRules", "LinearAlgebra", "Primes", "Random", "Sobol"]
-path = "/home/chrisrackauckas/github-runners/demeter4-9/_work/QuasiMonteCarlo.jl/QuasiMonteCarlo.jl"
+path = "/home/runner/work/QuasiMonteCarlo.jl/QuasiMonteCarlo.jl"
 uuid = "8a4e6c94-4038-4cdc-81c3-7e6ffdb2a71b"
 version = "0.3.5"
 weakdeps = ["Distributions"]
