@@ -27,5 +27,6 @@ end
 
 function sample(n::Integer, d::Integer, S::LatticeRuleSample, T = Float64)
     lat = LatticeRules.LatticeRule(d)
-    return randomize(reduce(hcat, lat[0:(n - 1)]), S.R)
+    result = reduce(hcat, lat[0:(n - 1)])
+    return randomize(T == Float64 ? result : T.(result), S.R)
 end
