@@ -26,8 +26,8 @@ Base.@kwdef struct KroneckerSample{V <: Union{AbstractVector, Missing}} <:
 end
 
 function KroneckerSample(d::Integer, R = NoRand(), T = Float64)
-    ratio = harmonious(d, 2eps(T))
-    generator = [ratio^i for i in 1:d]
+    ratio = harmonious(d, T)
+    generator = T[ratio^i for i in 1:d]
     return KroneckerSample(generator, R)
 end
 
@@ -69,7 +69,8 @@ http://extremelearning.com.au/unreasonable-effectiveness-of-quasirandom-sequence
 GoldenSample(args...; kwargs...) = KroneckerSample(args...; kwargs...)
 
 # generate (inverse) harmonious numbers
-@fastmath function harmonious(d::Integer, tol::T = 2eps(float(d))) where {T}
+@fastmath function harmonious(d::Integer, ::Type{T} = Float64) where {T}
+    tol = 2eps(T)
     y_old = one(T)
     # Approximate solution of x^(d+1) = x + 1 (nested radical)
     y = (one(T) + y_old)^inv(d + 1)
