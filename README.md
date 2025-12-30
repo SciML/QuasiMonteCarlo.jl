@@ -216,3 +216,5 @@ plot(p..., size = (1500, 900))
 ```
 
 ![Different randomization methods of the same initial set of points](img/various_randomization.svg)
+
+
