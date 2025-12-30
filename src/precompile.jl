@@ -41,9 +41,20 @@ using PrecompileTools
         sample(64, lb, ub, FaureSample())
 
         # Unit box sampling (without bounds) - also common
+        # These are important for users who work directly with unit hypercube
         sample(n, d, SobolSample())
         sample(n, d, LatinHypercubeSample())
         sample(n, d, HaltonSample())
+        sample(n, d, GridSample())
+        sample(n, d, RandomSample())
+        sample(n, d, LatticeRuleSample())
+        sample(n, d, GoldenSample())
+        sample(n, d, KroneckerSample(d))
+        sample(64, d, FaureSample())
+        # VanDerCorputSample is 1D only
+        sample(n, 1, VanDerCorputSample(base = 2))
+        # RandomizedHaltonSample has significant compilation time
+        sample(n, d, RandomizedHaltonSample())
 
         # Precompile with Shift randomization (common randomization method)
         sample(n, lb, ub, SobolSample(R = Shift()))
