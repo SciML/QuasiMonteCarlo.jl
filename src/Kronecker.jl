@@ -20,7 +20,7 @@ Leobacher, G., & Pillichshammer, F. (2014). *Introduction to quasi-Monte Carlo i
 https://link.springer.com/content/pdf/10.1007/978-3-319-03425-6.pdf
 """
 Base.@kwdef struct KroneckerSample{V <: Union{AbstractVector, Missing}} <:
-                   DeterministicSamplingAlgorithm
+    DeterministicSamplingAlgorithm
     generator::V = missing
     R::RandomizationMethod = NoRand()
 end
@@ -35,14 +35,16 @@ function sample(n::Integer, d::Integer, S::KroneckerSample{Missing}, T = Float64
     return sample(n, d, KroneckerSample(d, S.R, T))
 end
 
-function sample(n::Integer, d::Integer, k::KroneckerSample{V},
-        T) where {V <: AbstractVector}
-    @assert eltype(V)==T "Sample type must match generator type."
+function sample(
+        n::Integer, d::Integer, k::KroneckerSample{V},
+        T
+    ) where {V <: AbstractVector}
+    @assert eltype(V) == T "Sample type must match generator type."
     return randomize(sample(n, d, k), k.R)
 end
 
 function sample(n::Integer, d::Integer, k::KroneckerSample{V}) where {V <: AbstractVector}
-    @assert d==length(k.generator) "Dimensions of generator and sample must match."
+    @assert d == length(k.generator) "Dimensions of generator and sample must match."
     return @. mod(k.generator * (1:n)', 1)
 end
 

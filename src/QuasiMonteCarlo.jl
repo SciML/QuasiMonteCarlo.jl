@@ -13,12 +13,12 @@ const ZERO_SAMPLES_MESSAGE = "Number of samples must be greater than zero"
 const DIM_MISMATCH_MESSAGE = "Dimensionality of lb and ub must match"
 
 function _check_sequence(lb, ub, n::Integer)
-    @assert length(lb)==length(ub) DIM_MISMATCH_MESSAGE
+    @assert length(lb) == length(ub) DIM_MISMATCH_MESSAGE
     @assert all(x -> x[1] ≤ x[2], zip(lb, ub)) UB_LB_MESSAGE
-    @assert n>0 ZERO_SAMPLES_MESSAGE
+    return @assert n > 0 ZERO_SAMPLES_MESSAGE
 end
 
-_check_sequence(n::Integer) = @assert n>0 ZERO_SAMPLES_MESSAGE
+_check_sequence(n::Integer) = @assert n > 0 ZERO_SAMPLES_MESSAGE
 
 """
     RandomSample <: RandomSamplingAlgorithm
@@ -54,9 +54,13 @@ Return a QMC point set where:
 
 In the first method the type of the point set is specified by `T` while in the second method the output type is inferred from the bound types.
 """
-function sample(n::Integer, lb::T, ub::T,
-        S::D) where {T <: Union{Base.AbstractVecOrTuple, Number},
-        D <: SamplingAlgorithm}
+function sample(
+        n::Integer, lb::T, ub::T,
+        S::D
+    ) where {
+        T <: Union{Base.AbstractVecOrTuple, Number},
+        D <: SamplingAlgorithm,
+    }
     _check_sequence(lb, ub, n)
     lb = float.(lb)
     ub = float.(ub)
@@ -99,24 +103,24 @@ include("RandomizedQuasiMonteCarlo/iterators.jl")
 include("precompile.jl")
 
 export SamplingAlgorithm,
-       GridSample,
-       SobolSample,
-       LatinHypercubeSample,
-       RandomizedHaltonSample,
-       LatticeRuleSample,
-       RandomSample,
-       HaltonSample,
-       VanDerCorputSample,
-       GoldenSample,
-       KroneckerSample,
-       FaureSample,
-       randomize,
-       RandomizationMethod,
-       NoRand,
-       Shift,
-       ScrambleMethod,
-       OwenScramble,
-       MatousekScramble,
-       DigitalShift,
-       DesignMatrix
+    GridSample,
+    SobolSample,
+    LatinHypercubeSample,
+    RandomizedHaltonSample,
+    LatticeRuleSample,
+    RandomSample,
+    HaltonSample,
+    VanDerCorputSample,
+    GoldenSample,
+    KroneckerSample,
+    FaureSample,
+    randomize,
+    RandomizationMethod,
+    NoRand,
+    Shift,
+    ScrambleMethod,
+    OwenScramble,
+    MatousekScramble,
+    DigitalShift,
+    DesignMatrix
 end # module

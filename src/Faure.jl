@@ -10,8 +10,10 @@ function pascal_mat(dimension::I, base = Inf) where {I <: Integer}
 end
 
 # raise a Pascal matrix to a given power.
-@fastmath function pascal_power!(result::UpperTriangular, pascal::UpperTriangular,
-        power::Integer, base::Integer)
+@fastmath function pascal_power!(
+        result::UpperTriangular, pascal::UpperTriangular,
+        power::Integer, base::Integer
+    )
     @inbounds @simd for idx in eachindex(pascal)
         i, j = Tuple(idx)
         i ≤ j ? (result[idx] = powermod(power, j - i, base) * pascal[idx]) : result[idx]
@@ -44,23 +46,31 @@ Base.@kwdef struct FaureSample <: DeterministicSamplingAlgorithm
     R::RandomizationMethod = NoRand()
 end
 
-@fastmath function sample(n::Integer, dimension::Integer, S::FaureSample, T = Float64;
-        skipchecks = false)
+@fastmath function sample(
+        n::Integer, dimension::Integer, S::FaureSample, T = Float64;
+        skipchecks = false
+    )
     base = nextprime(dimension)
     n_digits = ceil(Int, log(base, n))
     power = n_digits - 1
 
     if !skipchecks && (n % prevpow(base, n) ≠ 0)
         n -= (n % base^power)
-        throw(ArgumentError("Invalid sample size: Faure sequences must be multiples of `base^power`. " *
-                            "Try $n or $(n+base^power) instead."))
+        throw(
+            ArgumentError(
+                "Invalid sample size: Faure sequences must be multiples of `base^power`. " *
+                    "Try $n or $(n + base^power) instead."
+            )
+        )
     end
 
     return randomize(_faure_samples(n, n_digits, dimension, T), S.R)
 end
 
-@fastmath @views function _faure_samples(n_samples::I, n_digits::I, dimension::I,
-        ::Type{F} = Float64) where {I <: Integer, F}
+@fastmath @views function _faure_samples(
+        n_samples::I, n_digits::I, dimension::I,
+        ::Type{F} = Float64
+    ) where {I <: Integer, F}
     base = nextprime(dimension)
     inv_base = inv(base)
 
