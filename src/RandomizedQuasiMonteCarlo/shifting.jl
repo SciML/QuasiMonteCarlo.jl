@@ -23,26 +23,28 @@ function randomize(x, R::Shift)
 end
 
 function randomize!(x, R::Shift)
-    shift!(R.rng, x)
+    return shift!(R.rng, x)
 end
 
 function shift!(rng::AbstractRNG, points::AbstractMatrix{T}) where {T <: Real}
     d = size(points, 1)
     U = zeros(T, d)
-    shift!(rng, points, U)
+    return shift!(rng, points, U)
 end
 
 function shift!(points::AbstractMatrix{T}, U::AbstractVector{T}) where {T <: Real}
-    shift!(Random.default_rng(), points, U)
+    return shift!(Random.default_rng(), points, U)
 end
 
-function shift!(rng::AbstractRNG, points::AbstractMatrix{T},
-        U::AbstractVector{T}) where {T <: Real}
+function shift!(
+        rng::AbstractRNG, points::AbstractMatrix{T},
+        U::AbstractVector{T}
+    ) where {T <: Real}
     rand!(rng, U)
     for i in axes(points, 2)
         points[:, i] += U
     end
-    points[:] = frac.(points)
+    return points[:] = frac.(points)
 end
 
 frac(y) = y - floor(y)

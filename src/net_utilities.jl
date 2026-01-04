@@ -14,6 +14,7 @@ function unif2bits!(bits::AbstractArray, x::AbstractArray, b::Integer)
     for i in CartesianIndices(x)
         unif2bits!(@view(bits[:, i]), x[i], b)
     end
+    return
 end
 
 """
@@ -34,6 +35,7 @@ function unif2bits!(bits::AbstractVector{<:Integer}, y::Real, b::Integer; kwargs
         r, y = divrem(y, invbase^i)
         bits[i] = r
     end
+    return
 end
 
 #? Apparently this is not ideal to explicitly state the Type.
@@ -45,8 +47,10 @@ end
 
 Convert a vector of pad "bits" in base b into a number y∈[0,1[.
 """
-function bits2unif(::Type{T}, bits::AbstractVector{<:Integer},
-        b::Integer) where {T <: Rational}
+function bits2unif(
+        ::Type{T}, bits::AbstractVector{<:Integer},
+        b::Integer
+    ) where {T <: Rational}
     # Turn sequence of bits into a point in [0,1)
     # First bits are highest order
     y = zero(T)
@@ -56,8 +60,10 @@ function bits2unif(::Type{T}, bits::AbstractVector{<:Integer},
     return y
 end
 
-function bits2unif(::Type{T}, bits::AbstractVector{<:Integer},
-        b::Integer) where {T <: AbstractFloat}
+function bits2unif(
+        ::Type{T}, bits::AbstractVector{<:Integer},
+        b::Integer
+    ) where {T <: AbstractFloat}
     # Turn sequence of bits into a point in [0,1)
     # First bits are highest order
     y = zero(T)
@@ -68,7 +74,7 @@ function bits2unif(::Type{T}, bits::AbstractVector{<:Integer},
 end
 
 function bits2unif(bits::AbstractVector{<:Integer}, b::Integer)
-    bits2unif(Float64, bits::AbstractVector{<:Integer}, b::Integer)
+    return bits2unif(Float64, bits::AbstractVector{<:Integer}, b::Integer)
 end
 
 #? This seems faster than @evalpoly(b, $bit...)

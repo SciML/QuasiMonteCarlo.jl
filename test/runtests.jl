@@ -14,7 +14,7 @@ using HypothesisTests
 
 @views function embiggen!(a::Vector{T}, new_len::Integer, pad::T) where {T}
     old_len = length(a)
-    @assert new_len≥old_len "Can't embiggen something smaller"
+    @assert new_len ≥ old_len "Can't embiggen something smaller"
     if new_len == old_len
         return a
     elseif new_len == old_len + 1
@@ -42,18 +42,22 @@ See Definition 15.7 and for properties see Chapter 15 to 17.
 The test is exact if the element of `net` are of type `Rational`. Indeed, in that case, one can exactly deal with points at the edge of intervals of the form [a,b)ᵈ.
 The conversion `Float` to `Rational` is usually possible with usual nets, e.g., Sobol, Faure (may require `Rational{BigInt}.(net)`).
 """
-function istmsnet(net::AbstractMatrix{T}; λ::I, t::I, m::I, s::I,
-        base::I) where {I <: Integer, T <: Real}
+function istmsnet(
+        net::AbstractMatrix{T}; λ::I, t::I, m::I, s::I,
+        base::I
+    ) where {I <: Integer, T <: Real}
     pass = true
 
-    @assert size(net, 2)==λ * (base^m) "Number of points must be as size(net, 2) = $(size(net, 2)) == λ * (base^m) = $(λ * (base^m))"
-    @assert size(net, 1)==s "Dimension must be as size(net, 2) = $(size(net, 2)) == s = $s"
+    @assert size(net, 2) == λ * (base^m) "Number of points must be as size(net, 2) = $(size(net, 2)) == λ * (base^m) = $(λ * (base^m))"
+    @assert size(net, 1) == s "Dimension must be as size(net, 2) = $(size(net, 2)) == s = $s"
     @assert all(0 .≤ net .< 1) "All points must be in [0,1)"
 
     perms = multiexponents(s, m - t)
     for stepsize in perms
-        intervals = mince(IntervalBox([interval(zero(T), one(T)) for i in 1:s]),
-            NTuple{s, Int}(base .^ stepsize))
+        intervals = mince(
+            IntervalBox([interval(zero(T), one(T)) for i in 1:s]),
+            NTuple{s, Int}(base .^ stepsize)
+        )
         pass &= all(intervals) do intvl
             λ * base^t == count(point -> inCloseOpen(point, intvl), collect(eachcol((net))))
         end
@@ -72,7 +76,7 @@ Checks if the number `x` is a member of the interval `a` (close on the left and 
 """
 function inCloseOpen(x::T, a::Interval) where {T <: Real}
     isinf(x) && return false
-    a.lo <= x < a.hi
+    return a.lo <= x < a.hi
 end
 inCloseOpen(X::AbstractVector, Y::IntervalBox{N, T}) where {N, T} = all(inCloseOpen.(X, Y))
 
@@ -85,15 +89,15 @@ n = 8
 d = 1
 
 for point_constructor in [
-    FaureSample(),
-    GridSample(),
-    HaltonSample(),
-    KroneckerSample(),
-    LatinHypercubeSample(),
-    LatticeRuleSample(),
-    RandomSample(),
-    SobolSample()
-]
+        FaureSample(),
+        GridSample(),
+        HaltonSample(),
+        KroneckerSample(),
+        LatinHypercubeSample(),
+        LatticeRuleSample(),
+        RandomSample(),
+        SobolSample(),
+    ]
     @show point_constructor
     s = QuasiMonteCarlo.sample(n, lb, ub, point_constructor)
     @test all(all(x .<= ub) for x in eachcol(s))
@@ -149,8 +153,8 @@ end
     μ = mean(s; dims = 2)
     variance = var(s; corrected = false, dims = 2)
     for i in eachindex(μ)
-        @test μ[i]≈0.5 atol=2 / sqrt(n)
-        @test variance[i]≈1 / 12 rtol=2 / sqrt(n)
+        @test μ[i] ≈ 0.5 atol = 2 / sqrt(n)
+        @test variance[i] ≈ 1 / 12 rtol = 2 / sqrt(n)
     end
 end
 
@@ -166,8 +170,8 @@ end
     μ = mean(s; dims = 2)
     variance = var(s; dims = 2)
     for i in eachindex(μ)
-        @test μ[i]≈0.5 atol=2 / sqrt(n)
-        @test variance[i]≈1 / 12 rtol=2 / sqrt(n)
+        @test μ[i] ≈ 0.5 atol = 2 / sqrt(n)
+        @test variance[i] ≈ 1 / 12 rtol = 2 / sqrt(n)
     end
     @test pvalue(SignedRankTest(eachrow(s)...)) > 0.0001
 end
@@ -184,8 +188,8 @@ end
     μ = mean(s; dims = 2)
     variance = var(s; dims = 2)
     for i in eachindex(μ)
-        @test μ[i]≈0.5 atol=2 / sqrt(n)
-        @test variance[i]≈1 / 12 rtol=2 / sqrt(n)
+        @test μ[i] ≈ 0.5 atol = 2 / sqrt(n)
+        @test variance[i] ≈ 1 / 12 rtol = 2 / sqrt(n)
     end
     @test pvalue(SignedRankTest(eachrow(s)...)) > 0.0001
 
@@ -206,7 +210,7 @@ end
         @test 1 - maximum(s) ≈ minimum(s)
         @test minimum(s) ≈ inv(2n)
         @test mean(s) ≈ 0.5
-        @test var(s; corrected = false)≈1 / 12 rtol=2 / sqrt(n)
+        @test var(s; corrected = false) ≈ 1 / 12 rtol = 2 / sqrt(n)
     end
 end
 
@@ -234,8 +238,8 @@ end
     μ = mean(s; dims = 2)
     variance = var(s; dims = 2)
     for i in eachindex(μ)
-        @test μ[i]≈0.5 atol=2 / n
-        @test variance[i]≈1 / 12 rtol=2 / n
+        @test μ[i] ≈ 0.5 atol = 2 / n
+        @test variance[i] ≈ 1 / 12 rtol = 2 / n
     end
 end
 
@@ -260,8 +264,8 @@ end
     μ = mean(s; dims = 2)
     variance = var(s; dims = 2)
     for i in eachindex(μ)
-        @test μ[i]≈0.5 atol=2 / n
-        @test variance[i]≈1 / 12 rtol=2 / n
+        @test μ[i] ≈ 0.5 atol = 2 / n
+        @test variance[i] ≈ 1 / 12 rtol = 2 / n
     end
     for (i, j) in combinations(1:d, 2)
         @test pvalue(SignedRankTest(s[i, :], s[j, :])) > 0.0001
@@ -312,8 +316,8 @@ end
         μ = mean(s; dims = 2)
         variance = var(s; dims = 2)
         for i in eachindex(μ)
-            @test μ[i]≈0.5 atol=1 / sqrt(n)
-            @test variance[i]≈1 / 12 rtol=1 / sqrt(n)
+            @test μ[i] ≈ 0.5 atol = 1 / sqrt(n)
+            @test variance[i] ≈ 1 / 12 rtol = 1 / sqrt(n)
         end
         for (i, j) in combinations(1:d, 2)
             @test pvalue(SignedRankTest(s[i, :], s[j, :])) > 0.0001
@@ -329,8 +333,8 @@ end
     μ = mean(s; dims = 2)
     variance = var(s; dims = 2)
     for i in eachindex(μ)
-        @test μ[i]≈0.5 atol=3 / n
-        @test variance[i]≈1 / 12 rtol=3 / n
+        @test μ[i] ≈ 0.5 atol = 3 / n
+        @test variance[i] ≈ 1 / 12 rtol = 3 / n
     end
 end
 
@@ -399,7 +403,7 @@ end
         SobolSample(R = OwenScramble(base = 2, pad = m)),
         SobolSample(),
         LatticeRuleSample(R = Shift()),
-        SobolSample(R = MatousekScramble(base = 2, pad = m))
+        SobolSample(R = MatousekScramble(base = 2, pad = m)),
     ]
     for algorithm in algorithms
         Ms = QuasiMonteCarlo.generate_design_matrices(n, lb, ub, algorithm, num_mat)
@@ -427,7 +431,7 @@ end
         # LatticeRuleSample(R = Shift()), # TODO add support for LatticeRule
         SobolSample(R = OwenScramble(base = 2, pad = m)),
         SobolSample(R = MatousekScramble(base = 2, pad = m)),
-        SobolSample(R = DigitalShift(base = 2, pad = m))
+        SobolSample(R = DigitalShift(base = 2, pad = m)),
     ]
     for algorithm in algorithms
         @show algorithm
@@ -436,7 +440,7 @@ end
         @test isa(X, Matrix{eltype(X)}) == true
         μ = [mean(f(c) for c in eachcol(X)) for X in iterator] # Check that iterator do work!
         if !isa(algorithm, Beta) # The Beta distribution is not Uniform hence we do not expect the μ to be close to 1. We could compute the expected results but it would involve a β function dependency.
-            @test μ≈ones(num_mat) atol=5e-2 # the results for different randomization should all be close to 1. Arbitrarily we allow 5% error.
+            @test μ ≈ ones(num_mat) atol = 5.0e-2 # the results for different randomization should all be close to 1. Arbitrarily we allow 5% error.
         end
     end
 end
@@ -452,19 +456,27 @@ end
     for type in [Float32, Float64]
         for Int_type in [Int32, Int64]
             b, pad = Int_type(2), Int_type(32)
-            scramblings = [OwenScramble(base = b, pad = pad)
-                           MatousekScramble(base = b, pad = pad)
-                           DigitalShift(base = b, pad = pad)]
+            scramblings = [
+                OwenScramble(base = b, pad = pad)
+                MatousekScramble(base = b, pad = pad)
+                DigitalShift(base = b, pad = pad)
+            ]
             for scrambling in scramblings
                 output,
-                other_arrays... = QuasiMonteCarlo.initialize(n,
+                    other_arrays... = QuasiMonteCarlo.initialize(
+                    n,
                     d,
                     SobolSample(),
                     scrambling,
-                    type)
+                    type
+                )
                 @test output isa Matrix{type}
-                @test all([other_array isa Array{Int_type, 3}
-                           for other_array in other_arrays])
+                @test all(
+                    [
+                        other_array isa Array{Int_type, 3}
+                            for other_array in other_arrays
+                    ]
+                )
 
                 iterator = DesignMatrix(n, d, SobolSample(), scrambling, 1, type)
                 scrambled_output = QuasiMonteCarlo.next!(iterator)
@@ -542,14 +554,16 @@ end
         NoRand(),
         OwenScramble(base = base, pad = m),
         MatousekScramble(base = base, pad = m),
-        DigitalShift(base = base, pad = m)
+        DigitalShift(base = base, pad = m),
     ]
     pass = Array{Bool}(undef, length(v), m)
     for (s, t) in enumerate(t_sobol[1:m])
         net = Rational.(QuasiMonteCarlo.sample(n, s, SobolSample()))
         for j in eachindex(v)
-            pass[j, s] = istmsnet(randomize(net, v[j]); λ, t, m, s,
-                base = base)
+            pass[j, s] = istmsnet(
+                randomize(net, v[j]); λ, t, m, s,
+                base = base
+            )
         end
     end
     @test all(pass)
@@ -565,16 +579,25 @@ end
     pass = Array{Bool}(undef, 4, m)
     for s in 1:m
         net = Rational{BigInt}.(QuasiMonteCarlo.sample(nextprime(s)^m, s, FaureSample())) # Convert the sequence in Rational{BigInt} (needed to scramble)
-        pass[1, s] = istmsnet(randomize(net, NoRand()); λ, t, m, s,
-            base = nextprime(s))
-        pass[2, s] = istmsnet(randomize(net, OwenScramble(base = nextprime(s), pad = m));
-            λ, t, m, s, base = nextprime(s))
+        pass[1, s] = istmsnet(
+            randomize(net, NoRand()); λ, t, m, s,
+            base = nextprime(s)
+        )
+        pass[2, s] = istmsnet(
+            randomize(net, OwenScramble(base = nextprime(s), pad = m));
+            λ, t, m, s, base = nextprime(s)
+        )
         pass[3, s] = istmsnet(
-            randomize(net,
-                MatousekScramble(base = nextprime(s), pad = m));
-            λ, t, m, s, base = nextprime(s))
-        pass[4, s] = istmsnet(randomize(net, DigitalShift(base = nextprime(s), pad = m));
-            λ, t, m, s, base = nextprime(s))
+            randomize(
+                net,
+                MatousekScramble(base = nextprime(s), pad = m)
+            );
+            λ, t, m, s, base = nextprime(s)
+        )
+        pass[4, s] = istmsnet(
+            randomize(net, DigitalShift(base = nextprime(s), pad = m));
+            λ, t, m, s, base = nextprime(s)
+        )
     end
     @test all(pass)
 end

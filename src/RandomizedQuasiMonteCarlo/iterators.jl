@@ -3,7 +3,7 @@ abstract type AbstractDesignMatrix end
 # Make an iterator so that we can do "for X in DesignMatrix(...)"
 Base.length(s::AbstractDesignMatrix) = s.count
 function Base.iterate(s::AbstractDesignMatrix, state = 1)
-    state > s.count ? nothing : (next!(s), state + 1)
+    return state > s.count ? nothing : (next!(s), state + 1)
 end
 
 """
@@ -56,7 +56,7 @@ One can use the common[`DesignMatrix`](@ref) interface to create the iterator.
 """
 mutable struct DistributionDesignMat{T <: Real, T2} <: AbstractDesignMatrix
     X::Array{T, 2} #array of size (N, d)
-    D::T2#::Distributions.Sampleable
+    D::T2 #::Distributions.Sampleable
     count::Int
 end
 
@@ -92,36 +92,43 @@ Create an iterator for doing multiple i.i.d. randomization over QMC sequences wh
     It is now compatible with all scrambling methods and shifting. One can also use it with `Distributions.Sampleable` or `RandomSample`.
 """
 function DesignMatrix(
-        N, d, S::DeterministicSamplingAlgorithm, num_mats::Integer, T::DataType = Float64)
+        N, d, S::DeterministicSamplingAlgorithm, num_mats::Integer, T::DataType = Float64
+    )
     return DesignMatrix(N, d, S, S.R, num_mats, T)
 end
 
-function DesignMatrix(N,
+function DesignMatrix(
+        N,
         d,
         S::DeterministicSamplingAlgorithm,
         R::OwenScramble,
         num_mats::Integer,
-        T::DataType = Float64)
+        T::DataType = Float64
+    )
     X, random_bits, bits, indices = initialize(N, d, S, R, T)
     return OwenDesignMat(X, random_bits, bits, indices, R, num_mats)
 end
 
-function DesignMatrix(N,
+function DesignMatrix(
+        N,
         d,
         S::DeterministicSamplingAlgorithm,
         R::ScrambleMethod,
         num_mats::Integer,
-        T = Float64)
+        T = Float64
+    )
     X, random_bits, bits = initialize(N, d, S, R, T)
     return ScrambleDesignMat(X, random_bits, bits, R, num_mats)
 end
 
-function DesignMatrix(N,
+function DesignMatrix(
+        N,
         d,
         S::DeterministicSamplingAlgorithm,
         R::Shift,
         num_mats,
-        T::DataType = Float64)
+        T::DataType = Float64
+    )
     X = initialize(N, d, S, R, T)
     return ShiftDesignMat(X, R, num_mats)
 end
@@ -151,11 +158,13 @@ function initialize(n, d, sampler, R::OwenScramble, T::DataType = Float64)
     return random_points, random_bits, bits, indices
 end
 
-function scramble!(random_points::AbstractArray{T},
+function scramble!(
+        random_points::AbstractArray{T},
         random_bits,
         bits,
         indices,
-        R::OwenScramble) where {T <: Real}
+        R::OwenScramble
+    ) where {T <: Real}
     randomize_bits!(random_bits, bits, indices, R)
     for i in CartesianIndices(random_points)
         random_points[i] = bits2unif(T, @view(random_bits[:, i]), R.base)
@@ -177,10 +186,12 @@ function initialize(n, d, sampler, R::ScrambleMethod, T::DataType = Float64)
     return random_points, random_bits, bits
 end
 
-function scramble!(random_points::AbstractArray{T},
+function scramble!(
+        random_points::AbstractArray{T},
         random_bits,
         bits,
-        R::ScrambleMethod) where {T <: Real}
+        R::ScrambleMethod
+    ) where {T <: Real}
     randomize_bits!(random_bits, bits, R)
     for i in CartesianIndices(random_points)
         random_points[i] = bits2unif(T, @view(random_bits[:, i]), R.base)
@@ -227,18 +238,22 @@ Create `num_mats` matrices each containing a QMC point set, where:
 """
 function generate_design_matrices(
         n, d, sampler::DeterministicSamplingAlgorithm, num_mats::Integer,
-        T::DataType = Float64)
+        T::DataType = Float64
+    )
     return generate_design_matrices(n, d, sampler, sampler.R, num_mats, T)
 end
 
 function generate_design_matrices(
         n, d, sampler::RandomSamplingAlgorithm, num_mats::Integer,
-        T::DataType = Float64)
+        T::DataType = Float64
+    )
     return [sample(n, d, sampler, T) for j in 1:num_mats]
 end
 
-function generate_design_matrices(n, lb, ub, sampler,
-        num_mats = 2)
+function generate_design_matrices(
+        n, lb, ub, sampler,
+        num_mats = 2
+    )
     if n <= 0
         throw(ZeroSamplesError())
     end
@@ -264,18 +279,21 @@ Note that this is an ad hoc way to produce i.i.d sequence as it creates a determ
 This does not have any QMC garantuees.
 """
 function generate_design_matrices(
-        n, d, sampler, R::NoRand, num_mats::Integer, T::DataType = Float64)
+        n, d, sampler, R::NoRand, num_mats::Integer, T::DataType = Float64
+    )
     out = sample(n, num_mats * d, sampler, T)
     @warn "The `generate_design_matrices(n, d, sampler, R = NoRand(), num_mats)` method does not produces true and independent QMC matrices, see [this doc warning](https://docs.sciml.ai/QuasiMonteCarlo/stable/design_matrix/) for more context.
     Prefer using randomization methods such as `R = Shift()`, `R = MatousekScrambling()`, etc., see [documentation](https://docs.sciml.ai/QuasiMonteCarlo/stable/randomization/)"
     return [out[(j * d + 1):((j + 1) * d), :] for j in 0:(num_mats - 1)]
 end
 
-function generate_design_matrices(n,
+function generate_design_matrices(
+        n,
         d,
         sampler,
         R::RandomizationMethod,
         num_mats::Integer,
-        T::DataType = Float64)
+        T::DataType = Float64
+    )
     return collect(DesignMatrix(n, d, sampler, R, num_mats, T))
 end

@@ -13,7 +13,7 @@ end
 
 function sample(n::Integer, d::Integer, S::GridSample, T = Float64)
     samples = rand.(range.(zeros(T, d), ones(T, d); length = n + 1), Ref(n))
-    randomize(mapreduce(permutedims, vcat, samples), S.R)
+    return randomize(mapreduce(permutedims, vcat, samples), S.R)
 end
 
 """
