@@ -142,7 +142,7 @@ end
 @testset "GridSample" begin
     lb = [0.0, 0.0]
     ub = [1.0, 1.0]
-    n = 16
+    n = 64
     d = 4
 
     s = QuasiMonteCarlo.sample(n, lb, ub, GridSample())
