@@ -321,9 +321,9 @@ version = "3.4.1+1"
 
 [[deps.GR]]
 deps = ["Artifacts", "Base64", "DelimitedFiles", "Downloads", "GR_jll", "HTTP", "JSON", "Libdl", "LinearAlgebra", "Preferences", "Printf", "Qt6Wayland_jll", "Random", "Serialization", "Sockets", "TOML", "Tar", "Test", "p7zip_jll"]
-git-tree-sha1 = "44716a1a667cb867ee0e9ec8edc31c3e4aa5afdc"
+git-tree-sha1 = "f954322d5de03ec630d177cda203dcd92b6be399"
 uuid = "28b8d3ca-fb5f-59d9-8090-bfdbd6d07a71"
-version = "0.73.24"
+version = "0.73.26"
 
     [deps.GR.extensions]
     IJuliaExt = "IJulia"
@@ -333,9 +333,9 @@ version = "0.73.24"
 
 [[deps.GR_jll]]
 deps = ["Artifacts", "Bzip2_jll", "Cairo_jll", "FFMPEG_jll", "Fontconfig_jll", "FreeType2_jll", "GLFW_jll", "JLLWrappers", "JpegTurbo_jll", "Libdl", "Libtiff_jll", "Pixman_jll", "Qt6Base_jll", "Zlib_jll", "libpng_jll"]
-git-tree-sha1 = "be8a1b8065959e24fdc1b51402f39f3b6f0f6653"
+git-tree-sha1 = "6fada551286ab6ea4ca1628cb2de9f166a2ec966"
 uuid = "d2c73de3-f751-5644-a686-071e5b155ba9"
-version = "0.73.24+0"
+version = "0.73.26+0"
 
 [[deps.GettextRuntime_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl", "Libiconv_jll"]
@@ -746,9 +746,9 @@ version = "1.57.1+0"
 
 [[deps.Parsers]]
 deps = ["Dates", "PrecompileTools", "UUIDs"]
-git-tree-sha1 = "5d5e0a78e971354b1c7bff0655d11fdc1b0e12c8"
+git-tree-sha1 = "468dbe2b510c876dc091b2c74ed52c7c34f48b9b"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "2.8.4"
+version = "2.8.5"
 
 [[deps.Pixman_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "LLVMOpenMP_jll", "Libdl"]
@@ -874,7 +874,7 @@ version = "2.11.3"
 
 [[deps.QuasiMonteCarlo]]
 deps = ["Accessors", "ConcreteStructs", "LatticeRules", "LinearAlgebra", "PrecompileTools", "Primes", "Random", "Sobol"]
-path = "/home/chrisrackauckas/github-runners/demeter4-23/_work/QuasiMonteCarlo.jl/QuasiMonteCarlo.jl"
+path = "/home/chrisrackauckas/github-runners/demeter4-7/_work/QuasiMonteCarlo.jl/QuasiMonteCarlo.jl"
 uuid = "8a4e6c94-4038-4cdc-81c3-7e6ffdb2a71b"
 version = "0.3.5"
 weakdeps = ["Distributions"]
