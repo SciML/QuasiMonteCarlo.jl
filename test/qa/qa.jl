@@ -1,4 +1,4 @@
-using QuasiMonteCarlo, Aqua
+using QuasiMonteCarlo, Aqua, Test
 @testset "Aqua" begin
     Aqua.find_persistent_tasks_deps(QuasiMonteCarlo)
     Aqua.test_ambiguities(QuasiMonteCarlo, recursive = false)
