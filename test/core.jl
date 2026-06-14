@@ -253,7 +253,7 @@ end
     @test_throws ArgumentError QuasiMonteCarlo.sample(d^2 + 1, d, sampler)
     s = sortslices(QuasiMonteCarlo.sample(n, d, sampler); dims = 2)
     # FaureSample() generates centered boxes, unlike DiceDesign
-    r = sortslices(include("rfaure.jl")'; dims = 2) .+ inv(2base^(power + 1))
+    r = sortslices(include("shared/rfaure.jl")'; dims = 2) .+ inv(2base^(power + 1))
 
     @test s isa Matrix
     @test size(s) == (d, n)
