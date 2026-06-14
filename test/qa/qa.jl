@@ -1,5 +1,6 @@
-using QuasiMonteCarlo, Aqua, Test
-@testset "Aqua" begin
+using SafeTestsets
+@safetestset "Aqua" begin
+    using QuasiMonteCarlo, Aqua, Test
     Aqua.find_persistent_tasks_deps(QuasiMonteCarlo)
     Aqua.test_ambiguities(QuasiMonteCarlo, recursive = false)
     Aqua.test_deps_compat(QuasiMonteCarlo)

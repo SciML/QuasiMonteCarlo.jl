@@ -1,118 +1,36 @@
-using QuasiMonteCarlo
-using Test
+using SafeTestsets
 
-using Statistics, LinearAlgebra, StatsBase, Random
-using Primes, Combinatorics, Distributions, IntervalArithmetic
-using HypothesisTests
+@safetestset "1D sampling smoke tests" begin
+    include("setup.jl")
 
-# struct InertSampler <: Random.AbstractRNG end
-# InertSampler(args...; kwargs...) = InertSampler()
-# Random.rand(::InertSampler, ::Type{T}) where {T} = zero(T)
-# Random.rand(::InertSampler) = 0
-# Random.shuffle!(::InertSampler, arg::AbstractArray) = arg
+    for point_constructor in [
+            FaureSample(),
+            GridSample(),
+            HaltonSample(),
+            KroneckerSample(),
+            LatinHypercubeSample(),
+            LatticeRuleSample(),
+            RandomSample(),
+            SobolSample(),
+        ]
+        @show point_constructor
+        s = QuasiMonteCarlo.sample(n, lb, ub, point_constructor)
+        @test all(all(x .<= ub) for x in eachcol(s))
+        @test all(all(x .>= lb) for x in eachcol(s))
+        @test isa(s, Matrix) == true
+        @test size(s) == (d, n)
+    end
 
-@views function embiggen!(a::Vector{T}, new_len::Integer, pad::T) where {T}
-    old_len = length(a)
-    @assert new_len ≥ old_len "Can't embiggen something smaller"
-    if new_len == old_len
-        return a
-    elseif new_len == old_len + 1
-        push!(a, pad)
-        return a
-    else
-        append!(a, fill(pad, new_len - old_len))
-        return a
+    for (sampler, d) in Iterators.product([Cauchy(), Normal(0, 4)], 1:3)
+        @show sampler
+        s = QuasiMonteCarlo.sample(n, d, sampler)
+        @test s isa Matrix
+        @test size(s) == (d, n)
     end
 end
 
-####################
-### T, pad, S NETS ###
-####################
-
-"""
-    istmsnet(net::AbstractMatrix{T}; λ::I, t::I, m::I, d::I, base::I) where {I <: Integer, T <: Real}
-
-Test if a point set `net` (`dim×n`) is a `(λ,t,m,s)`-net in base `b`.
-
-`(λ,t,m,s)`-nets have strict equidistribution properties making them good QMC sequences.
-Their definition and properties can be found in the book [Monte Carlo theory, methods, and examples](https://artowen.su.domains/mc/qmcstuff.pdf) by Art B. Owen.
-See Definition 15.7 and for properties see Chapter 15 to 17.
-
-The test is exact if the element of `net` are of type `Rational`. Indeed, in that case, one can exactly deal with points at the edge of intervals of the form [a,b)ᵈ.
-The conversion `Float` to `Rational` is usually possible with usual nets, e.g., Sobol, Faure (may require `Rational{BigInt}.(net)`).
-"""
-function istmsnet(
-        net::AbstractMatrix{T}; λ::I, t::I, m::I, s::I,
-        base::I
-    ) where {I <: Integer, T <: Real}
-    pass = true
-
-    @assert size(net, 2) == λ * (base^m) "Number of points must be as size(net, 2) = $(size(net, 2)) == λ * (base^m) = $(λ * (base^m))"
-    @assert size(net, 1) == s "Dimension must be as size(net, 2) = $(size(net, 2)) == s = $s"
-    @assert all(0 .≤ net .< 1) "All points must be in [0,1)"
-
-    perms = multiexponents(s, m - t)
-    for stepsize in perms
-        intervals = mince(
-            IntervalBox([interval(zero(T), one(T)) for i in 1:s]),
-            NTuple{s, Int}(base .^ stepsize)
-        )
-        pass &= all(intervals) do intvl
-            λ * base^t == count(point -> inCloseOpen(point, intvl), collect(eachcol((net))))
-        end
-        if !pass
-            println("Errors in direction k = $stepsize")
-            return pass
-        end
-    end
-    return pass
-end
-
-"""
-    in_halfopen(x, a)
-
-Checks if the number `x` is a member of the interval `a` (close on the left and open on the right), treated as a set.
-"""
-function inCloseOpen(x::T, a::Interval) where {T <: Real}
-    isinf(x) && return false
-    return a.lo <= x < a.hi
-end
-inCloseOpen(X::AbstractVector, Y::IntervalBox{N, T}) where {N, T} = all(inCloseOpen.(X, Y))
-
-rng = MersenneTwister(1776)
-
-#1D
-lb = 0.0
-ub = 1.0
-n = 8
-d = 1
-
-for point_constructor in [
-        FaureSample(),
-        GridSample(),
-        HaltonSample(),
-        KroneckerSample(),
-        LatinHypercubeSample(),
-        LatticeRuleSample(),
-        RandomSample(),
-        SobolSample(),
-    ]
-    @show point_constructor
-    s = QuasiMonteCarlo.sample(n, lb, ub, point_constructor)
-    @test all(all(x .<= ub) for x in eachcol(s))
-    @test all(all(x .>= lb) for x in eachcol(s))
-    @test isa(s, Matrix) == true
-    @test size(s) == (d, n)
-end
-
-for (sampler, d) in Iterators.product([Cauchy(), Normal(0, 4)], 1:3)
-    @show sampler
-    s = QuasiMonteCarlo.sample(n, d, sampler)
-    @test s isa Matrix
-    @test size(s) == (d, n)
-end
-
-@testset "1D" begin
+@safetestset "1D" begin
+    include("setup.jl")
     # @testset "SectionSample" begin
     #     constrained_val = 1.0
     #     point_constructor = SectionSample([NaN64], RandomSample())
@@ -138,7 +56,8 @@ end
 end
 
 #ND
-@testset "GridSample" begin
+@safetestset "GridSample" begin
+    include("setup.jl")
     lb = [0.0, 0.0]
     ub = [1.0, 1.0]
     n = 64
@@ -157,7 +76,8 @@ end
     end
 end
 
-@testset "RandomSample" begin
+@safetestset "RandomSample" begin
+    include("setup.jl")
     lb = [0.0, 0.0]
     ub = [1.0, 1.0]
     n = 20_000
@@ -175,7 +95,8 @@ end
     @test pvalue(SignedRankTest(eachrow(s)...)) > 0.0001
 end
 
-@testset "LHS" begin
+@safetestset "LHS" begin
+    include("setup.jl")
     lb = [0.0, 0.0]
     ub = [1.0, 1.0]
     d = length(lb)
@@ -197,7 +118,8 @@ end
     @test istmsnet(s, λ = 1, t = 0, m = 1, s = d, base = n)
 end
 
-@testset "Van der Corput Sequence" begin
+@safetestset "Van der Corput Sequence" begin
+    include("setup.jl")
     lb = 0
     ub = 1
     for base in [2, 3, 4]
@@ -213,7 +135,8 @@ end
     end
 end
 
-@testset "SobolSample" begin
+@safetestset "SobolSample" begin
+    include("setup.jl")
     lb = [0.0, 0.0, 0.0]
     ub = [1.0, 1.0, 1.0]
     d = length(lb)
@@ -242,7 +165,8 @@ end
     end
 end
 
-@testset "Faure Sample" begin
+@safetestset "Faure Sample" begin
+    include("setup.jl")
     #FaureSample()
     d = 17
     base = nextprime(d)
@@ -288,7 +212,8 @@ end
     end
 end
 
-@testset "(Randomized) Halton Sequence" begin
+@safetestset "(Randomized) Halton Sequence" begin
+    include("setup.jl")
     d = 4
     lb = zeros(d)
     ub = ones(d)
@@ -324,7 +249,8 @@ end
     end
 end
 
-@testset "LatticeRuleSample" begin
+@safetestset "LatticeRuleSample" begin
+    include("setup.jl")
     #LatticeRuleSample()
     s = QuasiMonteCarlo.sample(n, lb, ub, LatticeRuleSample())
     @test isa(s, Matrix)
@@ -337,7 +263,8 @@ end
     end
 end
 
-@testset "Kronecker" begin
+@safetestset "Kronecker" begin
+    include("setup.jl")
     d = 2
     n = 100
     ρ = 0.7548776662466927
@@ -389,7 +316,8 @@ end
 #                                                                                        RandomSample()))
 # end
 
-@testset "generate_design_matrices" begin
+@safetestset "generate_design_matrices" begin
+    include("setup.jl")
     d = 4
     m = 8
     lb = zeros(d)
@@ -416,7 +344,8 @@ end
     end
 end
 
-@testset "iterators" begin
+@safetestset "iterators" begin
+    include("setup.jl")
     d = 4
     m = 14
     n = 2^m
@@ -444,7 +373,8 @@ end
     end
 end
 
-@testset "Types of output and intermediate arrays" begin
+@safetestset "Types of output and intermediate arrays" begin
+    include("setup.jl")
     # Scrambling methods use intermediate array for the bits scrambling. It is in general unnecessary to have this large array stored as Int64.
     #TODO test other randomization methods (here just scrambling) and QMC sequence (here just Sobol)
     #TODO here we test output and constructions of intermediate array, we could test that all operation are type stables
@@ -485,7 +415,8 @@ end
     end
 end
 
-@testset "Randomized Quasi Monte Carlo: conversion functions" begin
+@safetestset "Randomized Quasi Monte Carlo: conversion functions" begin
+    include("setup.jl")
     b = 2
     x = (0 // 16):(1 // 16):(15 // 16)
     bits = QuasiMonteCarlo.unif2bits(x, b)
@@ -499,7 +430,8 @@ end
     @test x == y
 end
 
-@testset "Randomized Quasi Monte Carlo" begin
+@safetestset "Randomized Quasi Monte Carlo" begin
+    include("setup.jl")
     m = 6
     d = 5
     b = QuasiMonteCarlo.nextprime(d)
@@ -519,7 +451,8 @@ end
     u_nus = QuasiMonteCarlo.sample(N, d, FaureSample(OwenScramble(base = b, pad = pad)))
 end
 
-@testset "Randomized Quasi Monte Carlo Rational Scrambling" begin
+@safetestset "Randomized Quasi Monte Carlo Rational Scrambling" begin
+    include("setup.jl")
     m = 5
     d = 2
     b = QuasiMonteCarlo.nextprime(d)
@@ -537,12 +470,13 @@ end
     @test eltype(u_digital_shift) <: Rational
 end
 
-@testset "Sobol' sequence are (tₛ,m,s)-net in base 2 even after scrambling" begin
+@safetestset "Sobol' sequence are (tₛ,m,s)-net in base 2 even after scrambling" begin
+    include("setup.jl")
     #! Note that this is the first 2ᵐ elements of the sequence which are tested
     #! Note that the Sobol' sequence from Sobol.jl is the "controversed" version where the first element have be removed
 
     # Table of qualitity parameter t with respect to dimension s for Sobol' sequence.
-    # See "The algebraic-geometry approach to low-discrepancy sequences" H Niederreiter, C Xing - Monte Carlo and Quasi-Monte Carlo Methods 1996, 1998
+    # See "The algebraic-geometry approach to low-discrepancy sequences" H Niederreiter, C Xing - Monte Carlo and Quasi-Monte Carlo Methods 1996, 1998
     t_sobol = [0, 0, 1, 3, 5, 8, 11, 15, 19, 23, 27, 31, 35, 40, 45, 50, 55, 60, 65, 71]
 
     m = 12
@@ -568,7 +502,8 @@ end
     @test all(pass)
 end
 
-@testset "Faure sequence are (0,m,s)-net even after scrambling" begin
+@safetestset "Faure sequence are (0,m,s)-net even after scrambling" begin
+    include("setup.jl")
     # Faure sequence are exactly (t=0, s)-sequence in base b=nextprime(s)
     m = 4
     pad = m
