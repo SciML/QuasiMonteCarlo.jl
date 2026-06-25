@@ -1,4 +1,4 @@
-using PrecompileTools
+using PrecompileTools: @compile_workload, @setup_workload
 
 @setup_workload begin
     # Minimal precompilation workload to reduce time-to-first-sample
