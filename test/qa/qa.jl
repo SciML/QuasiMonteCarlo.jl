@@ -1,11 +1,16 @@
-using QuasiMonteCarlo, Aqua, Test
-@testset "Aqua" begin
-    Aqua.find_persistent_tasks_deps(QuasiMonteCarlo)
-    Aqua.test_ambiguities(QuasiMonteCarlo, recursive = false)
-    Aqua.test_deps_compat(QuasiMonteCarlo)
-    Aqua.test_piracies(QuasiMonteCarlo)
-    Aqua.test_project_extras(QuasiMonteCarlo)
-    Aqua.test_stale_deps(QuasiMonteCarlo)
-    Aqua.test_unbound_args(QuasiMonteCarlo)
-    Aqua.test_undefined_exports(QuasiMonteCarlo)
-end
+using SciMLTesting, QuasiMonteCarlo, Test
+
+run_qa(
+    QuasiMonteCarlo;
+    explicit_imports = true,
+    ei_kwargs = (;
+        all_qualified_accesses_are_public = (;
+            ignore = (
+                :AbstractVecOrTuple,  # Base (internal)
+                :GLOBAL_RNG,          # Random (non-public)
+                :default_rng,         # Random (non-public)
+                :skip!,               # Sobol (non-public)
+            ),
+        ),
+    ),
+)

@@ -1,7 +1,12 @@
 module QuasiMonteCarlo
 
-using Sobol, LatticeRules, Primes, LinearAlgebra, Random
-using ConcreteStructs, Accessors
+using Sobol: Sobol
+using LatticeRules: LatticeRules
+using Primes: nextprime, nextprimes
+using LinearAlgebra: Diagonal, LowerTriangular, UpperTriangular
+using Random: Random, AbstractRNG, rand!, shuffle
+using ConcreteStructs: @concrete
+using Accessors: @set
 
 abstract type SamplingAlgorithm end
 abstract type RandomSamplingAlgorithm <: SamplingAlgorithm end
