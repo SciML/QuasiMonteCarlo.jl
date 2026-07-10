@@ -1,10 +1,10 @@
 """
-    RandomizedHalton(rng::AbstractRNG = Random.GLOBAL_RNG) <: RandomSamplingAlgorithm
+    RandomizedHaltonSample(; rng = Random.GLOBAL_RNG) <: RandomSamplingAlgorithm
 
-    Create a randomized Halton sequence.
+Create a randomized Halton sequence.
 
-    References:
-    Owen, A. (2017). *A randomized Halton algorithm in R*. https://doi.org/10.48550/arXiv.1706.02808
+References:
+Owen, A. (2017). *A randomized Halton algorithm in R*. https://doi.org/10.48550/arXiv.1706.02808
 """
 Base.@kwdef @concrete struct RandomizedHaltonSample <: RandomSamplingAlgorithm
     rng::AbstractRNG = Random.GLOBAL_RNG

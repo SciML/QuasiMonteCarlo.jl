@@ -8,9 +8,32 @@ using Random: Random, AbstractRNG, rand!, shuffle
 using ConcreteStructs: @concrete
 using Accessors: @set
 
+"""
+    SamplingAlgorithm
+
+Abstract supertype for all sampling strategies accepted by [`sample`](@ref).
+"""
 abstract type SamplingAlgorithm end
+
+"""
+    RandomSamplingAlgorithm <: SamplingAlgorithm
+
+Abstract supertype for samplers that use an RNG to generate randomized point sets.
+"""
 abstract type RandomSamplingAlgorithm <: SamplingAlgorithm end
+
+"""
+    DeterministicSamplingAlgorithm <: SamplingAlgorithm
+
+Abstract supertype for deterministic low-discrepancy samplers.
+"""
 abstract type DeterministicSamplingAlgorithm <: SamplingAlgorithm end
+
+"""
+    RandomizationMethod
+
+Abstract supertype for methods that randomize deterministic point sets with [`randomize`](@ref).
+"""
 abstract type RandomizationMethod end
 
 const UB_LB_MESSAGE = "Lower bound exceeds upper bound (lb > ub)"
@@ -26,9 +49,9 @@ end
 _check_sequence(n::Integer) = @assert n > 0 ZERO_SAMPLES_MESSAGE
 
 """
-    RandomSample <: RandomSamplingAlgorithm
+    RandomSample(; rng = Random.GLOBAL_RNG) <: RandomSamplingAlgorithm
 
-Randomly distributed random numbers.
+Plain Monte Carlo sampler that draws independent uniform samples from the unit box.
 """
 Base.@kwdef @concrete struct RandomSample <: RandomSamplingAlgorithm
     rng::AbstractRNG = Random.GLOBAL_RNG
@@ -92,13 +115,18 @@ include("Lattices.jl")
 include("Section.jl")
 
 """
-```julia
-NoRand <: RandomizationMethod
-```
+    NoRand() <: RandomizationMethod
 
 No randomization is performed on the sampled sequence.
 """
 struct NoRand <: RandomizationMethod end
+
+"""
+    randomize(x, R::RandomizationMethod)
+
+Apply the randomization method `R` to the sample matrix `x`.
+The `NoRand()` method returns `x` unchanged.
+"""
 randomize(x, S::NoRand) = x
 
 include("RandomizedQuasiMonteCarlo/shifting.jl")
