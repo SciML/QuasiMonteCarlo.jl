@@ -10,10 +10,10 @@ QuasiMonteCarlo.sample
 
 Samplers are divided into two subtypes
 
-```julia
-abstract type SamplingAlgorithm end
-abstract type RandomSamplingAlgorithm <: SamplingAlgorithm end
-abstract type DeterministicSamplingAlgorithm <: SamplingAlgorithm end
+```@docs
+SamplingAlgorithm
+QuasiMonteCarlo.RandomSamplingAlgorithm
+QuasiMonteCarlo.DeterministicSamplingAlgorithm
 ```
 
 ### Deterministic Sampling Algorithm
@@ -33,6 +33,7 @@ SobolSample
     The QuasiMonteCarlo.jl package relies on the [Sobol.jl](https://github.com/JuliaMath/Sobol.jl) package to sample Sobol nets. The choice, there is to NOT start the sequence at `0`. This is debatable, see this [issue](https://github.com/JuliaMath/Sobol.jl/issues/31#issuecomment-1528136486) and ref therein for more context.
 
 ```@docs
+VanDerCorputSample
 FaureSample
 LatticeRuleSample
 HaltonSample
@@ -43,6 +44,7 @@ KroneckerSample
 ### Random Sampling Algorithm
 
 ```@docs
+RandomSample
 LatinHypercubeSample
 RandomizedHaltonSample
 ```

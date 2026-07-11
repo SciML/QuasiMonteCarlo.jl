@@ -15,8 +15,8 @@ A good reference is the [book by A. Owen](https://artowen.su.domains/mc/qmcstuff
 
 ## API for randomization
 
-```julia
-abstract type RandomizationMethod end
+```@docs
+RandomizationMethod
 ```
 
 There are two ways to obtain a randomized sequence:
