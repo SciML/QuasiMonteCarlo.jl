@@ -3,7 +3,6 @@ using SciMLTesting, QuasiMonteCarlo, Test
 run_qa(
     QuasiMonteCarlo;
     explicit_imports = true,
-    api_docs_kwargs = (; rendered = true),
     ei_kwargs = (;
         all_qualified_accesses_are_public = (;
             ignore = (
