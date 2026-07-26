@@ -9,8 +9,8 @@ makedocs(
     sitename = "QuasiMonteCarlo.jl",
     authors = "Chris Rackauckas",
     modules = [QuasiMonteCarlo],
-    clean = true, doctest = false, linkcheck = true,
-    warnonly = [:missing_docs],
+    clean = true, doctest = true, linkcheck = true,
+    checkdocs = :exports,
     linkcheck_ignore = [
         "https://www.sciencedirect.com/science/article/pii/S0010465509003087",
         "https://artowen.su.domains/mc/qmcstuff.pdf",
