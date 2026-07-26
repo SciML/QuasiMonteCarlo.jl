@@ -136,6 +136,8 @@ include("RandomizedQuasiMonteCarlo/iterators.jl")
 include("precompile.jl")
 
 export SamplingAlgorithm,
+    sample,
+    generate_design_matrices,
     GridSample,
     SobolSample,
     LatinHypercubeSample,
