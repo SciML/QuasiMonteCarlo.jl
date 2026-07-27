@@ -144,6 +144,7 @@ end
     n = 64
     d = 4
 
+    Random.seed!(1776)
     s = QuasiMonteCarlo.sample(n, lb, ub, GridSample())
     s = sortslices(s; dims = 2)
     differences = diff(s; dims = 2)
