@@ -14,7 +14,7 @@ end
 @testset "Public sampling API" begin
     @test isdefined(QuasiMonteCarlo, :sample)
     @test Base.isexported(QuasiMonteCarlo, :sample)
-    @test Docs.hasdoc(QuasiMonteCarlo, :sample)
+    @test Base.Docs.doc(Base.Docs.Binding(QuasiMonteCarlo, :sample)) !== nothing
 
     unit_points = sample(3, 2, ConstantSampler(), Float32)
     @test size(unit_points) == (2, 3)
