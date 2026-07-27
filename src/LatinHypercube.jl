@@ -1,10 +1,10 @@
 """
-    LatinHypercubeSample(rng::AbstractRNG = Random.GLOBAL_RNG) <: RandomSamplingAlgorithm
+    LatinHypercubeSample(rng::AbstractRNG = Random.TaskLocalRNG()) <: RandomSamplingAlgorithm
 
 A Latin Hypercube is a point set with the property that every one-dimensional interval `(i/n, i+1/n)` contains exactly one point. This is a good way to sample a high-dimensional space, as it is more uniform than a random sample but does not require as many points as a full net.
 """
 Base.@kwdef @concrete struct LatinHypercubeSample <: RandomSamplingAlgorithm
-    rng::AbstractRNG = Random.GLOBAL_RNG
+    rng::AbstractRNG = Random.TaskLocalRNG()
 end
 
 function sample(n::Integer, d::Integer, S::LatinHypercubeSample, T = Float64)

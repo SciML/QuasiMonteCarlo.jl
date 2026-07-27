@@ -1,12 +1,12 @@
 """
-    Shift(; rng = Random.GLOBAL_RNG) <: RandomizationMethod
+    Shift(; rng = Random.TaskLocalRNG()) <: RandomizationMethod
 
 Cranley-Patterson rotation.
 
 References: Cranley, R., & Patterson, T. N. (1976). Randomization of number theoretic methods for multiple integration. SIAM Journal on Numerical Analysis, 13(6), 904-914.
 """
 Base.@kwdef @concrete struct Shift <: RandomizationMethod
-    rng::AbstractRNG = Random.GLOBAL_RNG
+    rng::AbstractRNG = Random.TaskLocalRNG()
 end
 
 """
@@ -31,7 +31,7 @@ function shift!(rng::AbstractRNG, points::AbstractMatrix{T}) where {T <: Real}
 end
 
 function shift!(points::AbstractMatrix{T}, U::AbstractVector{T}) where {T <: Real}
-    return shift!(Random.default_rng(), points, U)
+    return shift!(Random.TaskLocalRNG(), points, U)
 end
 
 function shift!(

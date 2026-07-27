@@ -1,5 +1,5 @@
 """
-    RandomizedHaltonSample(; rng = Random.GLOBAL_RNG) <: RandomSamplingAlgorithm
+    RandomizedHaltonSample(; rng = Random.TaskLocalRNG()) <: RandomSamplingAlgorithm
 
 Create a randomized Halton sequence.
 
@@ -7,7 +7,7 @@ References:
 Owen, A. (2017). *A randomized Halton algorithm in R*. https://doi.org/10.48550/arXiv.1706.02808
 """
 Base.@kwdef @concrete struct RandomizedHaltonSample <: RandomSamplingAlgorithm
-    rng::AbstractRNG = Random.GLOBAL_RNG
+    rng::AbstractRNG = Random.TaskLocalRNG()
 end
 
 function sample(n::Integer, d::Integer, S::RandomizedHaltonSample, T = Float64)

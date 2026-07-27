@@ -6,7 +6,7 @@
 ScrambleMethod <: RandomizationMethod
 ```
 
-A scramble method needs at least the scrambling base `b`, the number of "bits" to use `pad` (`pad=32` is the default) and a seed `rng` (`rng = Random.GLOBAL_RNG` is the default).
+A scramble method needs at least the scrambling base `b`, the number of "bits" to use `pad` (`pad=32` is the default) and an RNG (`rng = Random.TaskLocalRNG()` by default).
 The scramble methods implementer are
 
   - `DigitalShift`.
@@ -47,7 +47,7 @@ References: Owen, A. B. (1995). Randomly permuted (t, m, s)-nets and (t, s)-sequ
 Base.@kwdef struct OwenScramble{I <: Integer} <: ScrambleMethod
     base::I
     pad::I = 32
-    rng::AbstractRNG = Random.GLOBAL_RNG
+    rng::AbstractRNG = Random.TaskLocalRNG()
 end
 
 function randomize!(
@@ -116,7 +116,7 @@ function getpermset(rng::AbstractRNG, m::Integer, b::I) where {I <: Integer}
     return y
 end
 
-getpermset(m::Integer, b::Integer) = getpermset(Random.GLOBAL_RNG, m, b)
+getpermset(m::Integer, b::Integer) = getpermset(Random.TaskLocalRNG(), m, b)
 
 """
     which_permutation(bits::AbstractArray{<:Integer,3}, b)
@@ -183,7 +183,7 @@ References: Matoušek, J. (1998). On thel2-discrepancy for anchored boxes. Journ
 Base.@kwdef struct MatousekScramble{I <: Integer} <: ScrambleMethod
     base::I
     pad::I = 32
-    rng::AbstractRNG = Random.GLOBAL_RNG
+    rng::AbstractRNG = Random.TaskLocalRNG()
 end
 
 #? Weird it should be faster than nested uniform Scramble but here it is not at all.-> look for other implementation and paper
@@ -242,7 +242,7 @@ function getmatousek(rng::AbstractRNG, m::Integer, b::I) where {I <: Integer}
     return matousek_M, matousek_C
 end
 
-getmatousek(m::Integer, b::Integer) = getmatousek(Random.GLOBAL_RNG, m, b)
+getmatousek(m::Integer, b::Integer) = getmatousek(Random.TaskLocalRNG(), m, b)
 
 """
 ```julia
@@ -259,7 +259,7 @@ It scrambles each coordinate in base `b` as `yₖ = (xₖ + Uₖ) mod b` where `
 Base.@kwdef struct DigitalShift{I <: Integer} <: ScrambleMethod
     base::I
     pad::I = 32
-    rng::AbstractRNG = Random.GLOBAL_RNG
+    rng::AbstractRNG = Random.TaskLocalRNG()
 end
 
 function randomize_bits!(
