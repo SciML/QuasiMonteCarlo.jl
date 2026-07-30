@@ -15,10 +15,9 @@ end
 
 @testset "Public sampling APIs" begin
     @test isdefined(QuasiMonteCarlo, :sample)
+    @test !Base.isexported(QuasiMonteCarlo, :sample)
     @static if VERSION >= v"1.11"
         @test Base.ispublic(QuasiMonteCarlo, :sample)
-    else
-        @test Base.isexported(QuasiMonteCarlo, :sample)
     end
     @test hasdoc(QuasiMonteCarlo, :sample)
 
@@ -26,12 +25,12 @@ end
     @test Base.isexported(QuasiMonteCarlo, :generate_design_matrices)
     @test hasdoc(QuasiMonteCarlo, :generate_design_matrices)
 
-    unit_points = sample(3, 2, ConstantSampler(), Float32)
+    unit_points = QuasiMonteCarlo.sample(3, 2, ConstantSampler(), Float32)
     @test size(unit_points) == (2, 3)
     @test eltype(unit_points) == Float32
     @test all(0 .<= unit_points .<= 1)
 
-    bounded_points = sample(3, [-2.0, 4.0], [2.0, 6.0], ConstantSampler())
+    bounded_points = QuasiMonteCarlo.sample(3, [-2.0, 4.0], [2.0, 6.0], ConstantSampler())
     @test bounded_points == [-0.0 -0.0 -0.0; 5.0 5.0 5.0]
 
     matrices = generate_design_matrices(3, 2, RandomSample(), 2, Float32)

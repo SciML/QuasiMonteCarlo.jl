@@ -101,19 +101,21 @@ ylabel!("|μ̂-μ|")
 Adding a new sampling method is a two-step process:
 
  1. Add a new SamplingAlgorithm type.
- 2. Implement `sample(n, d, sampler, T = Float64)` for that type.
+ 2. Implement `QuasiMonteCarlo.sample(n, d, sampler, T = Float64)` for that type.
 
 The unit-box method must return a matrix with dimension `d` by `n`, where `d` is
 the sample-space dimension and `n` is the number of samples. Every element must
 lie in `[0, 1]`. The package supplies the bounds method, so extensions should not
-implement `sample(n, lb, ub, sampler)`.
+implement `QuasiMonteCarlo.sample(n, lb, ub, sampler)`.
 
 **Example**
 
 ```julia
 struct NewAmazingSamplingAlgorithm{OPTIONAL} <: SamplingAlgorithm end
 
-function sample(n::Integer, d::Integer, ::NewAmazingSamplingAlgorithm, T = Float64)
+function QuasiMonteCarlo.sample(
+        n::Integer, d::Integer, ::NewAmazingSamplingAlgorithm, T = Float64
+    )
     return fill(convert(T, 0.5), d, n)
 end
 ```

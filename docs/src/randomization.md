@@ -1,6 +1,6 @@
 # [Randomization methods](@id Randomization)
 
-Most of the methods presented in [Sampler](@ref Samplers) are deterministic, i.e. `X = sample(n, d, ::DeterministicSamplingAlgorithm)` will always produce the same sequence $X = (X_1, \dots, X_n)$.
+Most of the methods presented in [Sampler](@ref Samplers) are deterministic, i.e. `X = QuasiMonteCarlo.sample(n, d, ::DeterministicSamplingAlgorithm)` will always produce the same sequence $X = (X_1, \dots, X_n)$.
 
 The main issue with deterministic Quasi Monte Carlo sampling is that it does not allow easy error estimation as opposed to plain Monte Carlo, where the variance can be estimated.
 
@@ -21,7 +21,7 @@ RandomizationMethod
 
 There are two ways to obtain a randomized sequence:
 
-  - Either directly use `QuasiMonteCarlo.sample(n, d, DeterministicSamplingAlgorithm(R = SomeRandomizationMethod()))` or `sample(n, lb, up, DeterministicSamplingAlgorithm(R = RandomizationMethod()))`.
+  - Either directly use `QuasiMonteCarlo.sample(n, d, DeterministicSamplingAlgorithm(R = SomeRandomizationMethod()))` or `QuasiMonteCarlo.sample(n, lb, up, DeterministicSamplingAlgorithm(R = RandomizationMethod()))`.
   - Or, given $n$ points $d$-dimensional points, all in $[0,1]^d$ one can do `randomize(X, SomeRandomizationMethod())` where $X$ is a $d\times n$-matrix.
 
 ```@docs
@@ -116,7 +116,7 @@ x_faure = QuasiMonteCarlo.sample(N, d, FaureSample())
 # Randomized version
 x_uniform = rand(d, N) # plain i.i.d. uniform
 x_shift = randomize(x_faure, Shift())
-x_nus = randomize(x_faure, OwenScramble(base = b, pad = pad)) # equivalent to sample(N, d, FaureSample(R = OwenScramble(base = b, pad = pad)))
+x_nus = randomize(x_faure, OwenScramble(base = b, pad = pad)) # equivalent to QuasiMonteCarlo.sample(N, d, FaureSample(R = OwenScramble(base = b, pad = pad)))
 x_lms = randomize(x_faure, MatousekScramble(base = b, pad = pad))
 x_digital_shift = randomize(x_faure, DigitalShift(base = b, pad = pad))
 ```

@@ -16,7 +16,7 @@ Abstract supertype for sampling strategies accepted by [`sample`](@ref).
 ## Extension rules
 
 Define a concrete subtype and implement
-`sample(n::Integer, d::Integer, sampler::YourSampler, T = Float64)`.
+`QuasiMonteCarlo.sample(n::Integer, d::Integer, sampler::YourSampler, T = Float64)`.
 The method must return a `d`-by-`n` matrix of elements of type `T` whose columns
 are points in the unit box `[0, 1]^d`. It must reject invalid sampler-specific
 inputs with an informative exception and must preserve the requested number of
@@ -121,10 +121,10 @@ true
 ## Extension rules
 
 To add a sampler, subtype [`SamplingAlgorithm`](@ref) and implement only the
-unit-box form `sample(n, d, sampler, T)`. The implementation must return a
-`d`-by-`n` matrix with elements in `[0, 1]`; the bounds form is provided by this
-package and delegates to that unit-box method. Do not extend this bounds method
-for a new sampler.
+unit-box form `QuasiMonteCarlo.sample(n, d, sampler, T)`. The implementation
+must return a `d`-by-`n` matrix with elements in `[0, 1]`; the bounds form is
+provided by this package and delegates to that unit-box method. Do not extend
+this bounds method for a new sampler.
 """
 function sample(
         n::Integer, lb::T, ub::T,
@@ -179,8 +179,11 @@ include("RandomizedQuasiMonteCarlo/iterators.jl")
 
 include("precompile.jl")
 
+@static if VERSION >= v"1.11"
+    eval(Expr(:public, :sample))
+end
+
 export SamplingAlgorithm,
-    sample,
     generate_design_matrices,
     GridSample,
     SobolSample,

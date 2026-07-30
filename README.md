@@ -119,7 +119,7 @@ All sampling methods are expected to return a matrix with dimension `d` by `n`, 
 ```julia
 struct NewAmazingSamplingAlgorithm{OPTIONAL} <: SamplingAlgorithm end
 
-function sample(n, lb, ub, ::NewAmazingSamplingAlgorithm)
+function QuasiMonteCarlo.sample(n, lb, ub, ::NewAmazingSamplingAlgorithm)
     if lb isa Number
         ...
         return x
@@ -132,10 +132,10 @@ end
 
 ## Randomization of QMC sequences
 
-Most of the previous methods are deterministic, i.e. `sample(n, d, Sampler()::DeterministicSamplingAlgorithm)` always produces the same sequence $X = (X_1, \dots, X_n)$.
+Most of the previous methods are deterministic, i.e. `QuasiMonteCarlo.sample(n, d, Sampler()::DeterministicSamplingAlgorithm)` always produces the same sequence $X = (X_1, \dots, X_n)$.
 There are two ways to obtain a randomized sequence:
 
-  - Either directly use `QuasiMonteCarlo.sample(n, d, DeterministicSamplingAlgorithm(R = RandomizationMethod()))` or `sample(n, lb, up, DeterministicSamplingAlgorithm(R = RandomizationMethod()))`.
+  - Either directly use `QuasiMonteCarlo.sample(n, d, DeterministicSamplingAlgorithm(R = RandomizationMethod()))` or `QuasiMonteCarlo.sample(n, lb, up, DeterministicSamplingAlgorithm(R = RandomizationMethod()))`.
   - Or, given $n$ points $d$-dimensional points, all in $[0,1]^d$ one can do `randomize(X, ::RandomizationMethod())` where $X$ is a $d\times n$-matrix.
 
 The currently available randomization methods are:
@@ -168,7 +168,7 @@ pad = m # Length of the b-ary decomposition number = sum(y[k]/b^k for k in 1:pad
 x_faure = QuasiMonteCarlo.sample(N, d, FaureSample())
 
 # Randomized version
-x_nus = randomize(x_faure, OwenScramble(base = b, pad = pad)) # equivalent to sample(N, d, FaureSample(R = OwenScramble(base = b, pad = pad)))
+x_nus = randomize(x_faure, OwenScramble(base = b, pad = pad)) # equivalent to QuasiMonteCarlo.sample(N, d, FaureSample(R = OwenScramble(base = b, pad = pad)))
 x_lms = randomize(x_faure, MatousekScramble(base = b, pad = pad))
 x_digital_shift = randomize(x_faure, DigitalShift(base = b, pad = pad))
 x_shift = randomize(x_faure, Shift())
