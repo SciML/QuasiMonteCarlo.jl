@@ -107,12 +107,12 @@ maps every coordinate from `[0, 1]` to its corresponding closed interval
 ```jldoctest
 julia> using QuasiMonteCarlo
 
-julia> unit_points = sample(4, 2, SobolSample());
+julia> unit_points = QuasiMonteCarlo.sample(4, 2, SobolSample());
 
 julia> size(unit_points)
 (2, 4)
 
-julia> points = sample(4, [0.0, -1.0], [1.0, 1.0], SobolSample());
+julia> points = QuasiMonteCarlo.sample(4, [0.0, -1.0], [1.0, 1.0], SobolSample());
 
 julia> all([0.0, -1.0] .<= points .<= [1.0, 1.0])
 true

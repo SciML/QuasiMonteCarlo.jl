@@ -3,6 +3,8 @@ using Test
 
 struct ConstantSampler <: SamplingAlgorithm end
 
+hasdoc(mod::Module, name::Symbol) = haskey(Base.Docs.meta(mod), Base.Docs.Binding(mod, name))
+
 function QuasiMonteCarlo.sample(
         n::Integer, d::Integer, ::ConstantSampler, T = Float64
     )
@@ -13,12 +15,16 @@ end
 
 @testset "Public sampling APIs" begin
     @test isdefined(QuasiMonteCarlo, :sample)
-    @test Base.isexported(QuasiMonteCarlo, :sample)
-    @test Base.Docs.hasdoc(QuasiMonteCarlo, :sample)
+    @static if VERSION >= v"1.11"
+        @test Base.ispublic(QuasiMonteCarlo, :sample)
+    else
+        @test Base.isexported(QuasiMonteCarlo, :sample)
+    end
+    @test hasdoc(QuasiMonteCarlo, :sample)
 
     @test isdefined(QuasiMonteCarlo, :generate_design_matrices)
     @test Base.isexported(QuasiMonteCarlo, :generate_design_matrices)
-    @test Base.Docs.hasdoc(QuasiMonteCarlo, :generate_design_matrices)
+    @test hasdoc(QuasiMonteCarlo, :generate_design_matrices)
 
     unit_points = sample(3, 2, ConstantSampler(), Float32)
     @test size(unit_points) == (2, 3)
