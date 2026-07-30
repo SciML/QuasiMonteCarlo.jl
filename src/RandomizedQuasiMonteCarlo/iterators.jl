@@ -219,22 +219,50 @@ end
 ## Generic function
 
 """
-```julia
-generate_design_matrices(n, d, sample_method::DeterministicSamplingAlgorithm,
-    num_mats, T = Float64)
-generate_design_matrices(n, d, sample_method::RandomSamplingAlgorithm,
-    num_mats, T = Float64)
-generate_design_matrices(n, lb, ub, sample_method,
-    num_mats = 2)
+    generate_design_matrices(n, d, sampler, num_mats, T = Float64)
+    generate_design_matrices(n, lb, ub, sampler, num_mats = 2)
+
+Generate multiple point-set matrices with `sampler`.
+
+## Arguments
+
+  - `n`: Positive number of points in each generated matrix.
+  - `d`: Positive dimension of the unit box. This form returns matrices of size
+    `(d, n)` with elements in `[0, 1]`.
+  - `lb`: Collection of lower bounds. Its length determines the dimension.
+  - `ub`: Collection of upper bounds with the same length as `lb`.
+  - `sampler`: Concrete [`SamplingAlgorithm`](@ref) used to construct each
+    point set.
+  - `num_mats`: Number of matrices to generate.
+
+## Optional Positional Arguments
+
+  - `T = Float64`: Element type of the unit-box matrices.
+
+## Returns
+
+A vector of `num_mats` matrices. Each unit-box matrix has size `(d, n)`. The
+bounds form maps every coordinate to its corresponding interval `[lb[i], ub[i]]`.
+
+## Examples
+
+```jldoctest
+julia> using QuasiMonteCarlo
+
+julia> matrices = generate_design_matrices(4, 2, RandomSample(), 3);
+
+julia> length(matrices)
+3
+
+julia> all(size(matrix) == (2, 4) for matrix in matrices)
+true
 ```
 
-Create `num_mats` matrices each containing a QMC point set, where:
+## Developer Notes
 
-  - `n` is the number of points to sample.
-  - `d` is the dimensionality of the point set in `[0, 1)ᵈ`,
-  - `sample_method` is the quasi-Monte Carlo sampling strategy used to create a deterministic point set `out`.
-  - `T` is the `eltype` of the point sets. For some QMC methods (Faure, Sobol) this can be `Rational`
-    If the bound `lb` and `ub` are specified instead of `d`, the samples will be transformed into the box `[lb, ub]`.
+This function builds on the public [`sample`](@ref) contract. New sampling
+algorithms should extend `sample`; they should not add methods to
+`generate_design_matrices`.
 """
 function generate_design_matrices(
         n, d, sampler::DeterministicSamplingAlgorithm, num_mats::Integer,

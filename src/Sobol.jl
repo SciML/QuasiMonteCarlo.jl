@@ -23,7 +23,7 @@ end
 
 function _sample!(seq::AbstractMatrix, s::Sobol.SobolSeq, R::RandomizationMethod)
     n = size(seq, 2)
-    Sobol.skip!(s, n, @view(seq[:, begin]))
+    skip(s, n)
     for x in eachcol(seq)
         Sobol.next!(s, x)
     end
