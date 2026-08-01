@@ -9,7 +9,7 @@ sample(n::Integer, lb::T, ub::T, D::Distributions.Sampleable, T = eltype(D))
 sample(n::Integer,
     lb::T,
     ub::T,
-    D::Distributions.Sampleable) where {T <: Union{Base.AbstractVecOrTuple, Number}}
+    D::Distributions.Sampleable) where {T <: Union{AbstractVector, Tuple, Number}}
 ```
 
 Return a point set from a distribution `D`:
@@ -38,7 +38,7 @@ sample(n::Integer, d::Integer, S::Distributions.Sampleable, T = Float64)
 sample(n::Integer,
     lb::T,
     ub::T,
-    S::Distributions.Sampleable) where {T <: Union{Base.AbstractVecOrTuple, Number}}
+    S::Distributions.Sampleable) where {T <: Union{AbstractVector, Tuple, Number}}
 ```
 
 Return a QMC point set where:
@@ -56,7 +56,7 @@ function QuasiMonteCarlo.sample(
         n::Integer, lb::T, ub::T,
         S::D
     ) where {
-        T <: Union{Base.AbstractVecOrTuple, Number},
+        T <: Union{AbstractVector, Tuple, Number},
         D <: Distributions.Sampleable,
     }
     QuasiMonteCarlo._check_sequence(lb, ub, n)
