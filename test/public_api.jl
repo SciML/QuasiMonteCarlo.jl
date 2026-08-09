@@ -44,3 +44,18 @@ end
     )
     @test all(all([-2.0, 4.0] .<= matrix .<= [2.0, 6.0]) for matrix in bounded_matrices)
 end
+
+@testset "Developer sequence validation API" begin
+    @test isdefined(QuasiMonteCarlo, :_check_sequence)
+    @test !Base.isexported(QuasiMonteCarlo, :_check_sequence)
+    @static if VERSION >= v"1.11"
+        @test Base.ispublic(QuasiMonteCarlo, :_check_sequence)
+    end
+    @test hasdoc(QuasiMonteCarlo, :_check_sequence)
+
+    @test isnothing(QuasiMonteCarlo._check_sequence(1))
+    @test isnothing(QuasiMonteCarlo._check_sequence([0.0, -1.0], [1.0, 1.0], 8))
+    @test_throws AssertionError QuasiMonteCarlo._check_sequence(0)
+    @test_throws AssertionError QuasiMonteCarlo._check_sequence([0.0], [1.0, 2.0], 8)
+    @test_throws AssertionError QuasiMonteCarlo._check_sequence([0.0, 2.0], [1.0, 1.0], 8)
+end
