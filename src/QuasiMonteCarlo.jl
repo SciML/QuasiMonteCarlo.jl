@@ -7,6 +7,7 @@ using LinearAlgebra: Diagonal, LowerTriangular, UpperTriangular
 using Random: Random, AbstractRNG, rand!, shuffle
 using ConcreteStructs: @concrete
 using Accessors: @set
+using SciMLPublic: @public
 
 """
     SamplingAlgorithm
@@ -50,6 +51,42 @@ const UB_LB_MESSAGE = "Lower bound exceeds upper bound (lb > ub)"
 const ZERO_SAMPLES_MESSAGE = "Number of samples must be greater than zero"
 const DIM_MISMATCH_MESSAGE = "Dimensionality of lb and ub must match"
 
+"""
+    _check_sequence(n::Integer)
+    _check_sequence(lb, ub, n::Integer)
+
+Validate the sample count and, when supplied, the bounds of a sampling sequence.
+
+# Arguments
+
+  - `n`: Number of sample points. It must be greater than zero.
+  - `lb`: Lower bounds. It must have the same length as `ub`, and every lower
+    bound must be less than or equal to the corresponding upper bound.
+  - `ub`: Upper bounds. It must have the same length as `lb`.
+
+# Returns
+
+  - `nothing`: Returned when all validations pass.
+
+# Throws
+
+  - `AssertionError`: Thrown when `n` is not positive, when `lb` and `ub` have
+    different lengths, or when any lower bound exceeds its corresponding upper
+    bound.
+
+# Examples
+
+```jldoctest
+julia> using QuasiMonteCarlo
+
+julia> QuasiMonteCarlo._check_sequence(8)
+
+julia> QuasiMonteCarlo._check_sequence([0.0, -1.0], [1.0, 1.0], 8)
+
+julia> QuasiMonteCarlo._check_sequence([0.0, 2.0], [1.0, 1.0], 8)
+ERROR: AssertionError: Lower bound exceeds upper bound (lb > ub)
+```
+"""
 function _check_sequence(lb, ub, n::Integer)
     @assert length(lb) == length(ub) DIM_MISMATCH_MESSAGE
     @assert all(x -> x[1] ≤ x[2], zip(lb, ub)) UB_LB_MESSAGE
@@ -57,6 +94,8 @@ function _check_sequence(lb, ub, n::Integer)
 end
 
 _check_sequence(n::Integer) = @assert n > 0 ZERO_SAMPLES_MESSAGE
+
+@public _check_sequence
 
 """
     RandomSample(; rng = Random.TaskLocalRNG()) <: RandomSamplingAlgorithm

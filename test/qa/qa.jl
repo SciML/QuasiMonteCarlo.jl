@@ -15,7 +15,7 @@ ei_kwargs = (;
     all_qualified_accesses_are_public = (;
         ignore = (
             :DistributionDesignMat, :ZERO_SAMPLES_MESSAGE,
-            :_check_sequence, :initialize,
+            :initialize,
         ),
     ),
 )

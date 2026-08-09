@@ -6,4 +6,5 @@ pages = [
     "randomization.md",
     "design_matrix.md",
     "types.md",
+    "Developer API" => "developer.md",
 ]
