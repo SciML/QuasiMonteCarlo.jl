@@ -1,7 +1,26 @@
 """
     LatinHypercubeSample(rng::AbstractRNG = Random.TaskLocalRNG()) <: RandomSamplingAlgorithm
 
-A Latin Hypercube is a point set with the property that every one-dimensional interval `(i/n, i+1/n)` contains exactly one point. This is a good way to sample a high-dimensional space, as it is more uniform than a random sample but does not require as many points as a full net.
+A Latin hypercube is a point set with the property that every one-dimensional
+interval `(i / n, (i + 1) / n)` contains exactly one point. It is useful for
+high-dimensional sampling because it is more uniform than independent Monte
+Carlo sampling without requiring a full tensor-product grid.
+
+# Fields
+
+- `rng::AbstractRNG = Random.TaskLocalRNG()`: Random-number generator used to
+  independently permute the strata in each dimension.
+
+# Examples
+
+```jldoctest
+julia> using QuasiMonteCarlo, Random
+
+julia> points = sample(8, 2, LatinHypercubeSample(MersenneTwister(42)));
+
+julia> size(points)
+(2, 8)
+```
 """
 Base.@kwdef @concrete struct LatinHypercubeSample <: RandomSamplingAlgorithm
     rng::AbstractRNG = Random.TaskLocalRNG()

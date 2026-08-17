@@ -1,7 +1,22 @@
 """
     HaltonSample(R::RandomizationMethod = NoRand()) <: DeterministicSamplingAlgorithm
 
-Create a Halton sequence.
+Create a Halton sequence using successive prime bases.
+
+# Fields
+
+- `R::RandomizationMethod = NoRand()`: Randomization applied to the sequence.
+
+# Examples
+
+```jldoctest
+julia> using QuasiMonteCarlo
+
+julia> points = sample(8, 2, HaltonSample());
+
+julia> size(points)
+(2, 8)
+```
 """
 Base.@kwdef @concrete struct HaltonSample <: DeterministicSamplingAlgorithm
     R::RandomizationMethod = NoRand()

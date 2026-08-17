@@ -189,5 +189,7 @@ plot(p..., size = (800, 600))
 
 !!! note
     
-    To check if a point set is a $(t,m,d)$-net, you can use the function `istmsnet` defined in the [tests file](https://github.com/SciML/QuasiMonteCarlo.jl/blob/2dce9905e564a85e1280115cc8af071674fc7d80/test/runtests.jl#L34) of this package.
+    The package test suite uses the `istmsnet` helper to check whether a point
+    set is a $(t,m,d)$-net. See the test suite for the exact checks when
+    contributing a new sequence.
     It uses the excellent [IntervalArithmetic.jl](https://github.com/JuliaIntervals/IntervalArithmetic.jl) package.

@@ -1,5 +1,9 @@
 # QuasiMonteCarlo.jl: Quasi-Monte Carlo (QMC) Samples Made Easy
 
+```@docs
+QuasiMonteCarlo
+```
+
 QuasiMonteCarlo.jl is a lightweight package for generating Quasi-Monte Carlo (QMC) samples
 using various different methods.
 
@@ -33,7 +37,7 @@ s = QuasiMonteCarlo.sample(n, lb, ub, RandomizedHaltonSample())
 ```
 
 The output `s` is a matrix, so one can use things like `@uview` from
-[UnsafeArrays.jl](https://github.com/oschulz/UnsafeArrays.jl) for a stack-allocated
+[UnsafeArrays.jl](https://github.com/JuliaArrays/UnsafeArrays.jl) for a stack-allocated
 view of the `i`th point:
 
 ```julia

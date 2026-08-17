@@ -12,9 +12,11 @@ Samplers are divided into two subtypes
 
 ```@docs
 SamplingAlgorithm
-QuasiMonteCarlo.RandomSamplingAlgorithm
-QuasiMonteCarlo.DeterministicSamplingAlgorithm
 ```
+
+The extension contracts for `RandomSamplingAlgorithm` and
+`DeterministicSamplingAlgorithm` are documented on the [Developer API](@ref
+DeveloperAPI) page.
 
 ### Deterministic Sampling Algorithm
 

@@ -1,7 +1,12 @@
 """
     GridSample(R::RandomizationMethod = NoRand()) <: DeterministicSamplingAlgorithm
 
-A simple rectangular grid lattice. Samples `n` random samples from a grid with `dx = (ub -lb)/n``
+A simple rectangular grid lattice. It samples from a regular grid in the unit
+box and optionally applies `R`.
+
+# Fields
+
+- `R::RandomizationMethod = NoRand()`: Randomization applied to the grid.
 
 In more than 2 dimensions, grids have worse discrepancy than simple Monte Carlo. As a
 result, they should almost never be used for multivariate integration; their use is as
@@ -17,9 +22,25 @@ function sample(n::Integer, d::Integer, S::GridSample, T = Float64)
 end
 
 """
-    LatticeRuleSample() <: DeterministicSamplingAlgorithm
+    LatticeRuleSample(R::RandomizationMethod = NoRand()) <: DeterministicSamplingAlgorithm
 
-Generate a point set using a lattice rule.
+Generate a point set using a rank-1 lattice rule.
+
+# Fields
+
+- `R::RandomizationMethod = NoRand()`: Randomization applied to the lattice
+  points.
+
+# Examples
+
+```jldoctest
+julia> using QuasiMonteCarlo
+
+julia> points = sample(8, 2, LatticeRuleSample());
+
+julia> size(points)
+(2, 8)
+```
 """
 Base.@kwdef @concrete struct LatticeRuleSample <: DeterministicSamplingAlgorithm
     R::RandomizationMethod = NoRand()

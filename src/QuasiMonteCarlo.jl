@@ -1,3 +1,14 @@
+"""
+    QuasiMonteCarlo
+
+Generate deterministic and randomized quasi-Monte Carlo point sets.
+
+The primary interface is [`sample`](@ref), which returns points as columns of
+a matrix. Deterministic samplers can be combined with [`randomize`](@ref),
+[`DesignMatrix`](@ref), or [`generate_design_matrices`](@ref) for randomized
+realizations and error estimation. Package developers can extend the generic
+sampler contract described on the [Developer API](@ref DeveloperAPI) page.
+"""
 module QuasiMonteCarlo
 
 using Sobol: Sobol
@@ -14,7 +25,7 @@ using SciMLPublic: @public
 
 Abstract supertype for sampling strategies accepted by [`sample`](@ref).
 
-## Extension rules
+# Extension rules
 
 Define a concrete subtype and implement
 `sample(n::Integer, d::Integer, sampler::YourSampler, T = Float64)`.
@@ -29,21 +40,65 @@ abstract type SamplingAlgorithm end
 """
     RandomSamplingAlgorithm <: SamplingAlgorithm
 
-Abstract supertype for samplers that use an RNG to generate randomized point sets.
+Abstract interface for samplers that generate randomized point sets.
+
+Subtypes must implement the unit-box method
+`sample(n::Integer, d::Integer, sampler, T = Float64)` described by
+[`SamplingAlgorithm`](@ref). The implementation must use the sampler's
+randomness, return a `d`-by-`n` matrix with entries in `[0, 1]`, and preserve
+the requested element type when `T` is supplied.
+
+The `generate_design_matrices` interface treats each call to `sample` as an
+independent realization. A sampler should therefore store its random state in
+a field, such as the `rng` field on [`RandomSample`](@ref), and should not
+cache a point set between calls unless that behavior is part of its contract.
+
+This type is a developer-facing interface and is not exported. Refer to it as
+`QuasiMonteCarlo.RandomSamplingAlgorithm` when defining an extension.
 """
 abstract type RandomSamplingAlgorithm <: SamplingAlgorithm end
+@public RandomSamplingAlgorithm
 
 """
     DeterministicSamplingAlgorithm <: SamplingAlgorithm
 
-Abstract supertype for deterministic low-discrepancy samplers.
+Abstract interface for deterministic low-discrepancy samplers.
+
+Subtypes must implement the unit-box method
+`sample(n::Integer, d::Integer, sampler, T = Float64)` described by
+[`SamplingAlgorithm`](@ref). The underlying sequence must be deterministic
+for equivalent sampler state; a non-`NoRand` `R` field may intentionally add
+randomization to the returned point set. The result must be a `d`-by-`n`
+matrix with entries in `[0, 1]` and element type `T` when `T` is supplied.
+
+To use the generic [`DesignMatrix`](@ref) or
+[`generate_design_matrices`](@ref) interfaces, a concrete subtype must also
+provide an `R::RandomizationMethod` field. That field supplies the default
+randomization method. A custom randomization method must follow the
+[`RandomizationMethod`](@ref) contract.
+
+This type is a developer-facing interface and is not exported. Refer to it as
+`QuasiMonteCarlo.DeterministicSamplingAlgorithm` when defining an extension.
 """
 abstract type DeterministicSamplingAlgorithm <: SamplingAlgorithm end
+@public DeterministicSamplingAlgorithm
 
 """
     RandomizationMethod
 
-Abstract supertype for methods that randomize deterministic point sets with [`randomize`](@ref).
+Abstract interface for methods that randomize deterministic point sets with
+[`randomize`](@ref).
+
+An implementation must preserve the shape of its input point matrix and keep
+every point in the unit box. It should provide
+`randomize(points::AbstractMatrix, method)` and return a new matrix unless the
+method is explicitly documented as mutating its input. The randomization must
+preserve the low-discrepancy properties promised by the concrete method and
+should use an owned or supplied random-number generator for reproducibility.
+
+Deterministic samplers store their default randomization method in an `R`
+field. Pass a method explicitly to `randomize` when a different randomization
+is needed for an existing point set.
 """
 abstract type RandomizationMethod end
 
@@ -100,15 +155,34 @@ _check_sequence(n::Integer) = @assert n > 0 ZERO_SAMPLES_MESSAGE
 """
     RandomSample(; rng = Random.TaskLocalRNG()) <: RandomSamplingAlgorithm
 
-Plain Monte Carlo sampler that draws independent uniform samples from the unit box.
+Plain Monte Carlo sampler that draws independent uniform samples from the unit
+box.
+
+# Fields
+
+- `rng::AbstractRNG`: random-number generator used for each call to
+  [`sample`](@ref).
+
+# Keywords
+
+- `rng::AbstractRNG = Random.TaskLocalRNG()`: random-number generator used to
+  draw the samples. Supply a seeded RNG for reproducible results.
+
+# Examples
+
+```jldoctest
+julia> using QuasiMonteCarlo, Random
+
+julia> sampler = RandomSample(MersenneTwister(42));
+
+julia> points = sample(4, 2, sampler);
+
+julia> size(points)
+(2, 4)
+```
 """
 Base.@kwdef @concrete struct RandomSample <: RandomSamplingAlgorithm
     rng::AbstractRNG = Random.TaskLocalRNG()
-end
-
-function sample(n::Integer, d::Integer, S::RandomSample, T = Float64)
-    _check_sequence(n)
-    return rand(S.rng, T, d, n)
 end
 
 """
@@ -117,31 +191,36 @@ end
 
 Generate `n` sample points with `sampler`.
 
-## Arguments
+# Arguments
 
-  - `n`: Positive number of points to generate.
-  - `d`: Positive dimension of the unit box. This form returns a `d`-by-`n`
-    matrix with values in `[0, 1]`.
-  - `lb`: Scalar, tuple, or vector of lower bounds. Its length determines the
-    dimension when it is not scalar.
-  - `ub`: Scalar, tuple, or vector of upper bounds with the same shape as `lb`.
-    Each lower bound must be less than or equal to its corresponding upper bound.
-  - `sampler`: Concrete [`SamplingAlgorithm`](@ref) that determines the point
-    set construction.
+- `n`: Positive number of points to generate.
+- `d`: Positive dimension of the unit box. This form returns a `d`-by-`n`
+  matrix with values in `[0, 1]`.
+- `lb`: Scalar, tuple, or vector of lower bounds. Its length determines the
+  dimension when it is not scalar.
+- `ub`: Scalar, tuple, or vector of upper bounds with the same shape as `lb`.
+  Each lower bound must be less than or equal to its corresponding upper bound.
+- `sampler`: Concrete [`SamplingAlgorithm`](@ref) that determines the point
+  set construction.
 
-## Optional Positional Arguments
+# Arguments with defaults
 
-  - `T = Float64`: Element type of the unit-box result. The bounds form infers
-    its output element type from `lb`.
+- `T = Float64`: Element type of the unit-box result. The bounds form infers
+  its output element type from `lb`.
 
-## Returns
+# Returns
 
 A matrix whose columns are the generated points. The unit-box form has size
 `(d, n)`. The bounds form has size `(length(lb), n)` for collection bounds and
 maps every coordinate from `[0, 1]` to its corresponding closed interval
 `[lb[i], ub[i]]`.
 
-## Examples
+# Throws
+
+- `AssertionError`: If `n` is not positive, the bounds have different lengths,
+  or a lower bound exceeds its corresponding upper bound.
+
+# Examples
 
 ```jldoctest
 julia> using QuasiMonteCarlo
@@ -157,7 +236,7 @@ julia> all([0.0, -1.0] .<= points .<= [1.0, 1.0])
 true
 ```
 
-## Extension rules
+# Extension rules
 
 To add a sampler, subtype [`SamplingAlgorithm`](@ref) and implement only the
 unit-box form `sample(n, d, sampler, T)`. The implementation must return a
@@ -165,6 +244,11 @@ unit-box form `sample(n, d, sampler, T)`. The implementation must return a
 package and delegates to that unit-box method. Do not extend this bounds method
 for a new sampler.
 """
+function sample(n::Integer, d::Integer, S::RandomSample, T = Float64)
+    _check_sequence(n)
+    return rand(S.rng, T, d, n)
+end
+
 function sample(
         n::Integer, lb::T, ub::T,
         S::D
@@ -200,15 +284,53 @@ include("Section.jl")
 """
     NoRand() <: RandomizationMethod
 
-No randomization is performed on the sampled sequence.
+Identity randomization for deterministic samplers.
+
+`randomize(points, NoRand())` returns `points` unchanged. It is also the
+default value of the `R` field on deterministic sampler types.
+
+# Examples
+
+```jldoctest
+julia> using QuasiMonteCarlo
+
+julia> points = sample(4, 2, SobolSample(R = NoRand()));
+
+julia> randomize(points, NoRand()) === points
+true
+```
 """
 struct NoRand <: RandomizationMethod end
 
 """
     randomize(x, R::RandomizationMethod)
 
-Apply the randomization method `R` to the sample matrix `x`.
-The `NoRand()` method returns `x` unchanged.
+Apply the randomization method `R` to a sample matrix `x`.
+
+# Arguments
+
+- `x::AbstractMatrix`: Matrix with one point per column. Its entries must be
+  in the unit box expected by the selected randomization method.
+- `R::RandomizationMethod`: Randomization strategy to apply.
+
+# Returns
+
+- A matrix with the same size as `x`, with each point randomized according to
+  `R`. `NoRand()` returns the original matrix unchanged; other methods return
+  a new matrix unless their method documentation says otherwise.
+
+# Examples
+
+```jldoctest
+julia> using QuasiMonteCarlo
+
+julia> points = sample(4, 2, SobolSample());
+
+julia> randomized = randomize(points, Shift());
+
+julia> size(randomized) == size(points)
+true
+```
 """
 randomize(x, S::NoRand) = x
 

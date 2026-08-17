@@ -3,17 +3,30 @@
 
 Cranley-Patterson rotation.
 
+# Fields
+
+- `rng::AbstractRNG = Random.TaskLocalRNG()`: Random-number generator used to
+  draw one shift vector for each call to [`randomize`](@ref).
+
+# Examples
+
+```jldoctest
+julia> using QuasiMonteCarlo, Random
+
+julia> points = sample(8, 2, SobolSample());
+
+julia> shifted = randomize(points, Shift(rng = MersenneTwister(42)));
+
+julia> size(shifted) == size(points)
+true
+```
+
 References: Cranley, R., & Patterson, T. N. (1976). Randomization of number theoretic methods for multiple integration. SIAM Journal on Numerical Analysis, 13(6), 904-914.
 """
 Base.@kwdef @concrete struct Shift <: RandomizationMethod
     rng::AbstractRNG = Random.TaskLocalRNG()
 end
 
-"""
-    randomize(x, R::Shift)
-
-Cranley Patterson Rotation i.e. `y = (x .+ U) mod 1` where `U ∼ 𝕌([0,1]ᵈ)` and `x` is a `d×n` matrix
-"""
 function randomize(x, R::Shift)
     y = copy(x)
     shift!(R.rng, y)

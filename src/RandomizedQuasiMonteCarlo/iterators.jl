@@ -1,4 +1,22 @@
+"""
+    AbstractDesignMatrix
+
+Developer-facing interface for iterators returned by [`DesignMatrix`](@ref).
+
+Concrete subtypes must store a `count` field and implement
+`next!(iterator)`, which produces the next point-set matrix. The generic
+`Base.length` and `Base.iterate` methods use those two pieces of the contract:
+iteration yields exactly `count` matrices, and each call to `next!` may reuse
+internal storage but must return a complete matrix before the next iteration
+step mutates that storage.
+
+Implementations should also define `Base.eltype(::Type{<:AbstractDesignMatrix})`
+to describe the matrix type yielded by iteration. This interface is intended
+for package developers extending the design-matrix machinery; application code
+should call [`DesignMatrix`](@ref) and iterate over its result.
+"""
 abstract type AbstractDesignMatrix end
+@public AbstractDesignMatrix
 
 # Make an iterator so that we can do "for X in DesignMatrix(...)"
 Base.length(s::AbstractDesignMatrix) = s.count
@@ -78,18 +96,58 @@ Base.eltype(::Type{DistributionDesignMat{T}}) where {T} = Matrix{T}
 Base.eltype(::Type{RandomDesignMat{T}}) where {T} = Matrix{T} # TODO one could create a type for AbstractDistribution to include RandomDesignMat and DistributionDesignMat
 
 """
-```julia
-DesignMatrix(n, d, sample_method::DeterministicSamplingAlgorithm, num_mats, T = Float64)
+    DesignMatrix(n, d, sampler, num_mats, T = Float64)
+    DesignMatrix(n, d, sampler, randomization, num_mats, T = Float64)
+
+Create an iterator that produces `num_mats` point-set matrices.
+
+The iterator is useful when a computation needs independent randomized QMC
+realizations but allocating all matrices at once is undesirable. For a
+deterministic sampler, the five-argument form uses the sampler's `R` field;
+the six-argument form selects `randomization` explicitly. `RandomSample` also
+has a five-argument form and generates independent Monte Carlo matrices.
+
+# Arguments
+
+- `n::Integer`: Number of points in each matrix.
+- `d::Integer`: Dimension of each point. Each yielded matrix has size `(d, n)`.
+- `sampler`: Deterministic or random [`SamplingAlgorithm`](@ref).
+- `randomization::RandomizationMethod`: Randomization applied to a
+  deterministic sampler.
+- `num_mats::Integer`: Number of matrices yielded by the iterator.
+- `T::DataType = Float64`: Element type of each matrix.
+
+# Returns
+
+- An [`AbstractDesignMatrix`](@ref) iterator whose elements are matrices of
+  size `(d, n)` and element type `T`.
+
+# Throws
+
+- An exception from the selected sampler or randomization method if `n`, `d`,
+  the randomization base, or the sampler-specific parameters are invalid.
+
+# Examples
+
+```jldoctest
+julia> using QuasiMonteCarlo
+
+julia> iterator = DesignMatrix(4, 2, SobolSample(R = Shift()), 3);
+
+julia> length(iterator)
+3
+
+julia> size(first(iterator))
+(2, 4)
 ```
 
-Create an iterator for doing multiple i.i.d. randomization over QMC sequences where
+# Extension rules
 
-  - `num_mats` is the length of the iterator
-  - `n` is the number of points to sample.
-  - `d` is the dimensionality of the point set in `[0, 1)ᵈ`,
-  - `sample_method` is the quasi-Monte Carlo sampling strategy used to create a deterministic point set `out`.
-  - `T` is the `eltype` of the point sets. For some QMC methods (Faure, Sobol) this can be `Rational`
-    It is now compatible with all scrambling methods and shifting. One can also use it with `Distributions.Sampleable` or `RandomSample`.
+For a custom deterministic sampler, define the unit-box `sample` method from
+[`SamplingAlgorithm`](@ref) and provide an `R::RandomizationMethod` field.
+The built-in randomization-specific `initialize` methods are implementation
+details; custom extensions should use the public `sample` and `randomize`
+contracts unless they are deliberately implementing a compatible iterator.
 """
 function DesignMatrix(
         N, d, S::DeterministicSamplingAlgorithm, num_mats::Integer, T::DataType = Float64
@@ -224,7 +282,7 @@ end
 
 Generate multiple point-set matrices with `sampler`.
 
-## Arguments
+# Arguments
 
   - `n`: Positive number of points in each generated matrix.
   - `d`: Positive dimension of the unit box. This form returns matrices of size
@@ -235,16 +293,22 @@ Generate multiple point-set matrices with `sampler`.
     point set.
   - `num_mats`: Number of matrices to generate.
 
-## Optional Positional Arguments
+# Optional positional arguments
 
   - `T = Float64`: Element type of the unit-box matrices.
 
-## Returns
+# Returns
 
 A vector of `num_mats` matrices. Each unit-box matrix has size `(d, n)`. The
 bounds form maps every coordinate to its corresponding interval `[lb[i], ub[i]]`.
 
-## Examples
+# Throws
+
+- `AssertionError`: If the bounds have different lengths or a lower bound
+  exceeds its corresponding upper bound.
+- An exception from the selected sampler if `n`, `d`, or `num_mats` is invalid.
+
+# Examples
 
 ```jldoctest
 julia> using QuasiMonteCarlo
@@ -258,7 +322,7 @@ julia> all(size(matrix) == (2, 4) for matrix in matrices)
 true
 ```
 
-## Developer Notes
+# Developer Notes
 
 This function builds on the public [`sample`](@ref) contract. New sampling
 algorithms should extend `sample`; they should not add methods to
