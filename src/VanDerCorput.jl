@@ -9,6 +9,23 @@ For example, in base 2, the sequence starts by inserting one point in each half 
 interval in the first pass (the first 2 samples); then one sample in each quarter, then each
 eighth, and so on. This creates a well-stratified sample, so long as the number of samples
 is a multiple of a power of the base.
+The one-dimensional result is returned as a vector of length `n`.
+
+# Fields
+
+- `base::Integer`: Base used for the radical-inverse expansion.
+- `R::RandomizationMethod = NoRand()`: Randomization applied to the sequence.
+
+# Examples
+
+```jldoctest
+julia> using QuasiMonteCarlo
+
+julia> points = sample(8, 1, VanDerCorputSample(base = 2));
+
+julia> size(points)
+(8,)
+```
 """
 Base.@kwdef @concrete struct VanDerCorputSample{I <: Integer} <:
     DeterministicSamplingAlgorithm

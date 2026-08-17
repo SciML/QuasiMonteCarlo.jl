@@ -4,22 +4,34 @@ using QuasiMonteCarlo
 import Distributions
 
 """
-```julia
-sample(n::Integer, lb::T, ub::T, D::Distributions.Sampleable, T = eltype(D))
-sample(n::Integer,
-    lb::T,
-    ub::T,
-    D::Distributions.Sampleable) where {T <: Union{AbstractVector, Tuple, Number}}
+    sample(n::Integer, d::Integer, D::Distributions.Sampleable, T = eltype(D))
+
+Draw independent samples from a `Distributions.Sampleable` distribution.
+
+# Arguments
+
+- `n::Integer`: Number of points to draw.
+- `d::Integer`: Number of independent coordinates in each point.
+- `D::Distributions.Sampleable`: Distribution sampled independently for each
+  coordinate.
+- `T = eltype(D)`: Element-type argument retained for compatibility with the
+  general `sample` interface. The distribution controls the element type of
+  the generated values.
+
+# Returns
+
+- A matrix with size `(d, n)`, with one sampled point per column.
+
+# Examples
+
+```jldoctest
+julia> using Distributions, QuasiMonteCarlo
+
+julia> points = sample(4, 2, Normal());
+
+julia> size(points)
+(2, 4)
 ```
-
-Return a point set from a distribution `D`:
-
-  - `n` is the number of points to sample.
-  - `D` is a `Distributions.Sampleable` from Distributions.jl.
-    The point set is in a `d`-dimensional unit box `[0, 1]^d`.
-    If the bounds are specified instead of just `d`, the sample is transformed (translation + scaling) into a box `[lb, ub]` where:
-  - `lb` is the lower bound for each variable. Its length fixes the dimensionality of the sample.
-  - `ub` is the upper bound. Its dimension must match `length(lb)`.
 """
 function QuasiMonteCarlo.sample(
         n::Integer,
@@ -33,24 +45,27 @@ function QuasiMonteCarlo.sample(
 end
 
 """
-```julia
-sample(n::Integer, d::Integer, S::Distributions.Sampleable, T = Float64)
-sample(n::Integer,
-    lb::T,
-    ub::T,
-    S::Distributions.Sampleable) where {T <: Union{AbstractVector, Tuple, Number}}
-```
+    sample(n::Integer, lb, ub, sampler::Distributions.Sampleable)
 
-Return a QMC point set where:
+Draw a quasi-Monte Carlo point set and map it to the box defined by `lb` and
+`ub` using a `Distributions.Sampleable` as the sampler argument.
 
-  - `n` is the number of points to sample.
-  - `S` is the quasi-Monte Carlo sampling strategy.
-    The point set is in a `d`-dimensional unit box `[0, 1]^d`.
-    If the bounds are specified, the sample is transformed (translation + scaling) into a box `[lb, ub]` where:
-  - `lb` is the lower bound for each variable. Its length fixes the dimensionality of the sample.
-  - `ub` is the upper bound. Its dimension must match `length(lb)`.
+# Arguments
 
-In the first method the type of the point set is specified by `T` while in the second method the output type is inferred from the bound types.
+- `n::Integer`: Number of points to draw.
+- `lb`: Scalar, tuple, or vector of lower bounds.
+- `ub`: Upper bounds with the same shape as `lb`.
+- `sampler::Distributions.Sampleable`: Distribution used by the extension.
+
+# Returns
+
+- A matrix with size `(length(lb), n)` whose columns lie in the requested
+  bounds.
+
+# Throws
+
+- `AssertionError`: If the bounds have different lengths or a lower bound
+  exceeds its corresponding upper bound.
 """
 function QuasiMonteCarlo.sample(
         n::Integer, lb::T, ub::T,

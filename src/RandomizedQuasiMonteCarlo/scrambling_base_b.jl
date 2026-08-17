@@ -2,11 +2,35 @@
 #TODO the typing could probably improved, resulting in more type stable (important for QMC computation to be able to use Float32, Float64, Rational, ... for points, and Int64, Int32, Int16 etc for bits etc.)
 
 """
-```julia
-ScrambleMethod <: RandomizationMethod
+    ScrambleMethod <: RandomizationMethod
+
+A scramble method randomizes a digital net in an integer base.
+
+# Interface rules
+
+Concrete subtypes must provide the fields `base::Integer`, `pad::Integer`,
+and `rng::AbstractRNG`. `base` must match the base of the sequence being
+scrambled, and `pad` must be at least `log(base, n)` for a point set with `n`
+points. The `randomize` interface preserves the matrix size and keeps points in
+the unit box.
+
+The package provides [`DigitalShift`](@ref), [`MatousekScramble`](@ref), and
+[`OwenScramble`](@ref). New implementations should add methods to the generic
+`randomize`/`randomize!` interface rather than changing sampler methods.
+
+# Examples
+
+```jldoctest
+julia> using QuasiMonteCarlo
+
+julia> points = sample(8, 2, FaureSample());
+
+julia> randomized = randomize(points, DigitalShift(base = 2, pad = 4));
+
+julia> size(randomized) == size(points)
+true
 ```
 
-A scramble method needs at least the scrambling base `b`, the number of "bits" to use `pad` (`pad=32` is the default) and an RNG (`rng = Random.TaskLocalRNG()` by default).
 The scramble methods implementer are
 
   - `DigitalShift`.
@@ -15,16 +39,6 @@ The scramble methods implementer are
 """
 abstract type ScrambleMethod <: RandomizationMethod end
 
-"""
-    randomize(x, R::ScrambleMethod)
-
-Return a scrambled version of `x`.
-The scramble methods implemented are
-
-  - `DigitalShift`.
-  - `OwenScramble`: Nested Uniform Scramble which was introduced in Owen (1995).
-  - `MatousekScramble`: Linear Matrix Scramble which was introduced in Matousek (1998).
-"""
 function randomize(x, R::ScrambleMethod)
     random_x = permutedims(copy(x))
     randomize!(random_x, permutedims(x), R)
@@ -32,11 +46,16 @@ function randomize(x, R::ScrambleMethod)
 end
 
 """
-```julia
-OwenScramble <: ScrambleMethod
-```
+    OwenScramble(base::Integer; pad = 32, rng = Random.TaskLocalRNG()) <: ScrambleMethod
 
-Nested Uniform Scramble aka Owen's scramble.
+Nested Uniform Scramble, also known as Owen's scramble.
+
+# Fields
+
+- `base::Integer`: Base of the digital net being scrambled.
+- `pad::Integer = 32`: Number of base-`base` digits retained for each point.
+- `rng::AbstractRNG = Random.TaskLocalRNG()`: Random-number generator used by
+  the scramble.
 
 `randomize(x, R::OwenScramble)` returns a scrambled version of `x`.
 The scramble method is Nested Uniform Scramble which was introduced in Owen (1995).
@@ -168,11 +187,16 @@ function randomize!(
 end
 
 """
-```julia
-MatousekScramble <: ScrambleMethod
-```
+    MatousekScramble(base::Integer; pad = 32, rng = Random.TaskLocalRNG()) <: ScrambleMethod
 
-Linear Matrix Scramble aka Matousek's scramble.
+Linear Matrix Scramble, also known as Matousek's scramble.
+
+# Fields
+
+- `base::Integer`: Base of the digital net being scrambled.
+- `pad::Integer = 32`: Number of base-`base` digits retained for each point.
+- `rng::AbstractRNG = Random.TaskLocalRNG()`: Random-number generator used by
+  the scramble.
 
 `randomize(x, R::MatousekScramble)` returns a scrambled version of `x`.
 The scramble method is Linear Matrix Scramble which was introduced in Matousek (1998).
@@ -245,12 +269,17 @@ end
 getmatousek(m::Integer, b::Integer) = getmatousek(Random.TaskLocalRNG(), m, b)
 
 """
-```julia
-DigitalShift <: ScrambleMethod
-```
+    DigitalShift(base::Integer; pad = 32, rng = Random.TaskLocalRNG()) <: ScrambleMethod
 
 Digital shift.
 `randomize(x, R::DigitalShift)` returns a scrambled version of `x`.
+
+# Fields
+
+- `base::Integer`: Base of the digital net being scrambled.
+- `pad::Integer = 32`: Number of base-`base` digits retained for each point.
+- `rng::AbstractRNG = Random.TaskLocalRNG()`: Random-number generator used by
+  the shift.
 
 The scramble method is Digital Shift.
 It scrambles each coordinate in base `b` as `yₖ = (xₖ + Uₖ) mod b` where `Uₖ ∼ 𝕌({0:b-1})`.

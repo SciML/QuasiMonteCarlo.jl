@@ -24,7 +24,13 @@ end
 """
     FaureSample(R::RandomizationMethod = NoRand()) <: DeterministicSamplingAlgorithm
 
-A Faure low-discrepancy sequence.
+A Faure low-discrepancy sequence in the prime base determined by the sample
+dimension.
+
+# Fields
+
+- `R::RandomizationMethod = NoRand()`: Randomization applied after the
+  deterministic Faure points are generated.
 
 Faure-distributed samples cover all dimensions evenly, using the same set of points for all
 variables, up to ordering.
@@ -36,7 +42,19 @@ effective dimension (functions where the first few inputs dominate the evaluatio
 
 The Faure sequence in dimension `s` forms a `(0, s)`-sequence with base `b = nextprime(s)`.
 
-A Faure sequence must have length `k * base^s` with `k < base < 1`.
+A Faure sequence must have a supported length of `k * base^s` with an integer
+`k` satisfying `1 ≤ k < base`.
+
+# Examples
+
+```jldoctest
+julia> using QuasiMonteCarlo
+
+julia> points = sample(8, 2, FaureSample());
+
+julia> size(points)
+(2, 8)
+```
 
 References:
 Faure, H. (1982). Discrépance de suites associées à un système de numération (en dimension s). *Acta Arith.*, 41, 337-351.

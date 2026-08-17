@@ -2,6 +2,22 @@
     SobolSample(R::RandomizationMethod = NoRand()) <: DeterministicSamplingAlgorithm
 
 Samples taken from Sobol's base-2 sequence.
+
+# Fields
+
+- `R::RandomizationMethod = NoRand()`: Randomization applied to the Sobol
+  points.
+
+# Examples
+
+```jldoctest
+julia> using QuasiMonteCarlo
+
+julia> points = sample(8, 2, SobolSample());
+
+julia> size(points)
+(2, 8)
+```
 """
 Base.@kwdef @concrete struct SobolSample <: DeterministicSamplingAlgorithm
     R::RandomizationMethod = NoRand()

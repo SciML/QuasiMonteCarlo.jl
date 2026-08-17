@@ -1,7 +1,13 @@
 using QuasiMonteCarlo
 using Test
 
-struct ConstantSampler <: SamplingAlgorithm end
+struct ConstantSampler <: QuasiMonteCarlo.RandomSamplingAlgorithm end
+
+struct GenericDeterministicSampler <: QuasiMonteCarlo.DeterministicSamplingAlgorithm
+    R::RandomizationMethod
+end
+
+GenericDeterministicSampler() = GenericDeterministicSampler(Shift())
 
 hasdoc(mod::Module, name::Symbol) = haskey(Base.Docs.meta(mod), Base.Docs.Binding(mod, name))
 
@@ -43,6 +49,47 @@ end
         3, [-2.0, 4.0], [2.0, 6.0], RandomSample(), 2
     )
     @test all(all([-2.0, 4.0] .<= matrix .<= [2.0, 6.0]) for matrix in bounded_matrices)
+end
+
+@testset "Developer interface metadata" begin
+    for name in (
+            :RandomSamplingAlgorithm, :DeterministicSamplingAlgorithm,
+            :AbstractDesignMatrix,
+        )
+        @test isdefined(QuasiMonteCarlo, name)
+        @test hasdoc(QuasiMonteCarlo, name)
+        @static if VERSION >= v"1.11"
+            @test Base.ispublic(QuasiMonteCarlo, name)
+        end
+    end
+end
+
+function QuasiMonteCarlo.sample(
+        n::Integer, d::Integer, ::GenericDeterministicSampler, T = Float64
+    )
+    return fill(convert(T, 0.25), d, n)
+end
+
+@testset "Generic sampler contracts" begin
+    sampler = GenericDeterministicSampler()
+
+    unit_points = sample(3, 2, sampler, Float32)
+    @test size(unit_points) == (2, 3)
+    @test eltype(unit_points) == Float32
+    @test all(0 .<= unit_points .<= 1)
+
+    bounded_points = sample(3, [-2.0, 4.0], [2.0, 6.0], sampler)
+    @test size(bounded_points) == (2, 3)
+    @test all([-2.0, 4.0] .<= bounded_points .<= [2.0, 6.0])
+
+    matrices = generate_design_matrices(3, 2, sampler, 2, Float32)
+    @test length(matrices) == 2
+    @test all(size(matrix) == (2, 3) for matrix in matrices)
+    @test all(eltype(matrix) == Float32 for matrix in matrices)
+
+    iterator = DesignMatrix(3, 2, sampler, 2, Float32)
+    @test length(iterator) == 2
+    @test all(size(matrix) == (2, 3) for matrix in iterator)
 end
 
 @testset "Developer sequence validation API" begin

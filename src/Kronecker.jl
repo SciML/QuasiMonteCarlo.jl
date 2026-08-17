@@ -1,7 +1,8 @@
 """
     KroneckerSample(generator::AbstractVector, R::RandomizationMethod = NoRand()) <: DeterministicSamplingAlgorithm
+    KroneckerSample(d::Integer, R::RandomizationMethod = NoRand(), T = Float64)
 
-A Kronecker sequence is a point set generated using a vector and equation:
+A Kronecker sequence is a point set generated using a vector and the equation
 `x[i] = i * generator .% 1`
 
 Where `i` runs from `1` through the sample size `n`. This sequence will be equidistributed
@@ -14,6 +15,31 @@ If no generator is specified, a lattice based on the generalized golden ratio is
 Kronecker sequences are not recommended for use in more than 3 dimensions, as theory on them
 is sparse. `LatticeRuleSample` will return rank-1 lattice rules, which behave similarly to
 Kronecker sequences but have better properties.
+
+# Fields
+
+- `generator::AbstractVector`: Generator vector. Its length must equal the
+  requested dimension.
+- `R::RandomizationMethod = NoRand()`: Randomization applied to the generated
+  sequence.
+
+# Arguments
+
+- `d::Integer`: Dimension for the constructor that creates a generalized
+  golden-ratio generator.
+- `R::RandomizationMethod`: Optional randomization method.
+- `T`: Element type used for the generated generator.
+
+# Examples
+
+```jldoctest
+julia> using QuasiMonteCarlo
+
+julia> points = sample(8, 2, KroneckerSample(2));
+
+julia> size(points)
+(2, 8)
+```
 
 References:
 Leobacher, G., & Pillichshammer, F. (2014). *Introduction to quasi-Monte Carlo integration and applications.* Switzerland: Springer International Publishing.
@@ -67,6 +93,22 @@ References:
 Roberts, M. (2018). The Unreasonable Effectiveness of Quasirandom Sequences.
 *Extreme Learning.*
 http://extremelearning.com.au/unreasonable-effectiveness-of-quasirandom-sequences/
+
+# Returns
+
+- A [`KroneckerSample`](@ref) configured with a generalized golden-ratio
+  generator.
+
+# Examples
+
+```jldoctest
+julia> using QuasiMonteCarlo
+
+julia> points = sample(8, 2, GoldenSample());
+
+julia> size(points)
+(2, 8)
+```
 """
 GoldenSample(args...; kwargs...) = KroneckerSample(args...; kwargs...)
 
