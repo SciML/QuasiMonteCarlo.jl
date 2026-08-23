@@ -54,7 +54,7 @@ ylims!(1e-9, 1)
 xaxis!(:log10)
 yaxis!(:log10)
 xlabel!(&quot;n&quot;, legend = :bottomleft)
-ylabel!(&quot;|μ̂-μ|&quot;)</code></pre><img src="index-25a35b56.svg" alt="Example block output"/><h2 id="Adding-a-new-sampling-method"><a class="docs-heading-anchor" href="#Adding-a-new-sampling-method">Adding a new sampling method</a><a id="Adding-a-new-sampling-method-1"></a><a class="docs-heading-anchor-permalink" href="#Adding-a-new-sampling-method" title="Permalink"></a></h2><p>Adding a new sampling method is a two-step process:</p><ol><li>Add a new SamplingAlgorithm type.</li><li>Implement <code>sample(n, d, sampler, T = Float64)</code> for that type.</li></ol><p>The unit-box method must return a matrix with dimension <code>d</code> by <code>n</code>, where <code>d</code> is the sample-space dimension and <code>n</code> is the number of samples. Every element must lie in <code>[0, 1]</code>. The package supplies the bounds method, so extensions should not implement <code>sample(n, lb, ub, sampler)</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia hljs">struct NewAmazingSamplingAlgorithm{OPTIONAL} &lt;: SamplingAlgorithm end
+ylabel!(&quot;|μ̂-μ|&quot;)</code></pre><img src="index-a8b4af5f.svg" alt="Example block output"/><h2 id="Adding-a-new-sampling-method"><a class="docs-heading-anchor" href="#Adding-a-new-sampling-method">Adding a new sampling method</a><a id="Adding-a-new-sampling-method-1"></a><a class="docs-heading-anchor-permalink" href="#Adding-a-new-sampling-method" title="Permalink"></a></h2><p>Adding a new sampling method is a two-step process:</p><ol><li>Add a new SamplingAlgorithm type.</li><li>Implement <code>sample(n, d, sampler, T = Float64)</code> for that type.</li></ol><p>The unit-box method must return a matrix with dimension <code>d</code> by <code>n</code>, where <code>d</code> is the sample-space dimension and <code>n</code> is the number of samples. Every element must lie in <code>[0, 1]</code>. The package supplies the bounds method, so extensions should not implement <code>sample(n, lb, ub, sampler)</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia hljs">struct NewAmazingSamplingAlgorithm{OPTIONAL} &lt;: SamplingAlgorithm end
 
 function sample(n::Integer, d::Integer, ::NewAmazingSamplingAlgorithm, T = Float64)
     return fill(convert(T, 0.5), d, n)
@@ -71,9 +71,9 @@ Build Info:
   Official https://julialang.org release
 Platform Info:
   OS: Linux (x86_64-linux-gnu)
-  CPU: 128 × AMD EPYC 9354 32-Core Processor
+  CPU: 112 × AMD EPYC 7663 56-Core Processor
   WORD_SIZE: 64
-  LLVM: libLLVM-18.1.7 (ORCJIT, znver4)
+  LLVM: libLLVM-18.1.7 (ORCJIT, znver3)
   GC: Built with stock GC
 Threads: 1 default, 1 interactive, 1 GC (on 4 virtual cores)
 Environment:
@@ -90,10 +90,10 @@ Environment:
   <span class="sgr90">[3da002f7] </span>ColorTypes v0.12.1
   <span class="sgr90">[c3611d14] </span>ColorVectorSpace v0.11.0
   <span class="sgr90">[5ae59095] </span>Colors v0.13.1
-  <span class="sgr90">[38540f10] </span>CommonSolve v0.2.13
+  <span class="sgr90">[38540f10] </span>CommonSolve v0.2.14
   <span class="sgr90">[34da2185] </span>Compat v4.18.1
   <span class="sgr90">[a33af91c] </span>CompositionsBase v0.1.2
-  <span class="sgr90">[2569d6c7] </span>ConcreteStructs v0.2.7
+  <span class="sgr90">[2569d6c7] </span>ConcreteStructs v0.2.8
   <span class="sgr90">[f0e56b4a] </span>ConcurrentUtilities v2.6.0
   <span class="sgr90">[187b0558] </span>ConstructionBase v1.6.0
   <span class="sgr90">[d38c429a] </span>Contour v0.6.3
@@ -154,7 +154,7 @@ Environment:
   <span class="sgr90">[ae029012] </span>Requires v1.3.1
   <span class="sgr90">[79098fc4] </span>Rmath v0.9.0
   <span class="sgr90">[f2b01f46] </span>Roots v3.0.7
-  <span class="sgr90">[431bcebd] </span>SciMLPublic v1.2.4
+  <span class="sgr90">[431bcebd] </span>SciMLPublic v1.3.0
   <span class="sgr90">[6c6a2e73] </span>Scratch v1.3.0
   <span class="sgr90">[992d4aef] </span>Showoff v1.0.3
   <span class="sgr90">[777ac1f9] </span>SimpleBufferStream v1.2.0
@@ -303,4 +303,4 @@ Environment:
   <span class="sgr90">[8e850b90] </span>libblastrampoline_jll v5.15.0+0
   <span class="sgr90">[8e850ede] </span>nghttp2_jll v1.64.0+1
   <span class="sgr90">[3f19e933] </span>p7zip_jll v17.7.0+0
-<span class="sgr36"><span class="sgr1">Info</span></span> Packages marked with <span class="sgr33">⌅</span> have new versions available but compatibility constraints restrict them from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.4.1/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.4.1/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="samplers/">Sampler APIs »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Sunday 23 August 2026 17:27">Sunday 23 August 2026</span>. Using Julia version 1.12.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+<span class="sgr36"><span class="sgr1">Info</span></span> Packages marked with <span class="sgr33">⌅</span> have new versions available but compatibility constraints restrict them from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.4.1/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.4.1/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="samplers/">Sampler APIs »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Sunday 23 August 2026 22:53">Sunday 23 August 2026</span>. Using Julia version 1.12.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
