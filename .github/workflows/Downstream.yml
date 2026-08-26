@@ -22,13 +22,54 @@ jobs:
       fail-fast: false
       matrix:
         package:
-          - {user: SciML, repo: Surrogates.jl, group: All}
           - {user: SciML, repo: NeuralPDE.jl, group: NNPDE1}
           - {user: SciML, repo: NeuralPDE.jl, group: NNPDE2}
-    uses: "SciML/.github/.github/workflows/downstream.yml@v1"
-    with:
-      julia-version: "1"
-      owner: "${{ matrix.package.user }}"
-      repo: "${{ matrix.package.repo }}"
-      group: "${{ matrix.package.group }}"
-    secrets: "inherit"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout QuasiMonteCarlo.jl
+        uses: actions/checkout@v7
+
+      - name: Checkout MonteCarloIntegration compat branch
+        uses: actions/checkout@v7
+        with:
+          repository: ChrisRackauckas/MonteCarloIntegration.jl
+          ref: quasimontecarlo-0.4
+          path: MonteCarloIntegration.jl
+
+      - name: Checkout downstream ${{ matrix.package.user }}/${{ matrix.package.repo }}
+        uses: actions/checkout@v7
+        with:
+          repository: "${{ matrix.package.user }}/${{ matrix.package.repo }}"
+          path: downstream
+
+      - name: Setup Julia
+        uses: julia-actions/setup-julia@v3
+        with:
+          version: "1"
+
+      - uses: julia-actions/julia-buildpkg@v1
+
+      - name: Run downstream tests
+        shell: julia --color=yes --project=downstream {0}
+        env:
+          GROUP: ${{ matrix.package.group }}
+        run: |
+          using Pkg
+          downstream_project = normpath("downstream")
+          Pkg.activate(downstream_project)
+          Pkg.develop([
+              PackageSpec(path="."),
+              PackageSpec(path="MonteCarloIntegration.jl"),
+          ])
+          Pkg.update()
+          Pkg.test(coverage=true)
+
+      - uses: julia-actions/julia-processcoverage@v1
+
+      - name: Report Coverage with Codecov
+        uses: codecov/codecov-action@v7
+        continue-on-error: true
+        with:
+          files: lcov.info
+          token: "${{ secrets.CODECOV_TOKEN }}"
+          disable_safe_directory: true
