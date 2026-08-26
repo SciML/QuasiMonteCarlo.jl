@@ -54,7 +54,7 @@ function istmsnet(
     perms = multiexponents(s, m - t)
     for stepsize in perms
         intervals = mince(
-            IntervalBox([interval(zero(T), one(T)) for i in 1:s]),
+            [interval(zero(T), one(T)) for i in 1:s],
             NTuple{s, Int}(base .^ stepsize)
         )
         pass &= all(intervals) do intvl
@@ -75,9 +75,9 @@ Checks if the number `x` is a member of the interval `a` (close on the left and 
 """
 function inCloseOpen(x::T, a::Interval) where {T <: Real}
     isinf(x) && return false
-    return a.lo <= x < a.hi
+    return inf(a) <= x < sup(a)
 end
-inCloseOpen(X::AbstractVector, Y::IntervalBox{N, T}) where {N, T} = all(inCloseOpen.(X, Y))
+inCloseOpen(X::AbstractVector, Y::AbstractVector{<:Interval}) = all(inCloseOpen.(X, Y))
 
 rng = MersenneTwister(1776)
 
