@@ -27,8 +27,12 @@ using PrecompileTools: @compile_workload, @setup_workload
         # RandomSample - basic uniform random sampling
         sample(n, lb, ub, RandomSample())
 
-        # LatticeRuleSample - lattice-based sampling
-        sample(n, lb, ub, LatticeRuleSample())
+        # LatticeRuleSample - lattice-based sampling. LatticeRules bounds the point
+        # count by `typemax(UInt32) + 1`, which promotes to UInt32 and wraps to 0
+        # where `Int` is 32 bits, so every lattice rule throws there.
+        if Sys.WORD_SIZE > 32
+            sample(n, lb, ub, LatticeRuleSample())
+        end
 
         # GoldenSample (Kronecker) - golden ratio based sampling
         sample(n, lb, ub, GoldenSample())
@@ -47,7 +51,9 @@ using PrecompileTools: @compile_workload, @setup_workload
         sample(n, d, HaltonSample())
         sample(n, d, GridSample())
         sample(n, d, RandomSample())
-        sample(n, d, LatticeRuleSample())
+        if Sys.WORD_SIZE > 32
+            sample(n, d, LatticeRuleSample())
+        end
         sample(n, d, GoldenSample())
         sample(n, d, KroneckerSample(d))
         sample(64, d, FaureSample())
