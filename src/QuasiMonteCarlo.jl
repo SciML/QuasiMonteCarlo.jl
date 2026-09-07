@@ -13,6 +13,7 @@ module QuasiMonteCarlo
 
 using Sobol: Sobol
 using LatticeRules: LatticeRules
+include("lattice_rules_32bit_patch.jl")
 using Primes: nextprime, nextprimes
 using LinearAlgebra: Diagonal, LowerTriangular, UpperTriangular
 using Random: Random, AbstractRNG, rand!, shuffle
