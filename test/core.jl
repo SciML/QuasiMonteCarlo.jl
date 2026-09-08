@@ -87,13 +87,16 @@ ub = 1.0
 n = 8
 d = 1
 
+# LatticeRules 0.0.1 rejects all LatticeRule32 constructions on 32-bit Julia.
+const LATTICE_RULES_OK = Sys.WORD_SIZE == 64 || pkgversion(LatticeRules) >= v"0.0.2"
+
 for point_constructor in [
         FaureSample(),
         GridSample(),
         HaltonSample(),
         KroneckerSample(),
         LatinHypercubeSample(),
-        LatticeRuleSample(),
+        (LATTICE_RULES_OK ? (LatticeRuleSample(),) : ())...,
         RandomSample(),
         SobolSample(),
     ]
@@ -326,15 +329,18 @@ end
 end
 
 @testset "LatticeRuleSample" begin
-    #LatticeRuleSample()
-    s = QuasiMonteCarlo.sample(n, lb, ub, LatticeRuleSample())
-    @test isa(s, Matrix)
-    @test size(s) == (d, n)
-    μ = mean(s; dims = 2)
-    variance = var(s; dims = 2)
-    for i in eachindex(μ)
-        @test μ[i] ≈ 0.5 atol = 3 / n
-        @test variance[i] ≈ 1 / 12 rtol = 3 / n
+    if !LATTICE_RULES_OK
+        @test_broken false # needs LatticeRules ≥ 0.0.2 on 32-bit
+    else
+        s = QuasiMonteCarlo.sample(n, lb, ub, LatticeRuleSample())
+        @test isa(s, Matrix)
+        @test size(s) == (d, n)
+        μ = mean(s; dims = 2)
+        variance = var(s; dims = 2)
+        for i in eachindex(μ)
+            @test μ[i] ≈ 0.5 atol = 3 / n
+            @test variance[i] ≈ 1 / 12 rtol = 3 / n
+        end
     end
 end
 
@@ -402,7 +408,7 @@ end
         LatinHypercubeSample(),
         SobolSample(R = OwenScramble(base = 2, pad = m)),
         SobolSample(),
-        LatticeRuleSample(R = Shift()),
+        (LATTICE_RULES_OK ? (LatticeRuleSample(R = Shift()),) : ())...,
         SobolSample(R = MatousekScramble(base = 2, pad = m)),
     ]
     for algorithm in algorithms
