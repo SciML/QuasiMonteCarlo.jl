@@ -1,4 +1,5 @@
 using QuasiMonteCarlo
+using LatticeRules
 using Test
 
 using Statistics, LinearAlgebra, StatsBase, Random
@@ -330,7 +331,7 @@ end
 
 @testset "LatticeRuleSample" begin
     if !LATTICE_RULES_OK
-        @test_broken false # needs LatticeRules ≥ 0.0.2 on 32-bit
+        @info "Skipping LatticeRuleSample: needs LatticeRules ≥ 0.0.2 on 32-bit"
     else
         s = QuasiMonteCarlo.sample(n, lb, ub, LatticeRuleSample())
         @test isa(s, Matrix)
