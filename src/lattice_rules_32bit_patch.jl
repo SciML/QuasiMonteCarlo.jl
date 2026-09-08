@@ -1,25 +1,14 @@
-# LatticeRules 0.0.1: on 32-bit Julia, `1` is Int32 so `typemax(UInt32) + 1`
-# wraps to `0x0`, and every `LatticeRule32` construction fails the `n ≤ …`
-# check (PieterjanRobbe/LatticeRules.jl#5). Redefine the broken methods until
-# a fixed LatticeRules is released.
-if Sys.WORD_SIZE == 32
-    @eval LatticeRules begin
-        LatticeRule32(z::Vector{UInt32}, s::Integer) =
-            LatticeRule32(z, s, Int64(typemax(UInt32)) + one(Int64))
-        function LatticeRule32(z::Vector{UInt32}, s::Integer, n::Integer)
-            s > 0 || throw(ArgumentError("number of dimensions s must be larger than 0"))
-            s ≤ length(z) || throw(
-                ArgumentError(
-                    "number of dimensions s must be less than or equal to the length of the generating vector z",
-                ),
-            )
-            n > 0 || throw(ArgumentError("maximum number of points n must be larger than 0"))
-            n ≤ Int64(typemax(UInt32)) + one(Int64) || throw(
-                ArgumentError(
-                    "maximum number of points n must be less than or equal to 2^32, consider implementing a LatticeRule64 type",
-                ),
-            )
-            return LatticeRule32{s}(view(z, 1:s), n)
-        end
+# Prefer LatticeRules' 3-arg constructor with an Int64 point bound so we never
+# hit LatticeRules 0.0.1's broken `typemax(UInt32) + 1` path on 32-bit Julia
+# (Int32 wrap → ArgumentError). Avoids mutating LatticeRules via `eval`, which
+# breaks incremental compilation / precompile. Safe once LatticeRules ≥ 0.0.2
+# as well (same numeric bound).
+function _lattice_rule(d::Integer)
+    d > 0 || throw(ArgumentError("number of dimensions d must be larger than 0"))
+    nmax = Int64(typemax(UInt32)) + one(Int64)
+    if d ≤ 250
+        return LatticeRules.LatticeRule32(LatticeRules.CKN_250_20, d, Int64(2)^20)
+    else
+        return LatticeRules.LatticeRule32(LatticeRules.K_3600_32, d, nmax)
     end
 end
