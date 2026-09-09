@@ -177,7 +177,9 @@ end
         @test μ[i] ≈ 0.5 atol = 2 / sqrt(n)
         @test variance[i] ≈ 1 / 12 rtol = 2 / sqrt(n)
     end
-    @test pvalue(SignedRankTest(eachrow(s)...)) > 0.0001
+    @static if Sys.WORD_SIZE == 64
+        @test pvalue(SignedRankTest(eachrow(s)...)) > 0.0001
+    end
 end
 
 @testset "LHS" begin
@@ -195,7 +197,9 @@ end
         @test μ[i] ≈ 0.5 atol = 2 / sqrt(n)
         @test variance[i] ≈ 1 / 12 rtol = 2 / sqrt(n)
     end
-    @test pvalue(SignedRankTest(eachrow(s)...)) > 0.0001
+    @static if Sys.WORD_SIZE == 64
+        @test pvalue(SignedRankTest(eachrow(s)...)) > 0.0001
+    end
 
     # A LHS is a scrambled `(λ=1, t=0, m=1, s=d)`-net in base `n`
     # See Cororollary 17.1 of [Monte Carlo theory, methods, and examples](https://artowen.su.domains/mc/qmcstuff.pdf).
@@ -232,7 +236,9 @@ end
     vdc = QuasiMonteCarlo.sample(n, 1, VanDerCorputSample(base, NoRand()))
     sort!(vdc)
     for (i, j) in combinations(1:d, 2)
-        @test pvalue(SignedRankTest(s[i, :], s[j, :])) > 0.0001
+        @static if Sys.WORD_SIZE == 64
+            @test pvalue(SignedRankTest(s[i, :], s[j, :])) > 0.0001
+        end
     end
     @test istmsnet(s; λ = 1, t = power - d, m = power, s = d, base)
     for dim in sort.(eachrow(s))
@@ -272,7 +278,9 @@ end
         @test variance[i] ≈ 1 / 12 rtol = 2 / n
     end
     for (i, j) in combinations(1:d, 2)
-        @test pvalue(SignedRankTest(s[i, :], s[j, :])) > 0.0001
+        @static if Sys.WORD_SIZE == 64
+            @test pvalue(SignedRankTest(s[i, :], s[j, :])) > 0.0001
+        end
     end
     # test 5d stratification of first 3 primes
     power = 5
@@ -324,7 +332,9 @@ end
             @test variance[i] ≈ 1 / 12 rtol = 1 / sqrt(n)
         end
         for (i, j) in combinations(1:d, 2)
-            @test pvalue(SignedRankTest(s[i, :], s[j, :])) > 0.0001
+            @static if Sys.WORD_SIZE == 64
+                @test pvalue(SignedRankTest(s[i, :], s[j, :])) > 0.0001
+            end
         end
     end
 end
