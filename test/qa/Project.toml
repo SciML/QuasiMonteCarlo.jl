@@ -9,6 +9,7 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 [compat]
 Aqua = "0.8"
 Distributions = "0.25"
+QuasiMonteCarlo = "0.4.3"
 SafeTestsets = "0.0.1, 0.1, 1"
 SciMLTesting = "2.4"
 Test = "1"
