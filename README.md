@@ -91,6 +91,7 @@ Sampling methods `SamplingAlgorithm` are divided into two subtypes
     
       + `GridSample` for samples on a regular grid.
       + `SobolSample` for the Sobol sequence.
+      + `DigitalNetSample` for a base-2 digital net with user-supplied generating matrices, e.g. from LatNet Builder.
       + `FaureSample` for the Faure sequence.
       + `LatticeRuleSample` for a randomly-shifted rank-1 lattice rule.
       + `HaltonSample` for the Halton sequence.

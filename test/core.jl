@@ -4,6 +4,7 @@ using Test
 using Statistics, LinearAlgebra, StatsBase, Random
 using Primes, Combinatorics, Distributions, IntervalArithmetic
 using HypothesisTests
+using Sobol: SobolSeq
 
 # struct InertSampler <: Random.AbstractRNG end
 # InertSampler(args...; kwargs...) = InertSampler()
@@ -241,6 +242,55 @@ end
         @test μ[i] ≈ 0.5 atol = 2 / n
         @test variance[i] ≈ 1 / 12 rtol = 2 / n
     end
+end
+
+@testset "DigitalNetSample" begin
+    d, m = 5, 8
+    n = 2^m
+    # Sobol.jl's direction integers satisfy m[j, k] < 2^k; left-align them in 32 bits.
+    sobol = SobolSeq(d).m .<< (32 .- (1:32)')
+    net = QuasiMonteCarlo.sample(2n, d, DigitalNetSample(sobol))
+    # SobolSample skips the first n - 1 points and runs in Gray-code order, so its n
+    # points are points n, ..., 2n - 1 of the digital sequence, at the Gray-code indices.
+    @test QuasiMonteCarlo.sample(n, d, SobolSample()) ==
+        net[:, [(k ⊻ (k >> 1)) + 1 for k in n:(2n - 1)]]
+
+    function stratified(points)
+        # Each coordinate puts exactly one point in each interval [k, k + 1) / n.
+        strata = 0:(size(points, 2) - 1)
+        return all(sort(floor.(Int, row .* size(points, 2))) == strata for row in eachrow(points))
+    end
+    @test stratified(net[:, 1:n])
+    owen = OwenScramble(base = 2, pad = 32, rng = MersenneTwister(1776))
+    scrambled = QuasiMonteCarlo.sample(n, d, DigitalNetSample(sobol; R = owen))
+    @test stratified(scrambled)
+    @test scrambled != net[:, 1:n]
+
+    # Float32 keeps only the bits it can hold, so an all-ones coordinate stays below 1.
+    @test QuasiMonteCarlo.sample(2, 1, DigitalNetSample(fill(typemax(UInt64), 1, 1)), Float32) ==
+        [0.0f0 prevfloat(1.0f0)]
+
+    # LatNet Builder `-O net` output for the Joe-Kuo nets, cut to 3 dimensions and 5 columns.
+    latnet = """
+    # Parameters for a digital net in base 2
+    3    # s = 3 dimensions
+    5    # k = 5,  n = 2^5 = 32 points
+    31   # r = 31 binary output digits
+    # Columns of gen. matrices C_1,...,C_s, one matrix per line
+    1073741824 536870912 268435456 134217728 67108864
+    1073741824 1610612736 1342177280 2013265920 1140850688
+    1073741824 1610612736 805306368 1207959552 1946157056
+    """
+    @test QuasiMonteCarlo.sample(32, 3, DigitalNetSample(IOBuffer(latnet))) == net[1:3, 1:32]
+    # LDData's `dnet` format adds the base to the same layout.
+    dnet = "# dnet\n2    # base b = 2\n" * latnet
+    @test QuasiMonteCarlo.sample(32, 3, DigitalNetSample(IOBuffer(dnet))) == net[1:3, 1:32]
+    @test_throws ArgumentError DigitalNetSample(IOBuffer(replace(dnet, "\n2 " => "\n3 ")))
+
+    @test QuasiMonteCarlo.sample(64, 2, DigitalNetSample(sobol[:, 1:6])) == net[1:2, 1:64]
+    @test_throws ArgumentError QuasiMonteCarlo.sample(65, 2, DigitalNetSample(sobol[:, 1:6]))
+    @test_throws ArgumentError QuasiMonteCarlo.sample(n, d + 1, DigitalNetSample(sobol))
+    @test_throws ArgumentError QuasiMonteCarlo.sample(-1, d, DigitalNetSample(sobol))
 end
 
 @testset "Faure Sample" begin

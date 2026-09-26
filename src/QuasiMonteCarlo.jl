@@ -277,6 +277,7 @@ include("Faure.jl")
 include("Kronecker.jl")
 include("Halton.jl")
 include("Sobol.jl")
+include("DigitalNet.jl")
 include("LatinHypercube.jl")
 include("RandomizedHalton.jl")
 include("Lattices.jl")
@@ -346,6 +347,7 @@ export SamplingAlgorithm,
     generate_design_matrices,
     GridSample,
     SobolSample,
+    DigitalNetSample,
     LatinHypercubeSample,
     RandomizedHaltonSample,
     LatticeRuleSample,
