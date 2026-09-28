@@ -14,8 +14,8 @@ scrambled, and `pad` must be at least `log(base, n)` for a point set with `n`
 points. The `randomize` interface preserves the matrix size and keeps points in
 the unit box.
 
-The package provides [`DigitalShift`](@ref), [`MatousekScramble`](@ref), and
-[`OwenScramble`](@ref). New implementations should add methods to the generic
+The package provides [`DigitalShift`](@ref), [`MatousekScramble`](@ref),
+[`OwenScramble`](@ref), and [`HashOwenScramble`](@ref). New implementations should add methods to the generic
 `randomize`/`randomize!` interface rather than changing sampler methods.
 
 # Examples
@@ -36,6 +36,7 @@ The scramble methods implementer are
   - `DigitalShift`.
   - `OwenScramble`: Nested Uniform Scramble which was introduced in Owen (1995).
   - `MatousekScramble`: Linear Matrix Scramble which was introduced in Matousek (1998).
+  - `HashOwenScramble`: Nested Uniform Scramble with hashed permutations (Burley 2020).
 """
 abstract type ScrambleMethod <: RandomizationMethod end
 
@@ -184,6 +185,83 @@ function randomize!(
         random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
     end
     return
+end
+
+"""
+    HashOwenScramble(base::Integer; pad = 32, rng = Random.TaskLocalRNG()) <: ScrambleMethod
+
+Nested Uniform Scramble whose permutations are hashed rather than stored.
+
+# Fields
+
+- `base::Integer`: Base of the digital net being scrambled.
+- `pad::Integer = 32`: Number of base-`base` digits retained for each point.
+- `rng::AbstractRNG = Random.TaskLocalRNG()`: Random-number generator from which each
+  `randomize` call draws one 64-bit seed.
+
+Digit `k` of a coordinate is shifted modulo `base` by a hash of the seed, the dimension
+and the `k - 1` digits above it: the same nested scramble as [`OwenScramble`](@ref),
+applied to all `pad` digits. The scramble of a point therefore depends only on the point
+and the seed, never on the other points, so
+
+  - any number of points can be scrambled (`OwenScramble` needs `n` to be a power of `base`), and
+  - the first `n` points of a scrambled sequence are the scrambled first `n` points: extending
+    a sample keeps the points already drawn.
+
+It costs `O(pad)` hashes per coordinate and stores no permutation tables.
+
+References: Owen, A. B. (1995), as for [`OwenScramble`](@ref); Burley, B. (2020). Practical
+Hash-based Owen Scrambling. Journal of Computer Graphics Techniques, 9(4), 1-20.
+
+# Examples
+
+```jldoctest
+julia> using QuasiMonteCarlo, Random
+
+julia> points = sample(8, 2, SobolSample());
+
+julia> short = randomize(points[:, 1:3], HashOwenScramble(base = 2, rng = Xoshiro(1)));
+
+julia> randomize(points, HashOwenScramble(base = 2, rng = Xoshiro(1)))[:, 1:3] == short
+true
+```
+"""
+Base.@kwdef struct HashOwenScramble{I <: Integer} <: ScrambleMethod
+    base::I
+    pad::I = 32
+    rng::AbstractRNG = Random.TaskLocalRNG()
+end
+
+"""SplitMix64's output function: a bijective avalanche of 64 bits."""
+function splitmix64(value::Unsigned)
+    x = UInt64(value) + 0x9e3779b97f4a7c15
+    x = (x ⊻ (x >> 30)) * 0xbf58476d1ce4e5b9
+    x = (x ⊻ (x >> 27)) * 0x94d049bb133111eb
+    return x ⊻ (x >> 31)
+end
+
+function randomize_bits!(
+        random_bits::AbstractArray{T, 3},
+        origin_bits::AbstractArray{T, 3},
+        R::HashOwenScramble
+    ) where {T <: Integer}
+    pad, n, d = size(origin_bits)
+    b = UInt64(R.base)
+    seed = rand(R.rng, UInt64)
+    for s in 1:d
+        key = splitmix64(seed ⊻ splitmix64(UInt64(s)))
+        for i in 1:n
+            node = key # the hash of the digits above digit k
+            for k in 1:pad
+                digit = origin_bits[k, i, s]
+                # `node * b / 2^64`, a uniform shift in 0:(b - 1).
+                shift = (widemul(node, b) >> 64) % UInt64
+                random_bits[k, i, s] = (digit + T(shift)) % R.base
+                node = splitmix64(node + (UInt64(digit) + 1) * 0x9e3779b97f4a7c15)
+            end
+        end
+    end
+    return random_bits
 end
 
 """

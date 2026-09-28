@@ -404,6 +404,7 @@ end
         SobolSample(),
         LatticeRuleSample(R = Shift()),
         SobolSample(R = MatousekScramble(base = 2, pad = m)),
+        SobolSample(R = HashOwenScramble(base = 2, pad = m)),
     ]
     for algorithm in algorithms
         Ms = QuasiMonteCarlo.generate_design_matrices(n, lb, ub, algorithm, num_mat)
@@ -432,6 +433,7 @@ end
         SobolSample(R = OwenScramble(base = 2, pad = m)),
         SobolSample(R = MatousekScramble(base = 2, pad = m)),
         SobolSample(R = DigitalShift(base = 2, pad = m)),
+        SobolSample(R = HashOwenScramble(base = 2, pad = m)),
     ]
     for algorithm in algorithms
         @show algorithm
@@ -460,6 +462,7 @@ end
                 OwenScramble(base = b, pad = pad)
                 MatousekScramble(base = b, pad = pad)
                 DigitalShift(base = b, pad = pad)
+                HashOwenScramble(base = b, pad = pad)
             ]
             for scrambling in scramblings
                 output,
@@ -555,6 +558,7 @@ end
         OwenScramble(base = base, pad = m),
         MatousekScramble(base = base, pad = m),
         DigitalShift(base = base, pad = m),
+        HashOwenScramble(base = base, pad = m),
     ]
     pass = Array{Bool}(undef, length(v), m)
     for (s, t) in enumerate(t_sobol[1:m])
@@ -576,7 +580,7 @@ end
     λ = 1
     t = 0
 
-    pass = Array{Bool}(undef, 4, m)
+    pass = Array{Bool}(undef, 5, m)
     for s in 1:m
         net = Rational{BigInt}.(QuasiMonteCarlo.sample(nextprime(s)^m, s, FaureSample())) # Convert the sequence in Rational{BigInt} (needed to scramble)
         pass[1, s] = istmsnet(
@@ -598,6 +602,43 @@ end
             randomize(net, DigitalShift(base = nextprime(s), pad = m));
             λ, t, m, s, base = nextprime(s)
         )
+        pass[5, s] = istmsnet(
+            randomize(net, HashOwenScramble(base = nextprime(s), pad = m));
+            λ, t, m, s, base = nextprime(s)
+        )
     end
     @test all(pass)
+end
+
+@testset "HashOwenScramble scrambles each point on its own" begin
+    shared_digits(x, y) = something(findfirst(x .!= y), length(x) + 1) - 1
+    # A nested scramble maps the digit strings of the grid {k / bᵖᵃᵈ} onto themselves and
+    # keeps the number of leading digits any two points share. Checked on the digits, as
+    # `unif2bits` does not round-trip every base-3 fraction.
+    for (b, pad) in ((2, 10), (3, 6))
+        grid = stack(reverse(digits(k; base = b, pad)) for k in 0:(b^pad - 1))
+        origin = reshape(grid, pad, :, 1)
+        scramble(seed) = QuasiMonteCarlo.randomize_bits!(similar(origin), origin, HashOwenScramble(base = b, pad = pad, rng = Xoshiro(seed)))[:, :, 1]
+        scrambled = scramble(3)
+        @test sort(collect(eachcol(scrambled))) == sort(collect(eachcol(grid)))
+        mapped = collect(zip(eachcol(grid), eachcol(scrambled)))
+        @test all(
+            shared_digits(x, y) == shared_digits(x̃, ỹ)
+                for (x, x̃) in Iterators.take(mapped, 100), (y, ỹ) in mapped
+        )
+        # Unlike a digital shift, the last digit's shift varies with the digits above it.
+        @test length(unique(mod.(scrambled[end, :] .- grid[end, :], b))) > 1
+        @test scrambled != scramble(4)
+    end
+
+    # Any point count, and a longer sample keeps the points of a shorter one.
+    points = QuasiMonteCarlo.sample(1000, 3, SobolSample())
+    R(seed) = HashOwenScramble(base = 2, pad = 32, rng = Xoshiro(seed))
+    long = randomize(points, R(1))
+    @test randomize(points[:, 1:37], R(1)) == long[:, 1:37]
+    @test all(0 .<= long .< 1)
+
+    # Each scrambled point is uniform: its mean over 4000 seeds is within 4 standard errors of ½.
+    draws = [randomize(points[:, 1:2], R(seed))[1, 2] for seed in 1:4000]
+    @test abs(mean(draws) - 0.5) < 4 * sqrt(1 / 12 / length(draws))
 end
