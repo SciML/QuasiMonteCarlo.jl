@@ -484,13 +484,39 @@ end
     x = (0 // 16):(1 // 16):(15 // 16)
     bits = QuasiMonteCarlo.unif2bits(x, b)
     y = [QuasiMonteCarlo.bits2unif(s, b) for s in eachcol(bits)]
-    @test x == y
+    # the midpoint of the cell of width 2^-32 given by the 32 bits
+    @test y == x .+ 2.0^-33
 
     b = 3
     x = (0 // 27):(1 // 27):(26 // 27)
     bits = QuasiMonteCarlo.unif2bits(x, b, pad = 8)
     y = [QuasiMonteCarlo.bits2unif(Rational, s, b) for s in eachcol(bits)]
     @test x == y
+end
+
+@testset "bits2unif stays strictly inside (0, 1)" begin
+    for T in (Float16, Float32, Float64), b in (2, 3, 5, 7), pad in (4, 32, 64)
+        # all digits b - 1 summed to 1.0f0 in Float32 before
+        @test 0 < QuasiMonteCarlo.bits2unif(T, fill(b - 1, pad), b) < 1
+        @test 0 < QuasiMonteCarlo.bits2unif(T, zeros(Int, pad), b) < 1
+    end
+end
+
+@testset "Scrambled points stay strictly inside (0, 1)" begin
+    # with pad = m, each coordinate has one point in every cell of width b^-m, including
+    # [0, b^-m[ and [1 - b^-m, 1[
+    d = 5
+    cases = [
+        (T, sampler, b, m, R)
+            for T in (Float32, Float64)
+            for (sampler, b, m) in ((SobolSample, 2, 6), (FaureSample, 5, 3))
+            for R in (OwenScramble, MatousekScramble, DigitalShift)
+    ]
+    for (T, sampler, b, m, R) in cases
+        x = QuasiMonteCarlo.sample(b^m, d, sampler(R = R(base = b, pad = m)), T)
+        @test eltype(x) == T
+        @test all(u -> 0 < u < 1, x)
+    end
 end
 
 @testset "Randomized Quasi Monte Carlo" begin
