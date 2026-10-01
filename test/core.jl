@@ -45,39 +45,32 @@ function istmsnet(
         net::AbstractMatrix{T}; λ::I, t::I, m::I, s::I,
         base::I
     ) where {I <: Integer, T <: Real}
-    pass = true
-
     @assert size(net, 2) == λ * (base^m) "Number of points must be as size(net, 2) = $(size(net, 2)) == λ * (base^m) = $(λ * (base^m))"
     @assert size(net, 1) == s "Dimension must be as size(net, 2) = $(size(net, 2)) == s = $s"
     @assert all(0 .≤ net .< 1) "All points must be in [0,1)"
 
-    perms = multiexponents(s, m - t)
-    for stepsize in perms
-        intervals = mince(
-            [interval(zero(T), one(T)) for i in 1:s],
-            NTuple{s, Int}(base .^ stepsize)
-        )
-        pass &= all(intervals) do intvl
-            λ * base^t == count(point -> inCloseOpen(point, intvl), collect(eachcol((net))))
+    # The elementary boxes are products of the 1D pieces of `mince(interval(0, 1), divisions)`, which
+    # tile [0,1) as [left end, next left end), so a coordinate lies in the last piece whose left end is
+    # ≤ it. Binning each point once costs O(n s log n) per direction instead of O(n × #boxes).
+    for stepsize in multiexponents(s, m - t)
+        divisions = base .^ stepsize
+        left_ends = [inf.(mince(interval(zero(T), one(T)), k)) for k in divisions]
+        counts = zeros(Int, prod(divisions))
+        for point in eachcol(net)
+            box, stride = 1, 1  # column-major linear index of the box holding `point`
+            for (ends, x) in zip(left_ends, point)
+                box += (searchsortedlast(ends, x; lt = <) - 1) * stride
+                stride *= length(ends)
+            end
+            counts[box] += 1
         end
-        if !pass
+        if !all(==(λ * base^t), counts)
             println("Errors in direction k = $stepsize")
-            return pass
+            return false
         end
     end
-    return pass
+    return true
 end
-
-"""
-    in_halfopen(x, a)
-
-Checks if the number `x` is a member of the interval `a` (close on the left and open on the right), treated as a set.
-"""
-function inCloseOpen(x::T, a::Interval) where {T <: Real}
-    isinf(x) && return false
-    return inf(a) <= x < sup(a)
-end
-inCloseOpen(X::AbstractVector, Y::AbstractVector{<:Interval}) = all(inCloseOpen.(X, Y))
 
 rng = MersenneTwister(1776)
 
@@ -536,6 +529,15 @@ end
     @test eltype(u_nus) <: Rational
     @test eltype(u_lms) <: Rational
     @test eltype(u_digital_shift) <: Rational
+end
+
+@testset "istmsnet rejects point sets that are not nets" begin
+    # Stratified along the first coordinate only: of the 2×2 boxes, the lower two hold 2 points each.
+    x = (0:3) .// 4
+    stratified_in_x = permutedims([x zero(x)])
+    @test istmsnet(stratified_in_x[1:1, :]; λ = 1, t = 0, m = 2, s = 1, base = 2)
+    @test !istmsnet(stratified_in_x; λ = 1, t = 0, m = 2, s = 2, base = 2)
+    @test !istmsnet(stratified_in_x; λ = 1, t = 1, m = 2, s = 2, base = 2)
 end
 
 @testset "Sobol' sequence are (tₛ,m,s)-net in base 2 even after scrambling" begin
