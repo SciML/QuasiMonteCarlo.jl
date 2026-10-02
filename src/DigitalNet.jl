@@ -1,5 +1,5 @@
 """
-    DigitalNetSample(generating_matrices::AbstractMatrix{<:Unsigned}; R::RandomizationMethod = NoRand()) <: DeterministicSamplingAlgorithm
+    DigitalNetSample(generating_matrices::AbstractMatrix{<:Unsigned}; R::RandomizationMethod = NoRand(), shift = nothing) <: DeterministicSamplingAlgorithm
     DigitalNetSample(file; R::RandomizationMethod = NoRand())
 
 A base-2 digital net or sequence defined by its generating matrices, such as a net
@@ -15,6 +15,17 @@ the leading `m` columns do.
 `sample(n, d, DigitalNetSample(generating_matrices))` requires
 `d ≤ size(generating_matrices, 1)` and `n ≤ 2^size(generating_matrices, 2)`. Each
 coordinate keeps as many leading bits as the output type `T` can represent exactly.
+An unsigned `T` returns the digits themselves: each coordinate is a left-aligned word
+holding its leading `8 * sizeof(T)` binary digits. `R` may be `NoRand`,
+[`MatousekScramble`](@ref) or [`DigitalShift`](@ref), which are applied to the generating
+matrices (`L C`, then a digit shift XORed into every point, [`scramble_generators`](@ref))
+rather than to the sampled points: the same points as `randomize` gives, from `O(pad²)`
+work per column rather than per point, keeping `pad` digits.
+
+A `shift` (one left-aligned word per dimension, `R = NoRand()`) is XORed into every point
+of the net instead: with the matrices and shifts [`scramble_generators`](@ref) returns, it
+generates the points of a scramble from the few kilobytes it is held in, one XOR per
+coordinate, equal to sampling with that scramble.
 
 The second form reads the generating matrices from `file`, a path or an `IO`, in the
 `dnet` format of [LDData](https://github.com/QMCSoftware/LDData) or in LatNet
@@ -26,6 +37,8 @@ Builder's `-O net` output format, which is the same without the base line.
   columns, one row per dimension and one column per bit of the point index.
 - `R::RandomizationMethod = NoRand()`: Randomization applied to the digital net.
   Scrambles must use `base = 2`.
+- `shift::Union{Nothing, AbstractVector{<:Unsigned}} = nothing`: Left-aligned digit shift
+  XORed into each dimension's points; at least one entry per sampled dimension.
 
 # Examples
 
@@ -47,13 +60,18 @@ L'Ecuyer, P., Marion, P., Godin, M., & Puchhammer, F. (2022). A tool for custom 
 @concrete struct DigitalNetSample <: DeterministicSamplingAlgorithm
     generating_matrices::AbstractMatrix{<:Unsigned}
     R::RandomizationMethod
+    shift::Union{Nothing, AbstractVector{<:Unsigned}}
 end
 
 function DigitalNetSample(
         generating_matrices::AbstractMatrix{<:Unsigned};
-        R::RandomizationMethod = NoRand()
+        R::RandomizationMethod = NoRand(),
+        shift::Union{Nothing, AbstractVector{<:Unsigned}} = nothing
     )
-    return DigitalNetSample(generating_matrices, R)
+    if !isnothing(shift) && !(R isa NoRand)
+        throw(ArgumentError("a digit shift replaces the randomization: use R = NoRand() with shift, not $(typeof(R))"))
+    end
+    return DigitalNetSample(generating_matrices, R, shift)
 end
 
 function DigitalNetSample(file::Union{AbstractString, IO}; R::RandomizationMethod = NoRand())
@@ -76,11 +94,80 @@ function DigitalNetSample(file::Union{AbstractString, IO}; R::RandomizationMetho
     if size(generating_matrices, 2) != k
         throw(ArgumentError("the header gives $k columns, but the generating matrices have $(size(generating_matrices, 2))"))
     end
-    return DigitalNetSample(generating_matrices, R)
+    return DigitalNetSample(generating_matrices, R, nothing)
 end
 
 function sample(n::Integer, d::Integer, S::DigitalNetSample, T::Type = Float64)
-    C = S.generating_matrices
+    if !isnothing(S.shift)
+        return _digits2unif.(T, _shifted_net_digits(n, d, S))
+    end
+    return _sample_net(n, d, S.generating_matrices, S.R, T)
+end
+
+function _sample_net(n::Integer, d::Integer, C::AbstractMatrix{<:Unsigned}, R::RandomizationMethod, ::Type{T}) where {T}
+    return randomize(_digits2unif.(T, _digital_net_digits(n, d, C)), R)
+end
+
+function _sample_net(n::Integer, d::Integer, C::AbstractMatrix{<:Unsigned}, R::DigitalMatrixScramble, ::Type{T}) where {T}
+    return _digits2unif.(T, _scrambled_net_digits(n, d, C, R))
+end
+
+function sample(n::Integer, d::Integer, S::DigitalNetSample, ::Type{T}) where {T <: Unsigned}
+    if !isnothing(S.shift)
+        return _leading_digits.(T, _shifted_net_digits(n, d, S))
+    end
+    if !(S.R isa Union{NoRand, DigitalMatrixScramble})
+        throw(ArgumentError("digit words support NoRand, MatousekScramble and DigitalShift, not $(typeof(S.R))"))
+    end
+    return _sample_words(n, d, S.generating_matrices, S.R, T)
+end
+
+function _sample_words(n::Integer, d::Integer, C::AbstractMatrix{<:Unsigned}, R::RandomizationMethod, ::Type{T}) where {T}
+    return randomize(_leading_digits.(T, _digital_net_digits(n, d, C)), R)
+end
+
+function _sample_words(n::Integer, d::Integer, C::AbstractMatrix{<:Unsigned}, R::DigitalMatrixScramble, ::Type{T}) where {T}
+    return _leading_digits.(T, _scrambled_net_digits(n, d, C, R))
+end
+
+"""
+    _shifted_net_digits(n, d, S::DigitalNetSample)
+
+The first `n` points of the leading `d` dimensions of `S`'s net with the held digit shift
+`S.shift` XORed into every point, as `_digital_net_digits`.
+"""
+function _shifted_net_digits(n::Integer, d::Integer, S::DigitalNetSample)
+    if length(S.shift) < d
+        throw(ArgumentError("requested $d dimensions, but the digit shift has $(length(S.shift)) entries"))
+    end
+    U = eltype(S.generating_matrices)
+    return _digital_net_digits(n, d, S.generating_matrices, convert(Vector{U}, S.shift[1:d]))
+end
+
+"""
+    _digital_net_digits(n, d, C)
+
+The first `n` points of the digital net with generating matrices `C` in its leading `d`
+dimensions, as left-aligned words of `eltype(C)`: a `d × n` matrix.
+"""
+function _digital_net_digits(
+        n::Integer, d::Integer, C::AbstractMatrix{U},
+        shifts::AbstractVector{U} = zeros(U, d)
+    ) where {U <: Unsigned}
+    _check_net_size(n, d, C)
+    digits = zeros(U, d, n)
+    @views for i in 0:(n - 1)
+        # `i & (i - 1)` clears the lowest set bit of `i`, so that point precedes point `i`.
+        if iszero(i)
+            digits[:, 1] .= shifts
+        else
+            digits[:, i + 1] .= digits[:, (i & (i - 1)) + 1] .⊻ C[1:d, trailing_zeros(i) + 1]
+        end
+    end
+    return digits
+end
+
+function _check_net_size(n::Integer, d::Integer, C::AbstractMatrix{<:Unsigned})
     if n < 0
         throw(ArgumentError("number of samples must be non-negative"))
     end
@@ -95,13 +182,35 @@ function sample(n::Integer, d::Integer, S::DigitalNetSample, T::Type = Float64)
             )
         )
     end
+    return
+end
 
-    digits = zeros(eltype(C), d, n)
-    @views for i in 1:(n - 1)
-        # `i & (i - 1)` clears the lowest set bit of `i`, so that point precedes point `i`.
-        digits[:, i + 1] .= digits[:, (i & (i - 1)) + 1] .⊻ C[1:d, trailing_zeros(i) + 1]
+"""
+    _scrambled_net_digits(n, d, C, R::Union{MatousekScramble, DigitalShift})
+
+The first `n` points of the digital net with generating matrices `C` in its leading `d`
+dimensions, scrambled by `R`: the net of the scrambled generating matrices
+([`scramble_generators`](@ref)) shifted by `R`'s digit shift, as `_digital_net_digits`.
+"""
+function _scrambled_net_digits(
+        n::Integer, d::Integer, C::AbstractMatrix{<:Unsigned}, R::DigitalMatrixScramble
+    )
+    _check_net_size(n, d, C)
+    scrambled, shifts = scramble_generators(C, d, R)
+    return _digital_net_digits(n, d, scrambled, shifts)
+end
+
+"""
+    _leading_digits(T, x::Unsigned)
+
+The left-aligned word `x` as a left-aligned `T`: its leading `8 * sizeof(T)` digits, padded
+with zeros when `T` is the wider type.
+"""
+function _leading_digits(::Type{T}, x::U) where {T <: Unsigned, U <: Unsigned}
+    if sizeof(T) <= sizeof(U)
+        return (x >> (8 * (sizeof(U) - sizeof(T)))) % T
     end
-    return randomize(_digits2unif.(T, digits), S.R)
+    return T(x) << (8 * (sizeof(T) - sizeof(U)))
 end
 
 """

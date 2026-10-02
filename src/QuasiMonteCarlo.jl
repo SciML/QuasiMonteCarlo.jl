@@ -277,7 +277,6 @@ include("Faure.jl")
 include("Kronecker.jl")
 include("Halton.jl")
 include("Sobol.jl")
-include("DigitalNet.jl")
 include("LatinHypercube.jl")
 include("RandomizedHalton.jl")
 include("Lattices.jl")
@@ -338,6 +337,7 @@ randomize(x, S::NoRand) = x
 
 include("RandomizedQuasiMonteCarlo/shifting.jl")
 include("RandomizedQuasiMonteCarlo/scrambling_base_b.jl")
+include("DigitalNet.jl")
 include("RandomizedQuasiMonteCarlo/iterators.jl")
 
 include("precompile.jl")

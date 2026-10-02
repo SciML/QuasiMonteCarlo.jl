@@ -724,3 +724,72 @@ end
         @test fetch.(tasks) == serial
     end
 end
+
+"""The first `dims` dimensions of `count` points of the net with `generating_matrices`, scrambled by `Scramble` seeded by `seed` over `pad` digits, as 32-bit digit words."""
+function scrambled_net_words(generating_matrices, Scramble, count, dims, seed, pad)
+    R = Scramble(base = 2, pad = pad, rng = Xoshiro(seed))
+    return QuasiMonteCarlo.sample(count, dims, DigitalNetSample(generating_matrices; R), UInt32)
+end
+
+@testset "$Scramble on a DigitalNetSample scrambles its generating matrices" for Scramble in (MatousekScramble, DigitalShift)
+    d, m = 4, 6
+    n = 2^m
+    sobol = SobolSeq(d).m .<< (32 .- (1:32)')
+    plain = QuasiMonteCarlo.sample(n, d, DigitalNetSample(sobol), UInt32)
+    @test plain == UInt32.(floor.(QuasiMonteCarlo.sample(n, d, DigitalNetSample(sobol)) .* 2.0^32))
+    words = scrambled_net_words(sobol, Scramble, n, d, 3, 32)
+    @test words != plain
+
+    # Scrambling the generating matrices is the scramble of the points, for the same draws,
+    # as floats and as digit words, and the digits after `pad` are cleared.
+    for pad in (32, 20, 5)
+        scramble() = Scramble(base = 2, pad = pad, rng = Xoshiro(3))
+        points = QuasiMonteCarlo.sample(n, d, DigitalNetSample(sobol; R = scramble()))
+        @test points == randomize(QuasiMonteCarlo.sample(n, d, DigitalNetSample(sobol)), scramble())
+        @test scrambled_net_words(sobol, Scramble, n, d, 3, pad) == UInt32.(floor.(points .* 2.0^32))
+    end
+    @test all(iszero, scrambled_net_words(sobol, Scramble, n, d, 3, 20) .& 0x00000fff)
+
+    # A longer sample keeps the points of a shorter one, and a wider one the dimensions of a narrower one.
+    @test scrambled_net_words(sobol, Scramble, 2n, d, 3, 32)[:, 1:37] == scrambled_net_words(sobol, Scramble, 37, d, 3, 32)
+    @test scrambled_net_words(sobol, Scramble, n, d, 3, 32)[1:2, :] == scrambled_net_words(sobol, Scramble, n, 2, 3, 32)
+
+    # The points are a shifted digital net: one point per elementary interval in the first two dimensions.
+    for first_digits in 0:m
+        @test box_counts(words[1:2, :], (first_digits, m - first_digits)) == ones(Int, n)
+    end
+
+    # The same draws on other threads give the same points.
+    tasks = [Threads.@spawn(scrambled_net_words(sobol, Scramble, n, d, seed, 32)) for seed in 1:8]
+    @test fetch.(tasks) == [scrambled_net_words(sobol, Scramble, n, d, seed, 32) for seed in 1:8]
+
+    # 33 digits do not fit the words of the matrices, and a net is base 2.
+    @test_throws ArgumentError scrambled_net_words(sobol, Scramble, n, d, 3, 33)
+    @test_throws ArgumentError QuasiMonteCarlo.sample(n, d, DigitalNetSample(sobol; R = Scramble(base = 3, pad = 20)), UInt32)
+end
+
+@testset "digit words of a DigitalNetSample" begin
+    d, n = 4, 64
+    sobol = SobolSeq(d).m .<< (32 .- (1:32)')
+    @test QuasiMonteCarlo.sample(n, d, DigitalNetSample(sobol), UInt64) == UInt64.(QuasiMonteCarlo.sample(n, d, DigitalNetSample(sobol), UInt32)) .<< 32
+    @test QuasiMonteCarlo.sample(n, d, DigitalNetSample(sobol), UInt16) == UInt16.(QuasiMonteCarlo.sample(n, d, DigitalNetSample(sobol), UInt32) .>> 16)
+    @test_throws ArgumentError QuasiMonteCarlo.sample(n, d, DigitalNetSample(sobol; R = OwenScramble(base = 2)), UInt32)
+end
+
+@testset "$Scramble held as scrambled generating matrices and shifts samples the same points" for Scramble in (MatousekScramble, DigitalShift)
+    d, n = 4, 64
+    sobol = SobolSeq(d).m .<< (32 .- (1:32)')
+    for pad in (32, 20)
+        direct = scrambled_net_words(sobol, Scramble, n, d, 3, pad)
+        matrices, shifts = QuasiMonteCarlo.scramble_generators(sobol, d, Scramble(base = 2, pad = pad, rng = Xoshiro(3)))
+        held = DigitalNetSample(matrices; shift = shifts)
+        @test QuasiMonteCarlo.sample(n, d, held, UInt32) == direct
+        # A longer sample keeps a shorter one's points, and fewer dimensions the leading ones.
+        @test QuasiMonteCarlo.sample(2n, d, held, UInt32)[:, 1:n] == direct
+        @test QuasiMonteCarlo.sample(n, 2, held, UInt32) == direct[1:2, :]
+        # Floats are the left ends of the cells of the leading digits.
+        @test QuasiMonteCarlo.sample(n, d, held, Float64) == Float64.(direct) ./ 2.0^32
+    end
+    @test_throws ArgumentError QuasiMonteCarlo.sample(n, d, DigitalNetSample(sobol; shift = zeros(UInt32, d - 1)), UInt32)
+    @test_throws ArgumentError DigitalNetSample(sobol; R = Scramble(base = 2, pad = 32), shift = zeros(UInt32, d))
+end

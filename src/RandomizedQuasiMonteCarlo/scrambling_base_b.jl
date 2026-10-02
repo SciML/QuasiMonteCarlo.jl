@@ -206,7 +206,9 @@ digit vector. The matrix and shift are drawn from `rng` in dimension order, what
 number of points, so a longer sample keeps the points of a shorter one and the first `k`
 dimensions of a `d`-dimensional sample are the `k`-dimensional sample's. In base 2 the
 scrambled points of a digital net are a digital net (with generating matrices `M C`)
-shifted by `c`. `pad` is the number of digits used for each point.
+shifted by `c`. `pad` is the number of digits used for each point. A [`DigitalNetSample`](@ref)
+applies the scramble to its generating matrices, which costs `O(pad²)` per column rather than
+per point ([`scramble_generators`](@ref)).
 
 References: Matoušek, J. (1998). On thel2-discrepancy for anchored boxes. Journal of Complexity, 14(4), 527-556.
 """
@@ -280,6 +282,7 @@ for each of the `pad` digits `k`. `U` is the same for every point `points` but i
 every dimension, and drawn from `rng` in dimension order, so a point's scramble depends on
 the point and the first draws of `rng` alone: it does not depend on the number of points
 and the first `k` dimensions of a `d`-dimensional sample are the `k`-dimensional sample's.
+On the generating matrices of a [`DigitalNetSample`](@ref) it is applied to the matrices.
 """
 Base.@kwdef struct DigitalShift{I <: Integer} <: ScrambleMethod
     base::I
@@ -301,4 +304,81 @@ function randomize_bits!(
         @views random_bits[:, :, s] .= (origin_bits[:, :, s] .+ digit_shift) .% R.base
     end
     return random_bits
+end
+
+const DigitalMatrixScramble = Union{MatousekScramble, DigitalShift}
+
+"""
+    scramble_generators(generating_matrices::AbstractMatrix{U}, d::Integer, R::DigitalMatrixScramble)
+
+The generating matrices of the first `d` dimensions of a base-2 digital net, scrambled by
+`R`, and the digit shift to add to every point. In dimension `s`, with `pad` the number of
+digits, the matrix `L` and the shift `c` that `randomize_bits!` draws from `R.rng`, in
+dimension order, give the columns `L C` and the shift `c`. The points of the scrambled net
+are the XORs of its columns selected by the digits of the point's index, XORed with `c`, so
+they equal the scramble of the unscrambled points. Only the first `pad` digits of each
+column and shift are kept. It costs `O(pad²)` per column, not per point.
+
+The generating matrices are left-aligned `U` words; returns the scrambled matrices and a
+vector of shifts, one per dimension.
+"""
+function scramble_generators(
+        generating_matrices::AbstractMatrix{U}, d::Integer, R::DigitalMatrixScramble
+    ) where {U <: Unsigned}
+    width = 8 * sizeof(U)
+    pad = Int(R.pad)
+    if R.base != 2
+        throw(ArgumentError("digital nets are base 2, but the scramble has base $(R.base)"))
+    end
+    if !(1 <= pad <= width)
+        throw(ArgumentError("pad = $pad digits do not fit in a $width-bit word"))
+    end
+    # Dimension order, so the first `k` dimensions are the same for every `d ≥ k`.
+    draws = [draw_digit_words(R.rng, R, U) for _ in 1:d]
+    scrambled = stack(
+        [
+            [multiply_digits(masks, word) for word in generators]
+                for ((masks, _), generators) in zip(draws, eachrow(@view generating_matrices[1:d, :]))
+        ]; dims = 1
+    )
+    return scrambled, last.(draws)
+end
+
+@public scramble_generators
+
+"""
+    draw_digit_words(rng, R::DigitalMatrixScramble, U)
+
+One dimension's scramble of `R` as left-aligned words of type `U`: the rows of the
+lower-triangular matrix, as bit masks over the digits (row `k` is a mask whose parity with
+a word gives digit `k` of the product), and the shift.
+"""
+function draw_digit_words(rng::AbstractRNG, R::MatousekScramble, ::Type{U}) where {U <: Unsigned}
+    matrix, shift = getmatousek(rng, Int(R.pad), R.base)
+    masks = [digits_to_word(U, row) for row in eachrow(matrix)]
+    return masks, digits_to_word(U, shift)
+end
+
+function draw_digit_words(rng::AbstractRNG, R::DigitalShift, ::Type{U}) where {U <: Unsigned}
+    shift = rand(rng, 0:(R.base - 1), Int(R.pad))
+    identity_masks = [one(U) << (8 * sizeof(U) - digit) for digit in 1:Int(R.pad)]
+    return identity_masks, digits_to_word(U, shift)
+end
+
+"""The left-aligned word of type `U` whose leading binary digits are `digits`."""
+function digits_to_word(::Type{U}, digits::AbstractVector{<:Integer}) where {U <: Unsigned}
+    word = zero(U)
+    for (position, digit) in enumerate(digits)
+        word |= U(digit) << (8 * sizeof(U) - position)
+    end
+    return word
+end
+
+"""Digit `k` of the product is the parity of `masks[k]` ANDed with `word`: a matrix-vector product over GF(2)."""
+function multiply_digits(masks::AbstractVector{U}, word::U) where {U <: Unsigned}
+    product = zero(U)
+    for (position, mask) in enumerate(masks)
+        product |= U(count_ones(mask & word) & 1) << (8 * sizeof(U) - position)
+    end
+    return product
 end
