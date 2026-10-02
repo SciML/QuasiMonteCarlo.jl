@@ -337,6 +337,7 @@ randomize(x, S::NoRand) = x
 
 include("RandomizedQuasiMonteCarlo/shifting.jl")
 include("RandomizedQuasiMonteCarlo/scrambling_base_b.jl")
+include("DigitalNet.jl")
 include("RandomizedQuasiMonteCarlo/iterators.jl")
 
 include("precompile.jl")
@@ -346,6 +347,7 @@ export SamplingAlgorithm,
     generate_design_matrices,
     GridSample,
     SobolSample,
+    DigitalNetSample,
     LatinHypercubeSample,
     RandomizedHaltonSample,
     LatticeRuleSample,
