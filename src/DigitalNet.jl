@@ -141,7 +141,7 @@ function _shifted_net_digits(n::Integer, d::Integer, S::DigitalNetSample)
         throw(ArgumentError("requested $d dimensions, but the digit shift has $(length(S.shift)) entries"))
     end
     U = eltype(S.generating_matrices)
-    return _digital_net_digits(n, d, S.generating_matrices, convert(Vector{U}, S.shift[1:d]))
+    return _digital_net_digits(n, d, S.generating_matrices, _leading_digits.(U, S.shift[1:d]))
 end
 
 """
