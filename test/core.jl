@@ -603,3 +603,74 @@ end
     end
     @test all(pass)
 end
+
+"""The 32 leading digits of each coordinate of `points` scrambled by `Scramble` seeded by `seed`."""
+function scrambled_words(Scramble, points, seed)
+    scrambled = randomize(points, Scramble(base = 2, pad = 32, rng = Xoshiro(seed)))
+    return UInt32.(floor.(scrambled .* 2.0^32))
+end
+
+"""The sorted numbers of points in each box of the grid that splits dimension `s` into `2^splits[s]` cells."""
+function box_counts(words, splits)
+    counts = Dict{Vector{UInt32}, Int}()
+    for point in eachcol(words)
+        box = UInt32[word >> (32 - split) for (word, split) in zip(point, splits)]
+        counts[box] = get(counts, box, 0) + 1
+    end
+    return sort!(collect(values(counts)))
+end
+
+@testset "$Scramble scrambles a digital net into a shifted digital net of all pad digits" for Scramble in (MatousekScramble, DigitalShift)
+    d, m = 4, 6
+    n = 2^m
+    sobol = QuasiMonteCarlo.sample(n, d, SobolSample())
+    plain = UInt32.(floor.(sobol .* 2.0^32))
+    words = scrambled_words(Scramble, sobol, 3)
+    @test words != plain
+
+    # Affine over GF(2): a ⊕ b ⊕ (any point) is again a point, so the points of each
+    # dimension are a shifted subspace of dimension m.
+    for dimension in axes(words, 1)
+        points = Set(words[dimension, :])
+        anchor = words[dimension, begin]
+        @test length(points) == n
+        @test all((a ⊻ b ⊻ anchor) in points for a in points for b in points)
+    end
+
+    # A longer sample keeps the points of a shorter one, and a wider one the dimensions of a
+    # narrower one: the scramble does not depend on the number of points or dimensions.
+    longer = QuasiMonteCarlo.sample(2n, d, SobolSample())
+    @test scrambled_words(Scramble, longer, 3)[:, 1:37] == scrambled_words(Scramble, longer[:, 1:37], 3)
+    @test scrambled_words(Scramble, sobol, 3)[1:2, :] == scrambled_words(Scramble, sobol[1:2, :], 3)
+
+    # The leading digits of a scrambled point depend on the leading digits alone.
+    cells = rand(Xoshiro(1), 0:(2^10 - 1), 1, 200)
+    coarse = (cells .+ rand(Xoshiro(2), 0:(2^22 - 1), 1, 200) ./ 2^22) ./ 2^10
+    fine = (cells .+ rand(Xoshiro(3), 0:(2^22 - 1), 1, 200) ./ 2^22) ./ 2^10
+    @test floor.(Int, randomize(coarse, Scramble(base = 2, pad = 32, rng = Xoshiro(4))) .* 2^10) ==
+        floor.(Int, randomize(fine, Scramble(base = 2, pad = 32, rng = Xoshiro(4))) .* 2^10)
+    @test randomize(coarse, Scramble(base = 2, pad = 32, rng = Xoshiro(4))) != randomize(fine, Scramble(base = 2, pad = 32, rng = Xoshiro(4)))
+
+    # Box counts are those of the unscrambled net: one point per elementary interval in the
+    # first two dimensions, and the same counts as the unscrambled net in all four.
+    for first_digits in 0:m
+        @test box_counts(words[1:2, :], (first_digits, m - first_digits)) == ones(Int, n)
+    end
+    for splits in Iterators.product(fill(0:m, d)...)
+        sum(splits) == m || continue
+        @test box_counts(words, splits) == box_counts(plain, splits)
+    end
+
+    # Each scrambled point is uniform: its mean over 4000 seeds is within 4 standard errors of ½.
+    draws = [scrambled_words(Scramble, fill(0.3, 1, 1), seed)[1, 1] / 2.0^32 for seed in 1:4000]
+    @test abs(mean(draws) - 0.5) < 4 * sqrt(1 / 12 / length(draws))
+end
+
+@testset "MatousekScramble and DigitalShift do not depend on the thread" begin
+    for Scramble in (MatousekScramble, DigitalShift)
+        sobol = QuasiMonteCarlo.sample(64, 4, SobolSample())
+        serial = [scrambled_words(Scramble, sobol, seed) for seed in 1:8]
+        tasks = [Threads.@spawn(scrambled_words(Scramble, sobol, seed)) for seed in 1:8]
+        @test fetch.(tasks) == serial
+    end
+end
