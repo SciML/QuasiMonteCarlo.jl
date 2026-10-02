@@ -199,8 +199,14 @@ Linear Matrix Scramble, also known as Matousek's scramble.
   the scramble.
 
 `randomize(x, R::MatousekScramble)` returns a scrambled version of `x`.
-The scramble method is Linear Matrix Scramble which was introduced in Matousek (1998).
-`pad` is the number of bits used for each point. One needs `pad ≥ log(base, n)`.
+The scramble method is Linear Matrix Scramble which was introduced in Matousek (1998):
+in each dimension the `pad` digits `a` of a point become `M a + c` modulo `base`, where `M`
+is a random lower-triangular `pad × pad` matrix with non-zero diagonal and `c` a random
+digit vector. The matrix and shift are drawn from `rng` in dimension order, whatever the
+number of points, so a longer sample keeps the points of a shorter one and the first `k`
+dimensions of a `d`-dimensional sample are the `k`-dimensional sample's. In base 2 the
+scrambled points of a digital net are a digital net (with generating matrices `M C`)
+shifted by `c`. `pad` is the number of digits used for each point.
 
 References: Matoušek, J. (1998). On thel2-discrepancy for anchored boxes. Journal of Complexity, 14(4), 527-556.
 """
@@ -224,29 +230,16 @@ function randomize_bits!(
     ) where {T <: Integer}
     # https://statweb.stanford.edu/~owen/mc/ Chapter 17.6 around equation (17.15).
     #
-    pad, n, d = size(origin_bits)
-    b = R.base
-    rng = R.rng
-    m = logi(b, n)
-    @assert m ≥ 1 "We need m ≥ 1" # m=0 causes awkward corner case below.  Caller handles that case specially.
-
+    pad, _, d = size(origin_bits)
     for s in 1:d
-        # Permutations matrix and shift to apply to bits 1:m
-        matousek_M, matousek_C = getmatousek(rng, m, b)
+        # A pad × pad matrix and shift per dimension, drawn in dimension order.
+        matousek_M, matousek_C = getmatousek(R.rng, pad, R.base)
 
         # xₖ = (∑ₗ Mₖₗ aₗ + Cₖ) mod b where xₖ is the k element in base b
-        # matousek_M (m×m) * origin_bits (m×n) .+ matousek_C (m×1)
-        @views random_bits[1:m, :, s] .= (
-            matousek_M * origin_bits[1:m, :, s] .+
-                matousek_C
-        ) .% b
+        # matousek_M (pad×pad) * origin_bits (pad×n) .+ matousek_C (pad×1)
+        @views random_bits[:, :, s] .= (matousek_M * origin_bits[:, :, s] .+ matousek_C) .% R.base
     end
-
-    # Paste in random entries for bits after m'th one
-    return if pad > m
-        # random_bits[(m + 1):pad, :, :] = rand(rng, 0:(b - 1), n * d * (pad - m))
-        rand!(rng, @view(random_bits[(m + 1):pad, :, :]), 0:(b - 1))
-    end
+    return random_bits
 end
 
 """
@@ -282,8 +275,11 @@ Digital shift.
   the shift.
 
 The scramble method is Digital Shift.
-It scrambles each coordinate in base `b` as `yₖ = (xₖ + Uₖ) mod b` where `Uₖ ∼ 𝕌({0:b-1})`.
-`U` is the same for every point `points` but i.i.d. along every dimension.
+It scrambles each coordinate in base `b` as `yₖ = (xₖ + Uₖ) mod b` where `Uₖ ∼ 𝕌({0:b-1})`
+for each of the `pad` digits `k`. `U` is the same for every point `points` but i.i.d. along
+every dimension, and drawn from `rng` in dimension order, so a point's scramble depends on
+the point and the first draws of `rng` alone: it does not depend on the number of points
+and the first `k` dimensions of a `d`-dimensional sample are the `k`-dimensional sample's.
 """
 Base.@kwdef struct DigitalShift{I <: Integer} <: ScrambleMethod
     base::I
@@ -298,24 +294,11 @@ function randomize_bits!(
     ) where {T <: Integer}
     # https://statweb.stanford.edu/~owen/mc/ Chapter 17.6 around equation (17.15).
     #
-    pad, n, d = size(origin_bits)
-    b = R.base
-    rng = R.rng
-    m = logi(b, n)
-    @assert m ≥ 1 "We need m ≥ 1" # m=0 causes awkward corner case below.  Caller handles that case specially.
-
+    pad, _, d = size(origin_bits)
     for s in 1:d
-        # Permutations matrix and shift to apply to bits 1:m
-        DS = rand(rng, 0:(b - 1), m)
-
-        # xₖ = (aₖ + Cₖ) mod b where xₖ is the k element in base b
-        # origin_bits (m×n) .+ DS (m×1)
-        @views random_bits[1:m, :, s] .= (origin_bits[1:m, :, s] .+ DS) .% b
+        # One shift of all `pad` digits per dimension, drawn in dimension order.
+        digit_shift = rand(R.rng, 0:(R.base - 1), pad)
+        @views random_bits[:, :, s] .= (origin_bits[:, :, s] .+ digit_shift) .% R.base
     end
-
-    # Paste in random entries for bits after m'th one
-    return if pad > m
-        # random_bits[(m + 1):pad, :, :] = rand(rng, 0:(b - 1), n * d * (pad - m))
-        rand!(rng, @view(random_bits[(m + 1):pad, :, :]), 0:(b - 1))
-    end
+    return random_bits
 end
