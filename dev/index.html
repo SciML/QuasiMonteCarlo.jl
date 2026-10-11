@@ -54,7 +54,7 @@ ylims!(1e-9, 1)
 xaxis!(:log10)
 yaxis!(:log10)
 xlabel!(&quot;n&quot;, legend = :bottomleft)
-ylabel!(&quot;|μ̂-μ|&quot;)</code></pre><img src="index-4990d066.svg" alt="Example block output"/><h2 id="Adding-a-new-sampling-method"><a class="docs-heading-anchor" href="#Adding-a-new-sampling-method">Adding a new sampling method</a><a id="Adding-a-new-sampling-method-1"></a><a class="docs-heading-anchor-permalink" href="#Adding-a-new-sampling-method" title="Permalink"></a></h2><p>Adding a new sampling method is a two-step process:</p><ol><li>Add a new SamplingAlgorithm type.</li><li>Implement <code>sample(n, d, sampler, T = Float64)</code> for that type.</li></ol><p>The unit-box method must return a matrix with dimension <code>d</code> by <code>n</code>, where <code>d</code> is the sample-space dimension and <code>n</code> is the number of samples. Every element must lie in <code>[0, 1]</code>. The package supplies the bounds method, so extensions should not implement <code>sample(n, lb, ub, sampler)</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia hljs">struct NewAmazingSamplingAlgorithm{OPTIONAL} &lt;: SamplingAlgorithm end
+ylabel!(&quot;|μ̂-μ|&quot;)</code></pre><img src="index-a5075761.svg" alt="Example block output"/><h2 id="Adding-a-new-sampling-method"><a class="docs-heading-anchor" href="#Adding-a-new-sampling-method">Adding a new sampling method</a><a id="Adding-a-new-sampling-method-1"></a><a class="docs-heading-anchor-permalink" href="#Adding-a-new-sampling-method" title="Permalink"></a></h2><p>Adding a new sampling method is a two-step process:</p><ol><li>Add a new SamplingAlgorithm type.</li><li>Implement <code>sample(n, d, sampler, T = Float64)</code> for that type.</li></ol><p>The unit-box method must return a matrix with dimension <code>d</code> by <code>n</code>, where <code>d</code> is the sample-space dimension and <code>n</code> is the number of samples. Every element must lie in <code>[0, 1]</code>. The package supplies the bounds method, so extensions should not implement <code>sample(n, lb, ub, sampler)</code>.</p><p><strong>Example</strong></p><pre><code class="language-julia hljs">struct NewAmazingSamplingAlgorithm{OPTIONAL} &lt;: SamplingAlgorithm end
 
 function sample(n::Integer, d::Integer, ::NewAmazingSamplingAlgorithm, T = Float64)
     return fill(convert(T, 0.5), d, n)
@@ -71,9 +71,9 @@ Build Info:
   Official https://julialang.org release
 Platform Info:
   OS: Linux (x86_64-linux-gnu)
-  CPU: 4 × Intel(R) Xeon(R) 6973P-C
+  CPU: 4 × AMD EPYC 9V45 96-Core Processor
   WORD_SIZE: 64
-  LLVM: libLLVM-20.1.8 (ORCJIT, graniterapids)
+  LLVM: libLLVM-20.1.8 (ORCJIT, znver5)
   GC: Built with stock GC
 Threads: 1 default, 1 interactive, 1 GC (on 4 virtual cores)</code></pre></details><details><summary>A more complete overview of all dependencies and their versions is also provided.</summary><pre class="documenter-example-output"><code class="nohighlight hljs ansi"><span class="sgr32"><span class="sgr1">Status</span></span> `~/work/QuasiMonteCarlo.jl/QuasiMonteCarlo.jl/docs/Manifest.toml`
   <span class="sgr90">[a4c015fc] </span>ANSIColoredPrinters v0.0.1
@@ -99,7 +99,7 @@ Threads: 1 default, 1 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   <span class="sgr90">[ffbed154] </span>DocStringExtensions v0.9.5
   <span class="sgr90">[e30172f5] </span>Documenter v1.19.0
   <span class="sgr90">[c87230d0] </span>FFMPEG v0.4.6
-  <span class="sgr90">[1a297f60] </span>FillArrays v1.17.1
+  <span class="sgr90">[1a297f60] </span>FillArrays v1.18.0
 <span class="sgr33">⌅</span> <span class="sgr90">[53c48c17] </span>FixedPointNumbers v0.8.6
   <span class="sgr90">[1fa38f19] </span>Format v1.3.7
   <span class="sgr90">[28b8d3ca] </span>GR v0.73.27
@@ -127,7 +127,7 @@ Threads: 1 default, 1 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   <span class="sgr90">[90014a1f] </span>PDMats v0.11.41
   <span class="sgr90">[69de0a69] </span>Parsers v3.0.0
   <span class="sgr90">[ccf2f8ad] </span>PlotThemes v3.3.0
-  <span class="sgr90">[995b91a9] </span>PlotUtils v1.5.0
+  <span class="sgr90">[995b91a9] </span>PlotUtils v1.5.1
   <span class="sgr90">[91a5bcdd] </span>Plots v1.41.7
   <span class="sgr90">[aea7be01] </span>PrecompileTools v1.3.4
   <span class="sgr90">[21216c6a] </span>Preferences v1.6.0
@@ -142,7 +142,7 @@ Threads: 1 default, 1 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   <span class="sgr90">[05181044] </span>RelocatableFolders v1.0.1
   <span class="sgr90">[ae029012] </span>Requires v1.3.1
   <span class="sgr90">[79098fc4] </span>Rmath v0.9.0
-  <span class="sgr90">[f2b01f46] </span>Roots v3.0.9
+  <span class="sgr90">[f2b01f46] </span>Roots v3.0.11
   <span class="sgr90">[431bcebd] </span>SciMLPublic v1.3.0
   <span class="sgr90">[6c6a2e73] </span>Scratch v1.3.0
   <span class="sgr90">[992d4aef] </span>Showoff v1.1.1
@@ -187,7 +187,7 @@ Threads: 1 default, 1 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   <span class="sgr90">[89763e89] </span>Libtiff_jll v4.7.3+0
   <span class="sgr90">[38a345b3] </span>Libuuid_jll v2.42.0+0
   <span class="sgr90">[e7412a2a] </span>Ogg_jll v1.3.6+0
-  <span class="sgr90">[9bd350c2] </span>OpenSSH_jll v10.5.1+0
+  <span class="sgr90">[9bd350c2] </span>OpenSSH_jll v10.6.1+0
   <span class="sgr90">[efe28fd5] </span>OpenSpecFun_jll v0.5.6+0
   <span class="sgr90">[91d4177d] </span>Opus_jll v1.6.1+0
   <span class="sgr90">[36c8627f] </span>Pango_jll v1.58.2+0
@@ -222,8 +222,8 @@ Threads: 1 default, 1 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   <span class="sgr90">[975044d2] </span>Xorg_xcb_util_keysyms_jll v0.4.1+0
   <span class="sgr90">[0d47668e] </span>Xorg_xcb_util_renderutil_jll v0.3.10+0
   <span class="sgr90">[c22f9ab0] </span>Xorg_xcb_util_wm_jll v0.4.2+0
-  <span class="sgr90">[35661453] </span>Xorg_xkbcomp_jll v1.4.7+0
-  <span class="sgr90">[33bec58e] </span>Xorg_xkeyboard_config_jll v2.47.0+2
+  <span class="sgr90">[35661453] </span>Xorg_xkbcomp_jll v1.5.0+0
+  <span class="sgr90">[33bec58e] </span>Xorg_xkeyboard_config_jll v2.48.0+0
   <span class="sgr90">[c5fb5394] </span>Xorg_xtrans_jll v1.6.0+0
   <span class="sgr90">[35ca27e7] </span>eudev_jll v3.2.14+0
 <span class="sgr33">⌅</span> <span class="sgr90">[214eeab7] </span>fzf_jll v0.61.1+0
@@ -234,7 +234,7 @@ Threads: 1 default, 1 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   <span class="sgr90">[2db6ffa8] </span>libevdev_jll v1.13.4+0
   <span class="sgr90">[f638f0a6] </span>libfdk_aac_jll v2.0.4+0
   <span class="sgr90">[36db933b] </span>libinput_jll v1.28.1+0
-  <span class="sgr90">[b53b4c65] </span>libpng_jll v1.6.59+0
+  <span class="sgr90">[b53b4c65] </span>libpng_jll v1.6.59+1
   <span class="sgr90">[9a156e7d] </span>libva_jll v2.23.0+0
   <span class="sgr90">[f27f6e37] </span>libvorbis_jll v1.3.8+0
   <span class="sgr90">[009596ad] </span>mtdev_jll v1.1.7+0
@@ -288,4 +288,4 @@ Threads: 1 default, 1 interactive, 1 GC (on 4 virtual cores)</code></pre></detai
   <span class="sgr90">[8e850b90] </span>libblastrampoline_jll v5.15.0+0
   <span class="sgr90">[8e850ede] </span>nghttp2_jll v1.67.1+0
   <span class="sgr90">[3f19e933] </span>p7zip_jll v17.8.2+0
-<span class="sgr36"><span class="sgr1">Info</span></span> Packages marked with <span class="sgr33">⌅</span> have new versions available but compatibility constraints restrict them from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.4.4/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.4.4/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="samplers/">Sampler APIs »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.19.0 on <span class="colophon-date" title="Sunday 4 October 2026 22:34">Sunday 4 October 2026</span>. Using Julia version 1.13.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+<span class="sgr36"><span class="sgr1">Info</span></span> Packages marked with <span class="sgr33">⌅</span> have new versions available but compatibility constraints restrict them from upgrading. To see why use `status --outdated -m`</code></pre></details><p>You can also download the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.4.4/assets/Manifest.toml">manifest</a> file and the <a href="https://github.com/SciML/QuasiMonteCarlo.jl/tree/gh-pages/v0.4.4/assets/Project.toml">project</a> file.</p></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="samplers/">Sampler APIs »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.19.0 on <span class="colophon-date" title="Sunday 11 October 2026 22:36">Sunday 11 October 2026</span>. Using Julia version 1.13.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
