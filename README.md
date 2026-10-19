@@ -36,14 +36,7 @@ s = QuasiMonteCarlo.sample(n, lb, ub, LatticeRuleSample())
 s = QuasiMonteCarlo.sample(n, lb, ub, HaltonSample())
 ```
 
-The output `s` is a matrix, so one can use things like `@uview` from
-[UnsafeArrays.jl](https://github.com/oschulz/UnsafeArrays.jl) for a stack-allocated
-view of the `i`th point:
-
-```julia
-using UnsafeArrays
-@uview s[:, i]
-```
+The output `s` is a matrix.
 
 ## API
 
