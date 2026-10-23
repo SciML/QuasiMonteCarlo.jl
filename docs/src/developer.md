@@ -15,6 +15,15 @@ same bounds and sample-count requirements as QuasiMonteCarlo.jl.
 QuasiMonteCarlo._check_sequence
 ```
 
+## Scrambled digital nets
+
+`DigitalNetSample` scrambles a net's generating matrices once instead of
+scrambling every point; this helper exposes that step.
+
+```@docs
+QuasiMonteCarlo.scramble_generators
+```
+
 ## Extension interfaces
 
 The following interfaces are public for package developers. They describe the
