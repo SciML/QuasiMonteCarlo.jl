@@ -87,6 +87,12 @@ MatousekScramble
 OwenScramble
 ```
 
+  - `HashOwenScramble` is the same nested scramble with its permutations hashed from the digits above rather than stored. Each point is scrambled independently of the others, so it takes any number of points, and extending a sample keeps the points already drawn.
+
+```@docs
+HashOwenScramble
+```
+
 ## Other methods
 
 `Shift(rng)` a.k.a. Cranley-Patterson Rotation. It is by far the fastest method; it is used in `LatticeRuleScramble` for example.

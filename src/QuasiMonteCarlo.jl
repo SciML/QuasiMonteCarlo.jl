@@ -361,6 +361,7 @@ export SamplingAlgorithm,
     Shift,
     ScrambleMethod,
     OwenScramble,
+    HashOwenScramble,
     MatousekScramble,
     DigitalShift,
     DesignMatrix
