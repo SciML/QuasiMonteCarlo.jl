@@ -600,7 +600,9 @@ end
     net = QuasiMonteCarlo.sample(n, 2, SobolSample())
     rng = Xoshiro(1)
     xs = [randomize(net, OwenScramble(base = 2, rng = rng))[2, 3] for _ in 1:1000]
-    @test pvalue(ExactOneSampleKSTest(xs, Uniform())) > 0.01
+    @test pvalue(OneSampleADTest(xs, Uniform())) > 0.01
+    # ...and so are its 7 leading binary digits (more sensitive to errors in single digits)
+    @test pvalue(ChisqTest(counts(trunc.(Int, ldexp.(xs, 7)), 0:127))) > 0.01
 end
 
 @testset "Faure sequence are (0,m,s)-net even after scrambling" begin

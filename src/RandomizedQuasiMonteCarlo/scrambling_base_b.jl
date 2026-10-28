@@ -106,6 +106,7 @@ function owen_scramble_base2!(
     for s in axes(points, 2)
         rand!(rng, flips)
         for i in axes(points, 1)
+            # Exact conversion; computing in `T` would overflow for Float16 and pad ≥ 16
             x = trunc(UInt64, ldexp(Float64(points[i, s]), pad))
             y = zero(UInt64)
             node = 1
