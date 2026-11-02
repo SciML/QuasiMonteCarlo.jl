@@ -571,6 +571,40 @@ end
     @test all(pass)
 end
 
+@testset "Nested uniform scramble of floating point nets in base 2" begin
+    t_sobol = [0, 0, 1, 3, 5]
+    m = 8
+    n = 2^m
+    bits64(x) = trunc(UInt64, ldexp(Float64(x), 64))
+    # Number of common leading binary digits, up to `m`
+    nprefix(x, y) = min(leading_zeros(bits64(x) ⊻ bits64(y)), m)
+    for T in (Float32, Float64), pad in (m, 32, 64)
+        for (s, t) in enumerate(t_sobol)
+            net = QuasiMonteCarlo.sample(n, s, SobolSample(), T)
+            x = randomize(net, OwenScramble(base = 2, pad = pad, rng = Xoshiro(s)))
+            @test x isa Matrix{T}
+            @test all(0 .≤ x .< 1)
+            @test istmsnet(Rational{Int128}.(x); λ = 1, t, m, s, base = 2)
+            # The flip of each digit depends only on the preceding digits...
+            @test all(1:s) do k
+                all(nprefix(net[k, i], net[k, j]) == nprefix(x[k, i], x[k, j]) for i in 1:n, j in 1:n)
+            end
+            # ...but not the same for all points (as for a digital shift)
+            @test all(1:s) do k
+                length(unique((bits64(x[k, i]) ⊻ bits64(net[k, i])) >> (64 - m) for i in 1:n)) > 1
+            end
+        end
+    end
+
+    # Each scrambled point is uniformly distributed
+    net = QuasiMonteCarlo.sample(n, 2, SobolSample())
+    rng = Xoshiro(1)
+    xs = [randomize(net, OwenScramble(base = 2, rng = rng))[2, 3] for _ in 1:1000]
+    @test pvalue(OneSampleADTest(xs, Uniform())) > 0.01
+    # ...and so are its 7 leading binary digits (more sensitive to errors in single digits)
+    @test pvalue(ChisqTest(counts(trunc.(Int, ldexp.(xs, 7)), 0:127))) > 0.01
+end
+
 @testset "Faure sequence are (0,m,s)-net even after scrambling" begin
     # Faure sequence are exactly (t=0, s)-sequence in base b=nextprime(s)
     m = 4
