@@ -202,11 +202,17 @@ next!(DM::ShiftDesignMat) = randomize!(DM.X, DM.R)
 next!(DM::DistributionDesignMat) = rand!(DM.D, DM.X)
 next!(DM::RandomDesignMat) = rand!(DM.X)
 
+"""
+    unrandomized_points(n, d, sampler, T) -> Matrix{T}
+
+Return the `d × n` points of `sampler` without its randomization.
+A `VanDerCorputSample` gives a vector, which becomes a `1 × n` matrix.
+"""
+unrandomized_points(n, d, sampler, T) = reshape(sample(n, d, (@set sampler.R = NoRand()), T), d, n)
+
 ## OwenScramble
 function initialize(n, d, sampler, R::OwenScramble, T::DataType = Float64)
-    # Generate unrandomized sequence
-    no_rand_sampler = @set sampler.R = NoRand()
-    points = permutedims(sample(n, d, no_rand_sampler, T))
+    points = permutedims(unrandomized_points(n, d, sampler, T))
 
     b = R.base
     bits = unif2bits(points, b, pad = R.pad)
@@ -233,9 +239,7 @@ end
 ## Other scramble
 
 function initialize(n, d, sampler, R::ScrambleMethod, T::DataType = Float64)
-    # Generate unrandomized sequence
-    no_rand_sampler = @set sampler.R = NoRand()
-    points = permutedims(sample(n, d, no_rand_sampler, T))
+    points = permutedims(unrandomized_points(n, d, sampler, T))
 
     b = R.base
     bits = unif2bits(points, b, pad = R.pad)
@@ -258,12 +262,7 @@ function scramble!(
 end
 
 ## Shift
-function initialize(n, d, sampler, R::Shift, T::DataType = Float64)
-    # Generate unrandomized sequence
-    no_rand_sampler = @set sampler.R = NoRand()
-    points = sample(n, d, no_rand_sampler, T)
-    return points
-end
+initialize(n, d, sampler, R::Shift, T::DataType = Float64) = unrandomized_points(n, d, sampler, T)
 
 ## Distribution
 function initialize(n, d, D::RandomSample, T::DataType = Float64)

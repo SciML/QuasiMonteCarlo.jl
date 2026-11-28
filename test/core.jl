@@ -220,6 +220,12 @@ end
         # One randomization for all points keeps one point in each cell of width 1/n.
         @test sort(floor.(Int, n .* s)) == 0:(n - 1)
         @test s != plain
+        # The iterators give 1 × n matrices with the same property.
+        sampler = VanDerCorputSample(; base, R)
+        for matrices in (collect(DesignMatrix(n, 1, sampler, 2)), QuasiMonteCarlo.generate_design_matrices(n, 1, sampler, 2))
+            @test all(size(matrix) == (1, n) && sort(floor.(Int, n .* vec(matrix))) == 0:(n - 1) for matrix in matrices)
+            @test allunique(matrices)
+        end
     end
 end
 
