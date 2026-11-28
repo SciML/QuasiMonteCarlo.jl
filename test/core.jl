@@ -236,6 +236,16 @@ end
     end
 end
 
+@testset "radical-inverse samplers count index digits exactly" begin
+    # One point has one index digit, so it is the center of the unit interval.
+    @test QuasiMonteCarlo.sample(1, 1, VanDerCorputSample(base = 3)) == [0.5]
+    @test QuasiMonteCarlo.sample(1, 3, HaltonSample()) == fill(0.5, 3, 1)
+    @test QuasiMonteCarlo.sample(1, 3, FaureSample()) == QuasiMonteCarlo.sample(3, 3, FaureSample())[:, 1:1]
+    # Float `ceil(log(5, 125))` is 4. The first Faure point of b^k points is 1 / 2b^(k + 1).
+    @test QuasiMonteCarlo.sample(125, 5, FaureSample())[:, 1] ≈ fill(1 / (2 * 5^4), 5)
+    @test QuasiMonteCarlo.sample(25, 5, FaureSample())[:, 1] ≈ fill(1 / (2 * 5^3), 5)
+end
+
 @testset "Faure Sample" begin
     #FaureSample()
     d = 17

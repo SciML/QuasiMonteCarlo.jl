@@ -39,7 +39,7 @@ function sample(n::Integer, d::Integer, S::VanDerCorputSample, T::Type = Float64
     base = S.base
     log_n = log(base, n)
     t = floor(Int, log_n)
-    n_digits = ceil(Int, log_n)
+    n_digits = _index_digits(n, base)
     λ = n ÷ (base^t)
     return randomize(_vdc(promote(λ, n_digits, base)..., T; n), S.R)
 end
@@ -72,6 +72,19 @@ end
     end
     return sequence
 end
+
+"""
+    _index_digits(n, base)
+
+The number of base-`base` digits of the largest index `n - 1` of `n` points, at least 1.
+Integer arithmetic keeps it exact where `ceil(log(base, n))` rounds, as at `n = 5^3`.
+
+```jldoctest
+julia> QuasiMonteCarlo._index_digits.((1, 8, 9, 125), (2, 2, 2, 5))
+(1, 3, 4, 3)
+```
+"""
+_index_digits(n::Integer, base::Integer) = ndigits(n - 1; base)
 
 @fastmath @views function _base_sum!(dgs::AbstractVector, base::Integer)
     @label start # for recursion
