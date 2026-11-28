@@ -76,7 +76,7 @@ end
 """
     _index_digits(n, base)
 
-The number of base-`base` digits of the largest index `n - 1` of `n` points, at least 1.
+The number of base-`base` digits of the largest index `n - 1` of `n ≥ 1` points, at least 1.
 Integer arithmetic keeps it exact where `ceil(log(base, n))` rounds, as at `n = 5^3`.
 
 ```jldoctest
@@ -84,7 +84,10 @@ julia> QuasiMonteCarlo._index_digits.((1, 8, 9, 125), (2, 2, 2, 5))
 (1, 3, 4, 3)
 ```
 """
-_index_digits(n::Integer, base::Integer) = ndigits(n - 1; base)
+function _index_digits(n::Integer, base::Integer)
+    _check_sequence(n)
+    return ndigits(n - 1; base)
+end
 
 @fastmath @views function _base_sum!(dgs::AbstractVector, base::Integer)
     @label start # for recursion

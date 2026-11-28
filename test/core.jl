@@ -244,6 +244,10 @@ end
     # Float `ceil(log(5, 125))` is 4. The first Faure point of b^k points is 1 / 2b^(k + 1).
     @test QuasiMonteCarlo.sample(125, 5, FaureSample())[:, 1] ≈ fill(1 / (2 * 5^4), 5)
     @test QuasiMonteCarlo.sample(25, 5, FaureSample())[:, 1] ≈ fill(1 / (2 * 5^3), 5)
+    # Zero points have no index to count, so every sampler rejects them.
+    @test_throws AssertionError QuasiMonteCarlo.sample(0, 2, HaltonSample())
+    @test_throws AssertionError QuasiMonteCarlo.sample(0, 2, FaureSample())
+    @test_throws AssertionError QuasiMonteCarlo.sample(0, 1, VanDerCorputSample(base = 2))
 end
 
 @testset "Faure Sample" begin
