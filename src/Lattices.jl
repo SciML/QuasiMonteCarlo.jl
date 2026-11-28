@@ -5,9 +5,10 @@ The points of a rectangular grid in the unit box, in random order. The grid has 
 cells along each axis, with `m` the smallest integer such that `m^d ≥ n`. Its points are
 the `m^d` cell centers, so no coordinate is 0 or 1.
 
-`sample(n, d, GridSample())` returns `n` distinct grid points, drawn without replacement
-and in random order. With `n = m^d` it is the whole grid. Every leading run of points is a
-uniform sample of the grid, so its mean is an unbiased estimate of the grid's mean.
+`sample(n, d, GridSample())` returns the centers of `n` distinct grid cells, drawn without
+replacement and in random order. With `n = m^d` it is the whole grid. Every leading run of
+points is a uniform sample of the grid, so its mean is an unbiased estimate of the grid's mean.
+A narrow element type, such as `Float16` on a fine grid, can round two centers to one value.
 
 # Fields
 
