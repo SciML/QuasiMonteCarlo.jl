@@ -150,10 +150,10 @@ end
     end
     @test_throws ArgumentError QuasiMonteCarlo.sample(4, 0, GridSample())
     # The float root misses the exact count at these sizes.
-    @test QuasiMonteCarlo.grid_cells(10^18, 3) == 10^6
-    @test QuasiMonteCarlo.grid_cells(10^18 + 1, 3) == 10^6 + 1
-    @test QuasiMonteCarlo.grid_cells(2^62 + 1, 2) == 2^31 + 1
-    @test QuasiMonteCarlo.grid_cells(typemax(Int), 1) == typemax(Int)
+    @test QuasiMonteCarlo.grid_cells(Int64(10)^18, 3) === Int64(10)^6
+    @test QuasiMonteCarlo.grid_cells(Int64(10)^18 + 1, 3) === Int64(10)^6 + 1
+    @test QuasiMonteCarlo.grid_cells(Int64(2)^62 + 1, 2) === Int64(2)^31 + 1
+    @test QuasiMonteCarlo.grid_cells(typemax(Int64), 1) === typemax(Int64)
     # Scaling a full grid keeps its exact mean and variance.
     lb, ub = [-1.0, 10.0], [3.0, 12.0]
     s = QuasiMonteCarlo.sample(64, lb, ub, GridSample(Xoshiro(1776)))

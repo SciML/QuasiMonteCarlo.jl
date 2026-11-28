@@ -68,7 +68,8 @@ function grid_cells(n::Integer, d::Integer)
     while cells > 1 && (cells - 1)^d >= n
         cells -= 1
     end
-    return Int(cells)
+    # `m ≤ n`, so the type of `n` holds `m`.
+    return convert(typeof(n), cells)
 end
 
 """
@@ -106,13 +107,8 @@ order: every leading run of them is a uniform sample without replacement.
 ```jldoctest
 julia> using QuasiMonteCarlo, Random
 
-julia> sort(QuasiMonteCarlo.distinct_indices(Xoshiro(1), 5, 5))
-5-element Vector{Int64}:
- 0
- 1
- 2
- 3
- 4
+julia> sort(QuasiMonteCarlo.distinct_indices(Xoshiro(1), 5, 5)) == 0:4
+true
 ```
 """
 function distinct_indices(rng::AbstractRNG, count::Integer, n::Integer)
