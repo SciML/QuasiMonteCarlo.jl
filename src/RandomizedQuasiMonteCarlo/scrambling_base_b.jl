@@ -206,7 +206,9 @@ check_scramble(::DeterministicSamplingAlgorithm, ::Integer, ::RandomizationMetho
 check_scramble(::SobolSample, ::Integer, R::ScrambleMethod) = check_base(R, 2)
 check_scramble(::FaureSample, d::Integer, R::ScrambleMethod) = check_base(R, nextprime(d))
 check_scramble(S::VanDerCorputSample, ::Integer, R::ScrambleMethod) = check_base(R, S.base)
-function check_scramble(::HaltonSample, ::Integer, R::ScrambleMethod)
+function check_scramble(::HaltonSample, d::Integer, R::ScrambleMethod)
+    # One coordinate has the single base 2.
+    d == 1 && return check_base(R, 2)
     throw(ArgumentError("$(nameof(typeof(R))) needs one base, but HaltonSample has a base per coordinate. Use RandomizedHaltonSample or Shift."))
 end
 
