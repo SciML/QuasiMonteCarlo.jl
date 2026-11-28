@@ -75,22 +75,16 @@ The implemented `ScramblingMethods` are
 DigitalShift
 ```
 
-  - `MatousekScramble` a.k.a. Linear Matrix Scramble is what people use in practice. Indeed, the observed performances are similar to `OwenScramble` for a lesser numerical cost.
+  - `MatousekScramble` a.k.a. Linear Matrix Scramble is what people use in practice. Its observed performance is similar to `OwenScramble`.
 
 ```@docs
 MatousekScramble
 ```
 
-  - `OwenScramble` a.k.a. Nested Uniform Scramble is the most understood theoretically, but is more costly to operate.
+  - `OwenScramble` a.k.a. Nested Uniform Scramble is the most understood theoretically. It hashes its permutations, so it scrambles any number of points, and extending a sample keeps the points already drawn.
 
 ```@docs
 OwenScramble
-```
-
-  - `HashOwenScramble` is the same nested scramble with its permutations hashed from the digits above rather than stored. Each point is scrambled independently of the others, so it takes any number of points, and extending a sample keeps the points already drawn.
-
-```@docs
-HashOwenScramble
 ```
 
 ## Other methods

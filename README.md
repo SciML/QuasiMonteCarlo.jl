@@ -146,7 +146,7 @@ The currently available randomization methods are:
     
       + `DigitalShift`
       + `MatousekScramble` a.k.a. Linear Matrix Scramble.
-      + `OwenScramble` a.k.a. Nested Uniform Scramble is the most understood theoretically, but is more costly to operate.
+      + `OwenScramble` a.k.a. Nested Uniform Scramble is the most understood theoretically. It scrambles any number of points.
 
   - `Shift(rng)` a.k.a. Cranley Patterson Rotation.
 

@@ -14,8 +14,8 @@ scrambled, and `pad` must be at least `log(base, n)` for a point set with `n`
 points. The `randomize` interface preserves the matrix size and keeps points in
 the unit box.
 
-The package provides [`DigitalShift`](@ref), [`MatousekScramble`](@ref),
-[`OwenScramble`](@ref), and [`HashOwenScramble`](@ref). New implementations should add methods to the generic
+The package provides [`DigitalShift`](@ref), [`MatousekScramble`](@ref), and
+[`OwenScramble`](@ref). New implementations should add methods to the generic
 `randomize`/`randomize!` interface rather than changing sampler methods.
 
 # Examples
@@ -36,7 +36,6 @@ The scramble methods implementer are
   - `DigitalShift`.
   - `OwenScramble`: Nested Uniform Scramble which was introduced in Owen (1995).
   - `MatousekScramble`: Linear Matrix Scramble which was introduced in Matousek (1998).
-  - `HashOwenScramble`: Nested Uniform Scramble with hashed permutations (Burley 2020).
 """
 abstract type ScrambleMethod <: RandomizationMethod end
 
@@ -44,132 +43,6 @@ function randomize(x, R::ScrambleMethod)
     random_x = permutedims(copy(x))
     randomize!(random_x, permutedims(x), R)
     return permutedims(random_x)
-end
-
-"""
-    OwenScramble(base::Integer; pad = 32, rng = Random.TaskLocalRNG()) <: ScrambleMethod
-
-Nested Uniform Scramble, also known as Owen's scramble.
-
-# Fields
-
-- `base::Integer`: Base of the digital net being scrambled.
-- `pad::Integer = 32`: Number of base-`base` digits retained for each point.
-- `rng::AbstractRNG = Random.TaskLocalRNG()`: Random-number generator used by
-  the scramble.
-
-`randomize(x, R::OwenScramble)` returns a scrambled version of `x`.
-The scramble method is Nested Uniform Scramble which was introduced in Owen (1995).
-`pad` is the number of bits used for each point. One needs `pad ≥ log(base, n)`.
-
-References: Owen, A. B. (1995). Randomly permuted (t, m, s)-nets and (t, s)-sequences. In Monte Carlo and Quasi-Monte Carlo Methods in Scientific Computing: Proceedings of a conference at the University of Nevada, Las Vegas, Nevada, USA, June 23–25, 1994 (pp. 299-317). Springer New York.
-"""
-Base.@kwdef struct OwenScramble{I <: Integer} <: ScrambleMethod
-    base::I
-    pad::I = 32
-    rng::AbstractRNG = Random.TaskLocalRNG()
-end
-
-function randomize!(
-        random_points::AbstractMatrix{T},
-        points::AbstractMatrix{T}, R::OwenScramble
-    ) where {T <: Real}
-    @assert size(points) == size(random_points)
-    b = R.base
-    unrandomized_bits = unif2bits(points, b, pad = R.pad)
-    random_bits = similar(unrandomized_bits)
-    indices = which_permutation(unrandomized_bits, b)
-    randomize_bits!(random_bits, unrandomized_bits, indices, R)
-    for i in CartesianIndices(random_points)
-        random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
-    end
-    return
-end
-
-"""
-    randomize_bits!(random_bits::AbstractArray{T, 3}, origin_bits::AbstractArray{T, 3}, R::ScrambleMethod) where {T <: Integer}
-
-In place version of a `OwenScramble` (Nested Uniform Scramble) for the "bit" array.
-This is faster to use this functions for multiple scramble of the same array (use `generate_design_matrices`).
-"""
-function randomize_bits!(
-        random_bits::AbstractArray{T, 3},
-        origin_bits::AbstractArray{T, 3},
-        indices::AbstractArray{F, 3},
-        R::OwenScramble
-    ) where {T <: Integer, F <: Integer}
-    # in place nested uniform Scramble.
-    #
-    m, n, d = size(indices)
-    b = R.base
-    rng = R.rng
-    pad = size(random_bits, 1)
-    @assert m ≥ 1 "We need m ≥ 1" # m=0 causes awkward corner case below.
-
-    for s in 1:d
-        theperms = getpermset(rng, m, b)         # Permutations to apply to bits 1:m
-        for k in 1:m                             # Here is where we want m > 0 so the loop works ok
-            @views random_bits[k, :, s] .= (
-                origin_bits[k, :, s] .+
-                    theperms[k, indices[k, :, s]]
-            ) .%
-                b   # permutation by adding a bit modulo b
-        end
-    end
-
-    # Paste in random entries for bits after m'th one
-    return if pad > m
-        # random_bits[(m + 1):pad, :, :] = rand(rng, 0:(b - 1), n * d * (pad - m))
-        rand!(rng, @view(random_bits[(m + 1):pad, :, :]), 0:(b - 1))
-    end
-end
-
-function getpermset(rng::AbstractRNG, m::Integer, b::I) where {I <: Integer}
-    # Get b^(k-1) random binary permutations for k=1 ... m
-    # m will ordinarily be m when there are n=b^m points
-    #
-    y = zeros(I, m, b^(m - 1))
-    for k in 1:m
-        nₖ = b^(k - 1)
-        y[k, 1:nₖ] = rand(rng, 0:(b - 1), nₖ)
-    end
-    return y
-end
-
-getpermset(m::Integer, b::Integer) = getpermset(Random.TaskLocalRNG(), m, b)
-
-"""
-    which_permutation(bits::AbstractArray{<:Integer,3}, b)
-
-This function is used in Nested Uniform Scramble.
-It assigns for each point (in every dimension) `m` number corresponding to its location on the slices 1, 1/b, 1/b², ..., 1/bᵐ⁻¹ of the axes [0,1[.
-This also can be used to verify some equidistribution prorepreties.
-Here we create the `indices` array `m`, and not `pad`. Indeed `(t,m,d)-net` in base `b` are scrambled up to the `1/bᵐ` component.
-Higher order components are just used i.i.d. `Uₖ ∼ 𝐔({0:b-1})` in `owen_scramble_bit!`.
-"""
-function which_permutation(bits::AbstractArray, b::I) where {I <: Integer}
-    n, d = size(bits)[2:end]
-    m = logi(b, n)
-
-    indices = zeros(I, m, n, d)
-    for j in axes(bits, 3)
-        which_permutation!(@view(indices[:, :, j]), bits[:, :, j], b)
-    end
-    return indices
-end
-
-function which_permutation!(
-        indices::AbstractMatrix{<:Integer},
-        bits::AbstractMatrix{<:Integer}, b::Integer
-    )
-    @assert size(indices)[2:end] == size(bits)[2:end] "You need size(indices) = $(size(indices)) equal size(bits) = $(size(bits))"
-    indices[1, :] .= 0 # same permutation for all observations i
-    for i in axes(indices, 2)                     # Here is where we want m > 0 so the loop works ok
-        for k in axes(indices, 1)[2:end]
-            indices[k, i] = bits2int(@view(bits[1:(k - 1), i]), b) # index of which perms to use at bit k for each i
-        end
-    end
-    return indices .+= 1 # array indexing starts at 1
 end
 
 function randomize!(
@@ -188,30 +61,32 @@ function randomize!(
 end
 
 """
-    HashOwenScramble(base::Integer; pad = 32, rng = Random.TaskLocalRNG()) <: ScrambleMethod
+    OwenScramble(base::Integer; pad = 32, rng = Random.TaskLocalRNG()) <: ScrambleMethod
 
-Nested Uniform Scramble whose permutations are hashed rather than stored.
+Nested Uniform Scramble, also known as Owen's scramble.
 
 # Fields
 
 - `base::Integer`: Base of the digital net being scrambled.
-- `pad::Integer = 32`: Number of base-`base` digits retained for each point.
+- `pad::Integer = 32`: Number of base-`base` digits scrambled in each coordinate.
 - `rng::AbstractRNG = Random.TaskLocalRNG()`: Random-number generator from which each
   `randomize` call draws one 64-bit seed.
 
-Digit `k` of a coordinate is shifted modulo `base` by a hash of the seed, the dimension
-and the `k - 1` digits above it: the same nested scramble as [`OwenScramble`](@ref),
-applied to all `pad` digits. The scramble of a point therefore depends only on the point
-and the seed, never on the other points, so
+A nested scramble gives each node of the `base`-ary digit tree a random permutation of `0:(base - 1)`.
+Digit `k` of a coordinate goes through the permutation of the node that the `k - 1` digits above it select.
+A hash of the seed, the dimension and these digits gives the permutation (Burley 2020), so no table is stored.
+The scramble of a point thus depends only on the point and the seed:
 
-  - any number of points can be scrambled (`OwenScramble` needs `n` to be a power of `base`), and
-  - the first `n` points of a scrambled sequence are the scrambled first `n` points: extending
-    a sample keeps the points already drawn.
+  - `randomize` accepts any number of points.
+  - The first `n` points of a scrambled sequence are the scrambled first `n` points.
+    Extending a sample keeps the points already drawn.
 
-It costs `O(pad)` hashes per coordinate and stores no permutation tables.
+Each node permutation is a uniform random cyclic shift of the digits.
+For `base = 2`, this is a uniform random permutation.
+The cost is `O(pad)` hashes per coordinate.
 
-References: Owen, A. B. (1995), as for [`OwenScramble`](@ref); Burley, B. (2020). Practical
-Hash-based Owen Scrambling. Journal of Computer Graphics Techniques, 9(4), 1-20.
+References: Owen, A. B. (1995). Randomly permuted (t, m, s)-nets and (t, s)-sequences. In Monte Carlo and Quasi-Monte Carlo Methods in Scientific Computing: Proceedings of a conference at the University of Nevada, Las Vegas, Nevada, USA, June 23–25, 1994 (pp. 299-317). Springer New York.
+Burley, B. (2020). Practical Hash-based Owen Scrambling. Journal of Computer Graphics Techniques, 9(4), 1-20.
 
 # Examples
 
@@ -220,44 +95,84 @@ julia> using QuasiMonteCarlo, Random
 
 julia> points = sample(8, 2, SobolSample());
 
-julia> short = randomize(points[:, 1:3], HashOwenScramble(base = 2, rng = Xoshiro(1)));
+julia> first_three = randomize(points[:, 1:3], OwenScramble(base = 2, rng = Xoshiro(1)));
 
-julia> randomize(points, HashOwenScramble(base = 2, rng = Xoshiro(1)))[:, 1:3] == short
+julia> randomize(points, OwenScramble(base = 2, rng = Xoshiro(1)))[:, 1:3] == first_three
 true
 ```
 """
-Base.@kwdef struct HashOwenScramble{I <: Integer} <: ScrambleMethod
+Base.@kwdef struct OwenScramble{I <: Integer} <: ScrambleMethod
     base::I
     pad::I = 32
     rng::AbstractRNG = Random.TaskLocalRNG()
 end
 
-"""SplitMix64's output function: a bijective avalanche of 64 bits."""
-function splitmix64(value::Unsigned)
-    x = UInt64(value) + 0x9e3779b97f4a7c15
-    x = (x ⊻ (x >> 30)) * 0xbf58476d1ce4e5b9
-    x = (x ⊻ (x >> 27)) * 0x94d049bb133111eb
-    return x ⊻ (x >> 31)
+"""Odd 64-bit constant `2^64 / φ` that SplitMix64 adds to its state."""
+const GOLDEN_GAMMA = 0x9e3779b97f4a7c15
+
+"""
+    splitmix64(word::Unsigned) -> UInt64
+
+Return the SplitMix64 output for state `word`: a bijective avalanche of 64 bits.
+
+# Examples
+
+```jldoctest
+julia> QuasiMonteCarlo.splitmix64(0x0)
+0xe220a8397b1dcdaf
+```
+"""
+function splitmix64(word::Unsigned)
+    mixed = UInt64(word) + GOLDEN_GAMMA
+    mixed = (mixed ⊻ (mixed >> 30)) * 0xbf58476d1ce4e5b9
+    mixed = (mixed ⊻ (mixed >> 27)) * 0x94d049bb133111eb
+    return mixed ⊻ (mixed >> 31)
 end
+
+"""
+    child_node(node::UInt64, digit::Integer) -> UInt64
+
+Return the hash of the child that `digit` selects below `node` in the digit tree.
+Distinct digits give distinct children, as `splitmix64` is a bijection.
+
+# Examples
+
+```jldoctest
+julia> QuasiMonteCarlo.child_node(0x0, 0) != QuasiMonteCarlo.child_node(0x0, 1)
+true
+```
+"""
+child_node(node::UInt64, digit::Integer) = splitmix64(node + (UInt64(digit) + 1) * GOLDEN_GAMMA)
+
+"""
+    node_shift(node::UInt64, base::Integer) -> UInt64
+
+Return the shift in `0:(base - 1)` that `node` applies to its digit: the top 64 bits of `node * base`.
+
+# Examples
+
+```jldoctest
+julia> QuasiMonteCarlo.node_shift(typemax(UInt64), 3)
+0x0000000000000002
+```
+"""
+node_shift(node::UInt64, base::Integer) = (widemul(node, UInt64(base)) >> 64) % UInt64
 
 function randomize_bits!(
         random_bits::AbstractArray{T, 3},
         origin_bits::AbstractArray{T, 3},
-        R::HashOwenScramble
+        R::OwenScramble
     ) where {T <: Integer}
     pad, n, d = size(origin_bits)
-    b = UInt64(R.base)
     seed = rand(R.rng, UInt64)
-    for s in 1:d
-        key = splitmix64(seed ⊻ splitmix64(UInt64(s)))
-        for i in 1:n
-            node = key # the hash of the digits above digit k
+    for dimension in 1:d
+        root = splitmix64(seed ⊻ splitmix64(UInt64(dimension)))
+        for point in 1:n
+            node = root
             for k in 1:pad
-                digit = origin_bits[k, i, s]
-                # `node * b / 2^64`, a uniform shift in 0:(b - 1).
-                shift = (widemul(node, b) >> 64) % UInt64
-                random_bits[k, i, s] = (digit + T(shift)) % R.base
-                node = splitmix64(node + (UInt64(digit) + 1) * 0x9e3779b97f4a7c15)
+                digit = origin_bits[k, point, dimension]
+                random_bits[k, point, dimension] = (digit + T(node_shift(node, R.base))) % R.base
+                node = child_node(node, digit)
             end
         end
     end
