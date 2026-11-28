@@ -304,8 +304,9 @@ bounds form maps every coordinate to its corresponding interval `[lb[i], ub[i]]`
 
 # Throws
 
-- `AssertionError`: If the bounds have different lengths or a lower bound
-  exceeds its corresponding upper bound.
+- `ArgumentError`: If `n` is not positive, or a lower bound exceeds its
+  corresponding upper bound.
+- `DimensionMismatch`: If the bounds have different lengths.
 - An exception from the selected sampler if `n`, `d`, or `num_mats` is invalid.
 
 # Examples

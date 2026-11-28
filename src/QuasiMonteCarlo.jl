@@ -221,8 +221,9 @@ maps every coordinate from `[0, 1]` to its corresponding closed interval
 
 # Throws
 
-- `AssertionError`: If `n` is not positive, the bounds have different lengths,
-  or a lower bound exceeds its corresponding upper bound.
+- `ArgumentError`: If `n` is not positive, or a lower bound exceeds its
+  corresponding upper bound.
+- `DimensionMismatch`: If the bounds have different lengths.
 
 # Examples
 
