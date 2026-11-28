@@ -80,6 +80,8 @@ The number of base-`base` digits of the largest index `n - 1` of `n ≥ 1` point
 Integer arithmetic keeps it exact where `ceil(log(base, n))` rounds, as at `n = 5^3`.
 
 ```jldoctest
+julia> using QuasiMonteCarlo
+
 julia> QuasiMonteCarlo._index_digits.((1, 8, 9, 125), (2, 2, 2, 5))
 (1, 3, 4, 3)
 ```
