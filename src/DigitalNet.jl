@@ -244,6 +244,8 @@ The midpoint of the cell of the leading `digits` binary digits of the left-align
 is exact and lies strictly inside `(0, 1)`; other types use `Float64`.
 
 ```jldoctest
+julia> using QuasiMonteCarlo
+
 julia> QuasiMonteCarlo._digits2unif(Float64, 0xc0000000, 2)
 0.875
 ```
