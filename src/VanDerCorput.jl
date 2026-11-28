@@ -34,8 +34,8 @@ Base.@kwdef @concrete struct VanDerCorputSample{I <: Integer} <:
 end
 
 function sample(n::Integer, d::Integer, S::VanDerCorputSample, T::Type = Float64)
-    @assert d == 1 "Van der Corput sequence only supports 1D sampling"
-    @assert n > 0 ZERO_SAMPLES_MESSAGE
+    d == 1 || throw(ArgumentError("Van der Corput sequence only supports 1D sampling"))
+    _check_sequence(n)
     base = S.base
     log_n = log(base, n)
     t = floor(Int, log_n)

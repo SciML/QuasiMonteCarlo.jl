@@ -102,7 +102,8 @@ end
 
     @test isnothing(QuasiMonteCarlo._check_sequence(1))
     @test isnothing(QuasiMonteCarlo._check_sequence([0.0, -1.0], [1.0, 1.0], 8))
-    @test_throws AssertionError QuasiMonteCarlo._check_sequence(0)
-    @test_throws AssertionError QuasiMonteCarlo._check_sequence([0.0], [1.0, 2.0], 8)
-    @test_throws AssertionError QuasiMonteCarlo._check_sequence([0.0, 2.0], [1.0, 1.0], 8)
+    @test_throws ArgumentError(QuasiMonteCarlo.ZERO_SAMPLES_MESSAGE) QuasiMonteCarlo._check_sequence(0)
+    @test_throws DimensionMismatch QuasiMonteCarlo._check_sequence([0.0], [1.0, 2.0], 8)
+    @test_throws ArgumentError QuasiMonteCarlo._check_sequence([0.0, 2.0], [1.0, 1.0], 8)
+    @test_throws ArgumentError QuasiMonteCarlo._check_sequence([0.0], [1.0], 0)
 end

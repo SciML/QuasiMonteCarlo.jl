@@ -245,9 +245,15 @@ end
     @test QuasiMonteCarlo.sample(125, 5, FaureSample())[:, 1] ≈ fill(1 / (2 * 5^4), 5)
     @test QuasiMonteCarlo.sample(25, 5, FaureSample())[:, 1] ≈ fill(1 / (2 * 5^3), 5)
     # Zero points have no index to count, so every sampler rejects them.
-    @test_throws AssertionError QuasiMonteCarlo.sample(0, 2, HaltonSample())
-    @test_throws AssertionError QuasiMonteCarlo.sample(0, 2, FaureSample())
-    @test_throws AssertionError QuasiMonteCarlo.sample(0, 1, VanDerCorputSample(base = 2))
+    @test_throws ArgumentError QuasiMonteCarlo.sample(0, 2, HaltonSample())
+    @test_throws ArgumentError QuasiMonteCarlo.sample(0, 2, FaureSample())
+    @test_throws ArgumentError QuasiMonteCarlo.sample(0, 1, VanDerCorputSample(base = 2))
+    @test_throws ArgumentError QuasiMonteCarlo.sample(4, 2, VanDerCorputSample(base = 2))
+    @test_throws ArgumentError QuasiMonteCarlo.sample(0, 2, LatinHypercubeSample())
+    @test_throws ArgumentError QuasiMonteCarlo.sample(4, [0.0, 1.0], [1.0, 0.5], HaltonSample())
+    @test_throws DimensionMismatch QuasiMonteCarlo.sample(4, [0.0], [1.0, 1.0], HaltonSample())
+    @test_throws DimensionMismatch QuasiMonteCarlo.sample(4, 3, KroneckerSample([0.5, 0.25], NoRand()))
+    @test_throws ArgumentError QuasiMonteCarlo.sample(4, 2, KroneckerSample([0.5, 0.25], NoRand()), Float32)
 end
 
 @testset "Faure Sample" begin
