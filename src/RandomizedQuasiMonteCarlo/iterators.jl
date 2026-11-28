@@ -163,6 +163,7 @@ function DesignMatrix(
         num_mats::Integer,
         T::DataType = Float64
     )
+    check_scramble(S, d, R)
     X, random_bits, bits, indices = initialize(N, d, S, R, T)
     return OwenDesignMat(X, random_bits, bits, indices, R, num_mats)
 end
@@ -175,6 +176,7 @@ function DesignMatrix(
         num_mats::Integer,
         T = Float64
     )
+    check_scramble(S, d, R)
     X, random_bits, bits = initialize(N, d, S, R, T)
     return ScrambleDesignMat(X, random_bits, bits, R, num_mats)
 end
