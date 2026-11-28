@@ -30,3 +30,14 @@ SUITE["sample"]["kronecker"] = @benchmarkable QuasiMonteCarlo.sample(
 SUITE["sample"]["lattice_rule"] = @benchmarkable QuasiMonteCarlo.sample(
     $n, $lb, $ub, LatticeRuleSample()
 )
+
+# =============================================================================
+# Randomization
+# =============================================================================
+
+SUITE["randomize"] = BenchmarkGroup()
+
+sobol_points = QuasiMonteCarlo.sample(2^12, 4, SobolSample())
+for scramble in (OwenScramble(base = 2), MatousekScramble(base = 2), DigitalShift(base = 2))
+    SUITE["randomize"][string(nameof(typeof(scramble)))] = @benchmarkable randomize($sobol_points, $scramble)
+end
