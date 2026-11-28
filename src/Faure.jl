@@ -113,7 +113,8 @@ end
             if dim_idx ≠ 1
                 dgs .= (permutation * dgs) .% base
             end
-            vdc[sample_idx] = (evalpoly(inv_base, dgs) + inv(2base^n_digits)) * inv_base
+            # The offset is half of the last digit's cell, so each point is the center of its cell.
+            vdc[sample_idx] = evalpoly(inv_base, dgs) * inv_base + inv(2base^n_digits)
         end
     end
     return faure
