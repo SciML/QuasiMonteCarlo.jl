@@ -97,9 +97,11 @@ end
     @test randomize(points[:, 1:37], scramble(1)) == long[:, 1:37]
     @test all(0 .<= long .< 1)
 
-    # Each scrambled point is uniform: its mean over 4000 seeds is within 4 standard errors of ½.
-    draws = [randomize(points[:, 1:2], scramble(seed))[1, 2] for seed in 1:4000]
-    @test abs(mean(draws) - 0.5) < 4 * sqrt(1 / 12 / length(draws))
+    # Each scrambled point is uniform: over 4000 seeds, its mean and variance lie within 4 standard errors of ½ and ¹⁄₁₂.
+    # The variance check also fails if `randomize` returns its input unchanged.
+    draws = [randomize(points[:, 1:3], scramble(seed))[2, 3] for seed in 1:4000]
+    @test abs(mean(draws) - 1 / 2) < 4 * sqrt(1 / 12 / length(draws))
+    @test abs(var(draws) - 1 / 12) < 4 * sqrt(1 / 180 / length(draws))
 
     # A design-matrix iterator draws a new seed for each matrix.
     first_matrix, second_matrix = DesignMatrix(1000, 3, SobolSample(R = OwenScramble(base = 2)), 2)
