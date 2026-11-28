@@ -30,14 +30,29 @@ The center `(2 cell + 1) / 2n` of cell `cell` of `n` equal cells of `[0, 1]`, as
 keeps it strictly inside `(0, 1)`, also when its rounding would reach 0 or 1.
 
 ```jldoctest
+julia> using QuasiMonteCarlo
+
 julia> QuasiMonteCarlo.grid_center(Float64, 3, 4)
 0.875
 ```
 """
 function grid_center(::Type{T}, cell::Integer, n::Integer) where {T <: AbstractFloat}
-    return clamp(T((2cell + 1) // 2n), nextfloat(zero(T)), prevfloat(one(T)))
+    return clamp(T(_exact_center(cell, n)), nextfloat(zero(T)), prevfloat(one(T)))
 end
-grid_center(::Type{T}, cell::Integer, n::Integer) where {T} = T((2cell + 1) // 2n)
+grid_center(::Type{T}, cell::Integer, n::Integer) where {T} = T(_exact_center(cell, n))
+"""
+    _exact_center(cell, n)
+
+The exact center `(2 cell + 1) / 2n` as a `Rational` of widened integers, so `2n` cannot overflow.
+
+```jldoctest
+julia> using QuasiMonteCarlo
+
+julia> QuasiMonteCarlo._exact_center(Int32(0), Int32(2)^30)
+1//2147483648
+```
+"""
+_exact_center(cell::Integer, n::Integer) = (2widen(cell) + 1) // (2widen(n))
 
 """
     LatticeRuleSample(R::RandomizationMethod = NoRand()) <: DeterministicSamplingAlgorithm
@@ -79,6 +94,8 @@ The midpoint of the cell of `precision(T) - 1` binary digits that holds `x ∈ [
 than a float takes the `Float64` midpoint.
 
 ```jldoctest
+julia> using QuasiMonteCarlo
+
 julia> QuasiMonteCarlo.cell_midpoint(Float64, 0.0) == 2.0^-53
 true
 ```

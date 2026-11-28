@@ -343,7 +343,7 @@ end
     @test QuasiMonteCarlo.sample(64, 3, LatticeRuleSample()) == reduce(hcat, lattice[0:63]) .+ 2.0^-53
     @test QuasiMonteCarlo.sample(64, 3, LatticeRuleSample(), Float32)[:, 1] == fill(2.0f0^-24, 3)
     @test QuasiMonteCarlo.cell_midpoint(Float32, prevfloat(1.0)) == prevfloat(1.0f0)
-    @test QuasiMonteCarlo.cell_midpoint(Rational{Int128}, 0.0) == 1 // 2^53
+    @test QuasiMonteCarlo.cell_midpoint(Rational{Int128}, 0.0) == 1 // Int128(2)^53
     # A float wider than the exponent range of Float64 scales in its own type.
     setprecision(BigFloat, 2048) do
         points = QuasiMonteCarlo.sample(4, 1, LatticeRuleSample(), BigFloat)
@@ -352,6 +352,9 @@ end
     # Cells finer than the last digit of a float still give centers inside (0, 1).
     @test QuasiMonteCarlo.grid_center(Float16, 2048, 2049) == prevfloat(Float16(1))
     @test QuasiMonteCarlo.grid_center(Float16, 0, 2^30) == nextfloat(Float16(0))
+    # `2n` overflows a 32-bit integer here, so the center needs widened arithmetic.
+    @test QuasiMonteCarlo.grid_center(Float64, Int32(0), Int32(2)^30) == 2.0^-31
+    @test QuasiMonteCarlo.grid_center(Float64, typemax(Int) - 1, typemax(Int)) ≈ 1 - 0.5 / typemax(Int)
     @test QuasiMonteCarlo.grid_center(Rational{Int}, 1, 4) == 3 // 8
     @test all(0 .< QuasiMonteCarlo.sample(2049, 1, GridSample(), Float16) .< 1)
 end
