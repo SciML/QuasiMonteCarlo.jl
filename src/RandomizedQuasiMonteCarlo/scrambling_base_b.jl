@@ -75,12 +75,49 @@ function randomize!(
     ) where {T <: Real}
     @assert size(points) == size(random_points)
     b = R.base
+    n = size(points, 1)
+    if T <: Union{Float16, Float32, Float64} && b == 2 && ispow2(n) && 1 ≤ trailing_zeros(n) ≤ R.pad ≤ 64
+        return owen_scramble_base2!(random_points, points, Int(R.pad), R.rng)
+    end
     unrandomized_bits = unif2bits(points, b, pad = R.pad)
     random_bits = similar(unrandomized_bits)
     indices = which_permutation(unrandomized_bits, b)
     randomize_bits!(random_bits, unrandomized_bits, indices, R)
     for i in CartesianIndices(random_points)
         random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
+    end
+    return
+end
+
+# Nested uniform scramble in base 2 of `n = 2^m` points (rows of `points`) on the binary digits.
+# In each dimension, digit `k ≤ m` of a point is flipped by a random bit that depends on its
+# first `k - 1` digits, i.e., on its node in a binary tree. As in `randomize_bits!`, the digits
+# `m + 1, ..., pad` are i.i.d. uniform, which assumes that each one-dimensional projection has
+# exactly one point in every interval of length `2^-m` (e.g., Sobol' nets).
+function owen_scramble_base2!(
+        random_points::AbstractMatrix{T},
+        points::AbstractMatrix{T}, pad::Int, rng::AbstractRNG
+    ) where {T <: Union{Float16, Float32, Float64}}
+    n = size(points, 1)
+    m = trailing_zeros(n)
+    # Digits beyond the precision of `T` are truncated to keep the points in [0, 1)
+    shift = max(pad - precision(T), 0)
+    flips = BitVector(undef, n)
+    for s in axes(points, 2)
+        rand!(rng, flips)
+        for i in axes(points, 1)
+            # Exact conversion; computing in `T` would overflow for Float16 and pad ≥ 16
+            x = trunc(UInt64, ldexp(Float64(points[i, s]), pad))
+            y = zero(UInt64)
+            node = 1
+            for k in 1:m
+                bit = (x >> (pad - k)) & 0x01
+                y = (y << 1) | (bit ⊻ flips[node])
+                node = 2 * node + Int(bit)
+            end
+            y = (y << (pad - m)) | (rand(rng, UInt64) >> (64 - (pad - m)))
+            random_points[i, s] = ldexp(T(y >> shift), shift - pad)
+        end
     end
     return
 end
