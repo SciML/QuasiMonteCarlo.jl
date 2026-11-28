@@ -46,6 +46,10 @@ end
                    b::Integer)
 
 Convert a vector of pad "bits" in base b into a number y∈[0,1[.
+
+For `T <: Rational` this is the exact value ∑ₖ bitsₖ/bᵏ. For `T <: AbstractFloat` it is
+the midpoint of the cell of width b⁻ᵐ given by the leading `m` bits, where `m` is the
+largest number of bits that `T` can hold exactly, so the result lies strictly in ]0,1[.
 """
 function bits2unif(
         ::Type{T}, bits::AbstractVector{<:Integer},
@@ -64,13 +68,20 @@ function bits2unif(
         ::Type{T}, bits::AbstractVector{<:Integer},
         b::Integer
     ) where {T <: AbstractFloat}
-    # Turn sequence of bits into a point in [0,1)
-    # First bits are highest order
-    y = zero(T)
-    for j in lastindex(bits):-1:1
-        y = (y + bits[j]) / b
+    # First bits are highest order. They give the index `k` of a cell of width 1/scale,
+    # with scale = bᵐ ≤ 2^(p - 1) for p = precision(T), so `2k + 1` and `2scale` are exact
+    # in `T` and the rounded midpoint lies in [2^-p, 1 - 2^-p].
+    max_scale = exp2(T(precision(T) - 1))
+    k = zero(T)
+    scale = one(T)
+    for bit in bits
+        if scale * b > max_scale
+            break
+        end
+        k = k * b + bit
+        scale *= b
     end
-    return y
+    return (2k + 1) / (2scale)
 end
 
 function bits2unif(bits::AbstractVector{<:Integer}, b::Integer)
