@@ -85,6 +85,8 @@ true
 """
 function cell_midpoint(::Type{T}, x::AbstractFloat) where {T <: AbstractFloat}
     kept = precision(T) - 1
-    return ldexp(T(floor(ldexp(x, kept))) + one(T) / 2, -kept)
+    # Scale in the wider type, so neither the scaling nor the conversion rounds or overflows.
+    wide = precision(T) >= precision(x) ? T(x) : x
+    return ldexp(T(floor(ldexp(wide, kept))) + one(T) / 2, -kept)
 end
 cell_midpoint(::Type{T}, x::AbstractFloat) where {T} = T(cell_midpoint(Float64, x))
