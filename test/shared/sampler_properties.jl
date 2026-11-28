@@ -13,11 +13,15 @@ inside_open_box(points) = all(x -> 0 < x < 1, points)
 # Uniform draws from 1:2000 rarely give the smallest sizes, where edge cases live.
 const SIZES = Data.Integers(1, 8) | Data.Integers(1, 2000)
 cell_centers(n) = ((0:(n - 1)) .+ 0.5) ./ n
-throws(::Type{E}, run) where {E <: Exception} = try
-    run()
-    false
-catch err
-    err isa E
+"""Whether `run()` throws an `E`. Any other exception propagates, so the property reports its type."""
+function throws(::Type{E}, run) where {E <: Exception}
+    try
+        run()
+    catch err
+        err isa E && return true
+        rethrow()
+    end
+    return false
 end
 
 @testset "samplers: property: valid sizes give n points inside the open unit box" begin
