@@ -61,13 +61,13 @@ function randomize!(
 end
 
 """
-    OwenScramble(base::Integer; pad = 32, rng = Random.TaskLocalRNG()) <: ScrambleMethod
+    OwenScramble(; base::Integer, pad = 32, rng = Random.TaskLocalRNG()) <: ScrambleMethod
 
 Nested Uniform Scramble, also known as Owen's scramble.
 
 # Fields
 
-- `base::Integer`: Base of the digital net being scrambled.
+- `base::Integer`: Prime base of the digital net being scrambled.
 - `pad::Integer = 32`: Number of base-`base` digits scrambled in each coordinate.
 - `rng::AbstractRNG = Random.TaskLocalRNG()`: Random-number generator from which each
   `randomize` call draws one 64-bit seed.
@@ -81,8 +81,10 @@ The scramble of a point thus depends only on the point and the seed:
   - The first `n` points of a scrambled sequence are the scrambled first `n` points.
     Extending a sample keeps the points already drawn.
 
-Each node permutation is a uniform random cyclic shift of the digits.
-For `base = 2`, this is a uniform random permutation.
+Each node permutation is a random affine map `a ↦ h·a + g mod base`, with `h` uniform on `1:(base - 1)` and `g` uniform on `0:(base - 1)`.
+For `base` 2 or 3, this is a uniform random permutation.
+For larger bases, each pair of distinct digits maps to a uniform pair of distinct digits, as under a uniform permutation.
+Two scrambled points thus have the same joint law as under Owen's scramble, so estimates have the same variance.
 The cost is `O(pad)` hashes per coordinate.
 
 References: Owen, A. B. (1995). Randomly permuted (t, m, s)-nets and (t, s)-sequences. In Monte Carlo and Quasi-Monte Carlo Methods in Scientific Computing: Proceedings of a conference at the University of Nevada, Las Vegas, Nevada, USA, June 23–25, 1994 (pp. 299-317). Springer New York.
@@ -105,6 +107,11 @@ Base.@kwdef struct OwenScramble{I <: Integer} <: ScrambleMethod
     base::I
     pad::I = 32
     rng::AbstractRNG = Random.TaskLocalRNG()
+    function OwenScramble(base::I, pad::I, rng::AbstractRNG) where {I <: Integer}
+        # A multiplier `h` that shares a factor with `base` would merge digits.
+        isprime(base) || throw(ArgumentError("OwenScramble needs a prime base, got $base"))
+        return new{I}(base, pad, rng)
+    end
 end
 
 """Odd 64-bit constant `2^64 / φ` that SplitMix64 adds to its state."""
@@ -173,10 +180,23 @@ julia> QuasiMonteCarlo.node_shift(typemax(UInt64), 3)
 node_shift(node::UInt64, base::Integer) = (widemul(node, UInt64(base)) >> 64) % UInt64
 
 """
+    node_multiplier(node::UInt64, base::Integer) -> UInt64
+
+Return the multiplier in `1:(base - 1)` that `node` applies to its digit, from one more hash of `node`.
+
+# Examples
+
+```jldoctest
+julia> QuasiMonteCarlo.node_multiplier(UInt64(12345), 2)
+0x0000000000000001
+```
+"""
+node_multiplier(node::UInt64, base::Integer) = node_shift(splitmix64(node), base - 1) + 1
+
+"""
     add_mod(digit::T, shift::T, base::T) where {T <: Unsigned} -> T
 
-Return `(digit + shift) mod base` without overflow, for `shift < base`.
-Throw a `DomainError` if `digit` is not a base-`base` digit.
+Return `(digit + shift) mod base` without overflow, for `digit, shift < base`.
 
 # Examples
 
@@ -186,9 +206,34 @@ julia> QuasiMonteCarlo.add_mod(typemax(UInt64) - 1, typemax(UInt64) - 1, typemax
 ```
 """
 function add_mod(digit::T, shift::T, base::T) where {T <: Unsigned}
-    digit < base || throw(DomainError(digit, "a base-$base digit must lie in 0:$(base - 1)"))
     gap = base - digit
     return shift >= gap ? shift - gap : digit + shift
+end
+
+"""
+    permute_digit(node::UInt64, digit::UInt64, base::UInt64) -> UInt64
+
+Return `h·digit + g mod base`, with multiplier `h` and shift `g` from the hash `node`.
+Throw a `DomainError` if `digit` is not a base-`base` digit.
+
+# Examples
+
+```jldoctest
+julia> sort([QuasiMonteCarlo.permute_digit(UInt64(7), UInt64(digit), UInt64(5)) for digit in 0:4])
+5-element Vector{UInt64}:
+ 0x0000000000000000
+ 0x0000000000000001
+ 0x0000000000000002
+ 0x0000000000000003
+ 0x0000000000000004
+```
+"""
+function permute_digit(node::UInt64, digit::UInt64, base::UInt64)
+    digit < base || throw(DomainError(digit, "a base-$base digit must lie in 0:$(base - 1)"))
+    multiplier = node_multiplier(node, base)
+    # Every base-2 multiplier is 1, so base 2 skips the 128-bit division.
+    scaled = isone(multiplier) ? digit : (widemul(multiplier, digit) % base) % UInt64
+    return add_mod(scaled, node_shift(node, base), base)
 end
 
 function randomize_bits!(
@@ -204,8 +249,7 @@ function randomize_bits!(
             node = root
             for k in 1:pad
                 digit = origin_bits[k, point, dimension]
-                shifted = add_mod(UInt64(digit), node_shift(node, R.base), UInt64(R.base))
-                random_bits[k, point, dimension] = T(shifted)
+                random_bits[k, point, dimension] = T(permute_digit(node, UInt64(digit), UInt64(R.base)))
                 node = child_node(node, digit)
             end
         end

@@ -1,4 +1,5 @@
 using QuasiMonteCarlo, Random, Statistics, Test
+using Primes: prevprime
 using Supposition: Data, @check
 
 """
@@ -50,16 +51,31 @@ end
     # 126 plus a shift of 2 or more exceeds typemax(Int8).
     top_digits = fill(Int8(126), 4, 50)
     @test all(0 .<= scramble_digits(top_digits, Int8(127), 1) .< 127)
-    # Digits on both sides of `digit + root shift == base` must keep distinct images.
-    huge_base = typemax(UInt64)
+    # Digits whose scaled values straddle `scaled + root shift == base` must keep distinct images.
+    huge_base = prevprime(typemax(UInt64))
     root = QuasiMonteCarlo.root_node(rand(Xoshiro(1), UInt64), 1)
     root_shift = QuasiMonteCarlo.node_shift(root, huge_base)
+    inverse = invmod(big(QuasiMonteCarlo.node_multiplier(root, huge_base)), huge_base)
+    straddle = [UInt64(mod(big(scaled) * inverse, huge_base)) for scaled in (huge_base - root_shift - 1, huge_base - root_shift)]
     @test root_shift >= 2
-    @test allunique(scramble_digits(UInt64[huge_base - root_shift huge_base - root_shift + 1], huge_base, 1))
+    @test scramble_digits(permutedims(straddle), huge_base, 1) == [huge_base - 1 0]
     @test QuasiMonteCarlo.add_mod(huge_base - 1, huge_base - 1, huge_base) == huge_base - 2
     @test QuasiMonteCarlo.add_mod(UInt8(3), UInt8(4), UInt8(5)) == 2
     @test QuasiMonteCarlo.add_mod(UInt8(1), UInt8(2), UInt8(5)) == 3
-    @test_throws DomainError QuasiMonteCarlo.add_mod(UInt8(5), UInt8(0), UInt8(5))
+    @test_throws DomainError QuasiMonteCarlo.permute_digit(UInt64(1), UInt64(5), UInt64(5))
+end
+
+@testset "OwenScramble: node permutations are affine with a uniform multiplier" begin
+    @test_throws ArgumentError OwenScramble(base = 4)
+    @test_throws ArgumentError OwenScramble(base = 1)
+    seeds = 1:6000
+    # Base 3 has 3! = 3 · 2 affine maps, so the root permutation must take all six values equally often.
+    permutations = [vec(scramble_digits([0 1 2], 3, seed)) for seed in seeds]
+    @test all(abs(count(==(permutation), permutations) / length(seeds) - 1 / 6) < 4 * sqrt(5 / 36 / length(seeds)) for permutation in unique(permutations))
+    @test length(unique(permutations)) == 6
+    # Base 5: the gap between the images of digits 0 and 1 is the multiplier, uniform on 1:4.
+    gaps = [mod(-(scramble_digits([0 1], 5, seed)...), 5) for seed in seeds]
+    @test all(abs(count(==(gap), gaps) / length(seeds) - 1 / 4) < 4 * sqrt(3 / 16 / length(seeds)) for gap in 1:4)
 end
 
 @testset "OwenScramble: sibling nodes draw independent permutations" begin
