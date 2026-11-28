@@ -68,6 +68,7 @@ end
         n::Integer, dimension::Integer, S::FaureSample, T = Float64;
         skipchecks = false
     )
+    check_scramble(S, dimension, S.R)
     base = nextprime(dimension)
     n_digits = ceil(Int, log(base, n))
     power = n_digits - 1

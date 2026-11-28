@@ -27,6 +27,7 @@ function sample(n::Integer, d::Integer, S::SobolSample, T = Float64)
     if n < 0
         throw(ArgumentError("number of samples must be non-negative"))
     end
+    check_scramble(S, d, S.R)
 
     seq = Matrix{T}(undef, d, n)
     if n == 0

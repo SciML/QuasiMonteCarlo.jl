@@ -187,6 +187,47 @@ function randomize!(
 end
 
 """
+    check_scramble(sampler::DeterministicSamplingAlgorithm, d::Integer, R::RandomizationMethod) -> Nothing
+
+Throw an `ArgumentError` if `R` cannot scramble the `d`-dimensional sequence of `sampler`.
+A scramble must use the base of the sequence, and a Halton sequence has a different base in each coordinate.
+
+# Examples
+
+```jldoctest
+julia> using QuasiMonteCarlo
+
+julia> QuasiMonteCarlo.check_scramble(FaureSample(), 3, OwenScramble(base = 2))
+ERROR: ArgumentError: OwenScramble has base 2, but the sequence has base 3
+[...]
+```
+"""
+check_scramble(::DeterministicSamplingAlgorithm, ::Integer, ::RandomizationMethod) = nothing
+check_scramble(::SobolSample, ::Integer, R::ScrambleMethod) = check_base(R, 2)
+check_scramble(::FaureSample, d::Integer, R::ScrambleMethod) = check_base(R, nextprime(d))
+check_scramble(S::VanDerCorputSample, ::Integer, R::ScrambleMethod) = check_base(R, S.base)
+function check_scramble(::HaltonSample, ::Integer, R::ScrambleMethod)
+    throw(ArgumentError("$(nameof(typeof(R))) needs one base, but HaltonSample has a base per coordinate. Use RandomizedHaltonSample or Shift."))
+end
+
+"""
+    check_base(R::ScrambleMethod, base::Integer) -> Nothing
+
+Throw an `ArgumentError` if the base of `R` differs from the sequence `base`.
+
+# Examples
+
+```jldoctest
+julia> isnothing(QuasiMonteCarlo.check_base(QuasiMonteCarlo.DigitalShift(base = 2), 2))
+true
+```
+"""
+function check_base(R::ScrambleMethod, base::Integer)
+    R.base == base || throw(ArgumentError("$(nameof(typeof(R))) has base $(R.base), but the sequence has base $base"))
+    return nothing
+end
+
+"""
     MatousekScramble(base::Integer; pad = 32, rng = Random.TaskLocalRNG()) <: ScrambleMethod
 
 Linear Matrix Scramble, also known as Matousek's scramble.

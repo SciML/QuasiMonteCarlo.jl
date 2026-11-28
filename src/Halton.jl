@@ -23,6 +23,7 @@ Base.@kwdef @concrete struct HaltonSample <: DeterministicSamplingAlgorithm
 end
 
 @views function sample(n::I, d::I, S::HaltonSample, T::Type = Float64) where {I <: Integer}
+    check_scramble(S, d, S.R)
     bases = nextprimes(one(n), d)
     n_digits = ceil.(I, log.(bases, n))
     λ = n .÷ bases .^ n_digits
