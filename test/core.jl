@@ -141,8 +141,8 @@ end
     s = QuasiMonteCarlo.sample(n, lb, ub, GridSample())
     s = sortslices(s; dims = 2)
     differences = diff(s; dims = 2)
-    # test for grid
-    @test all(x -> all(y -> y in 0.0:(1 / n):1.0, x), eachrow(s))
+    # test for grid: the centers of n equal cells
+    @test all(x -> all(y -> y in (1:2:(2n - 1)) ./ 2n, x), eachrow(s))
     μ = mean(s; dims = 2)
     variance = var(s; corrected = false, dims = 2)
     for i in eachindex(μ)
@@ -329,6 +329,26 @@ end
         @test μ[i] ≈ 0.5 atol = 3 / n
         @test variance[i] ≈ 1 / 12 rtol = 3 / n
     end
+end
+
+@testset "deterministic samplers never return 0 or 1" begin
+    samplers = [FaureSample(), GridSample(), HaltonSample(), KroneckerSample(), LatticeRuleSample(), SobolSample()]
+    for sampler in samplers, T in (Float64, Float32), (count, dims) in ((4, 1), (16, 2), (125, 5))
+        points = QuasiMonteCarlo.sample(count, dims, sampler, T)
+        @test eltype(points) == T
+        @test all(0 .< points .< 1)
+    end
+    # The lattice moves each point up by half a last digit, so its first point is not the origin.
+    lattice = QuasiMonteCarlo._lattice_rule(3)
+    @test QuasiMonteCarlo.sample(64, 3, LatticeRuleSample()) == reduce(hcat, lattice[0:63]) .+ 2.0^-53
+    @test QuasiMonteCarlo.sample(64, 3, LatticeRuleSample(), Float32)[:, 1] == fill(2.0f0^-24, 3)
+    @test QuasiMonteCarlo.cell_midpoint(Float32, prevfloat(1.0)) == prevfloat(1.0f0)
+    @test QuasiMonteCarlo.cell_midpoint(Rational{Int128}, 0.0) == 1 // 2^53
+    # Cells finer than the last digit of a float still give centers inside (0, 1).
+    @test QuasiMonteCarlo.grid_center(Float16, 2048, 2049) == prevfloat(Float16(1))
+    @test QuasiMonteCarlo.grid_center(Float16, 0, 2^30) == nextfloat(Float16(0))
+    @test QuasiMonteCarlo.grid_center(Rational{Int}, 1, 4) == 3 // 8
+    @test all(0 .< QuasiMonteCarlo.sample(2049, 1, GridSample(), Float16) .< 1)
 end
 
 @testset "Kronecker" begin
