@@ -346,10 +346,7 @@ function generate_design_matrices(
         n, lb, ub, sampler,
         num_mats = 2
     )
-    if n <= 0
-        throw(ZeroSamplesError())
-    end
-    @assert length(lb) == length(ub)
+    _check_sequence(lb, ub, n)
 
     # Generate a vector of num_mats independent "randomized" version of the QMC sequence
     out = generate_design_matrices(n, length(lb), sampler, num_mats, eltype(lb))
