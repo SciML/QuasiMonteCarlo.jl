@@ -10,6 +10,8 @@ const DETERMINISTIC_SAMPLERS = filter(s -> s isa QuasiMonteCarlo.DeterministicSa
 const ALL_SAMPLERS = (ANY_SIZE_SAMPLERS..., FaureSample())
 
 inside_open_box(points) = all(x -> 0 < x < 1, points)
+# Uniform draws from 1:2000 rarely give the smallest sizes, where edge cases live.
+const SIZES = Data.Integers(1, 8) | Data.Integers(1, 2000)
 cell_centers(n) = ((0:(n - 1)) .+ 0.5) ./ n
 throws(::Type{E}, run) where {E <: Exception} = try
     run()
@@ -20,12 +22,12 @@ end
 
 @testset "samplers: property: valid sizes give n points inside the open unit box" begin
     @check max_examples = 300 function any_size_inside(
-            sampler = Data.SampledFrom(DETERMINISTIC_SAMPLERS), n = Data.Integers(1, 2000), d = Data.Integers(1, 8)
+            sampler = Data.SampledFrom(DETERMINISTIC_SAMPLERS), n = SIZES, d = Data.Integers(1, 8)
         )
         points = QuasiMonteCarlo.sample(n, d, sampler)
         return size(points) == (d, n) && inside_open_box(points)
     end
-    @check max_examples = 300 function van_der_corput_inside(base = Data.Integers(2, 16), n = Data.Integers(1, 2000))
+    @check max_examples = 300 function van_der_corput_inside(base = Data.Integers(2, 16), n = SIZES)
         points = QuasiMonteCarlo.sample(n, 1, VanDerCorputSample(; base))
         return length(points) == n && inside_open_box(points)
     end
