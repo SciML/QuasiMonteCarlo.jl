@@ -85,7 +85,8 @@ Each node permutation is a random affine map `a ↦ h·a + g mod base`, with `h`
 For `base` 2 or 3, this is a uniform random permutation.
 For larger bases, each pair of distinct digits maps to a uniform pair of distinct digits, as under a uniform permutation.
 Two scrambled points thus have the same joint law as under Owen's scramble, so estimates have the same variance.
-These laws hold up to a hash bias of order `base^2 / 2^64`.
+These laws treat the node hashes as independent uniform draws.
+One 64-bit seed selects the scramble, so at most `2^64` scrambles occur, as for any 64-bit random generator.
 The cost is `O(pad)` hashes per coordinate.
 
 References: Owen, A. B. (1995). Randomly permuted (t, m, s)-nets and (t, s)-sequences. In Monte Carlo and Quasi-Monte Carlo Methods in Scientific Computing: Proceedings of a conference at the University of Nevada, Las Vegas, Nevada, USA, June 23–25, 1994 (pp. 299-317). Springer New York.
