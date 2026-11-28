@@ -304,7 +304,8 @@ end
 end
 
 @testset "Faure nets put each point at the center of its cell" begin
-    for (d, power) in ((1, 3), (3, 3), (5, 2), (7, 2))
+    # Float `log(5, 125)` exceeds 3, but the offset uses exact `nextpow`, so 125 points stay centered.
+    for (d, power) in ((1, 3), (3, 3), (5, 2), (5, 3), (7, 2))
         base = nextprime(d)
         n = base^power
         points = QuasiMonteCarlo.sample(n, d, FaureSample())
