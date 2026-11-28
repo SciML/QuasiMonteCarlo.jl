@@ -408,6 +408,10 @@ end
         @test isa(B, Matrix{typeof(B[1][1])}) == true
         @test size(B) == (d, n)
     end
+    # Invalid arguments fail with the messages that `sample` gives.
+    @test_throws AssertionError(QuasiMonteCarlo.ZERO_SAMPLES_MESSAGE) QuasiMonteCarlo.generate_design_matrices(0, lb, ub, SobolSample(), num_mat)
+    @test_throws AssertionError(QuasiMonteCarlo.DIM_MISMATCH_MESSAGE) QuasiMonteCarlo.generate_design_matrices(n, lb, ub[1:2], SobolSample(), num_mat)
+    @test_throws AssertionError(QuasiMonteCarlo.UB_LB_MESSAGE) QuasiMonteCarlo.generate_design_matrices(n, ub, lb, SobolSample(), num_mat)
 end
 
 @testset "iterators" begin
