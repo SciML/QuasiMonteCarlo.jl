@@ -220,7 +220,9 @@ Throw an `ArgumentError` if the base of `R` differs from the sequence `base`.
 # Examples
 
 ```jldoctest
-julia> isnothing(QuasiMonteCarlo.check_base(QuasiMonteCarlo.DigitalShift(base = 2), 2))
+julia> using QuasiMonteCarlo
+
+julia> isnothing(QuasiMonteCarlo.check_base(DigitalShift(base = 2), 2))
 true
 ```
 """
