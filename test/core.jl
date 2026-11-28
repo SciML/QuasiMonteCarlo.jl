@@ -141,8 +141,8 @@ end
     s = QuasiMonteCarlo.sample(n, lb, ub, GridSample())
     s = sortslices(s; dims = 2)
     differences = diff(s; dims = 2)
-    # test for grid
-    @test all(x -> all(y -> y in 0.0:(1 / n):1.0, x), eachrow(s))
+    # test for grid: the centers of n equal cells
+    @test all(x -> all(y -> y in (1:2:(2n - 1)) ./ 2n, x), eachrow(s))
     μ = mean(s; dims = 2)
     variance = var(s; corrected = false, dims = 2)
     for i in eachindex(μ)
@@ -258,6 +258,27 @@ end
     end
 end
 
+@testset "radical-inverse samplers count index digits exactly" begin
+    # One point has one index digit, so it is the center of the unit interval.
+    @test QuasiMonteCarlo.sample(1, 1, VanDerCorputSample(base = 3)) == [0.5]
+    @test QuasiMonteCarlo.sample(1, 3, HaltonSample()) == fill(0.5, 3, 1)
+    # Every coordinate of the one Faure point is the same offset, strictly inside the unit interval.
+    one_point = only(eachcol(QuasiMonteCarlo.sample(1, 3, FaureSample())))
+    @test length(one_point) == 3 && allequal(one_point) && 0 < first(one_point) < 1
+    # Float `ceil(log(5, 125))` is 4. The first Faure point is its offset, which one more digit divides by the base.
+    @test QuasiMonteCarlo.sample(125, 5, FaureSample())[:, 1] ≈ QuasiMonteCarlo.sample(25, 5, FaureSample())[:, 1] ./ 5
+    # Zero points have no index to count, so every sampler rejects them.
+    @test_throws ArgumentError QuasiMonteCarlo.sample(0, 2, HaltonSample())
+    @test_throws ArgumentError QuasiMonteCarlo.sample(0, 2, FaureSample())
+    @test_throws ArgumentError QuasiMonteCarlo.sample(0, 1, VanDerCorputSample(base = 2))
+    @test_throws ArgumentError QuasiMonteCarlo.sample(4, 2, VanDerCorputSample(base = 2))
+    @test_throws ArgumentError QuasiMonteCarlo.sample(0, 2, LatinHypercubeSample())
+    @test_throws ArgumentError QuasiMonteCarlo.sample(4, [0.0, 1.0], [1.0, 0.5], HaltonSample())
+    @test_throws DimensionMismatch QuasiMonteCarlo.sample(4, [0.0], [1.0, 1.0], HaltonSample())
+    @test_throws DimensionMismatch QuasiMonteCarlo.sample(4, 3, KroneckerSample([0.5, 0.25], NoRand()))
+    @test_throws ArgumentError QuasiMonteCarlo.sample(4, 2, KroneckerSample([0.5, 0.25], NoRand()), Float32)
+end
+
 @testset "Faure Sample" begin
     #FaureSample()
     d = 17
@@ -268,8 +289,8 @@ end
     @test_throws ArgumentError QuasiMonteCarlo.sample(d + 1, d, sampler)
     @test_throws ArgumentError QuasiMonteCarlo.sample(d^2 + 1, d, sampler)
     s = sortslices(QuasiMonteCarlo.sample(n, d, sampler); dims = 2)
-    # FaureSample() generates centered boxes, unlike DiceDesign
-    r = sortslices(include("shared/rfaure.jl")'; dims = 2) .+ inv(2base^(power + 1))
+    # FaureSample() generates centered boxes, unlike DiceDesign: n = base^power cells of width 1 / n.
+    r = sortslices(include("shared/rfaure.jl")'; dims = 2) .+ inv(2base^power)
 
     @test s isa Matrix
     @test size(s) == (d, n)
@@ -302,6 +323,20 @@ end
         s = QuasiMonteCarlo.sample(n, d, sampler)
         @test istmsnet(s; λ, t = 0, m = power, s = d, base)  # test 3d stratification of next 3 primes
     end
+end
+
+@testset "Faure nets put each point at the center of its cell" begin
+    # Float `log(5, 125)` exceeds 3, but the offset uses exact `nextpow`, so 125 points stay centered.
+    for (d, power) in ((1, 3), (3, 3), (5, 2), (5, 3), (7, 2))
+        base = nextprime(d)
+        n = base^power
+        points = QuasiMonteCarlo.sample(n, d, FaureSample())
+        # Each coordinate of a full net is a permutation of the n cell centers.
+        @test all(sort(row) ≈ ((0:(n - 1)) .+ 0.5) ./ n for row in eachrow(points))
+    end
+    # With λ < base copies of base^power, the cells have one more digit.
+    points = QuasiMonteCarlo.sample(2 * 3^2, 3, FaureSample())
+    @test points .* 3^3 .- 0.5 ≈ round.(points .* 3^3 .- 0.5)
 end
 
 @testset "(Randomized) Halton Sequence" begin
@@ -351,6 +386,34 @@ end
         @test μ[i] ≈ 0.5 atol = 3 / n
         @test variance[i] ≈ 1 / 12 rtol = 3 / n
     end
+end
+
+@testset "deterministic samplers never return 0 or 1" begin
+    samplers = [FaureSample(), GridSample(), HaltonSample(), KroneckerSample(), LatticeRuleSample(), SobolSample()]
+    for sampler in samplers, T in (Float64, Float32), (count, dims) in ((4, 1), (16, 2), (125, 5))
+        points = QuasiMonteCarlo.sample(count, dims, sampler, T)
+        @test eltype(points) == T
+        @test all(0 .< points .< 1)
+    end
+    # The lattice moves each point up by half a last digit, so its first point is not the origin.
+    lattice = QuasiMonteCarlo._lattice_rule(3)
+    @test QuasiMonteCarlo.sample(64, 3, LatticeRuleSample()) == reduce(hcat, lattice[0:63]) .+ 2.0^-53
+    @test QuasiMonteCarlo.sample(64, 3, LatticeRuleSample(), Float32)[:, 1] == fill(2.0f0^-24, 3)
+    @test QuasiMonteCarlo.cell_midpoint(Float32, prevfloat(1.0)) == prevfloat(1.0f0)
+    @test QuasiMonteCarlo.cell_midpoint(Rational{Int128}, 0.0) == 1 // Int128(2)^53
+    # A float wider than the exponent range of Float64 scales in its own type.
+    setprecision(BigFloat, 2048) do
+        points = QuasiMonteCarlo.sample(4, 1, LatticeRuleSample(), BigFloat)
+        @test points == [big(2)^-2048 0.5 + big(2)^-2048 0.25 + big(2)^-2048 0.75 + big(2)^-2048]
+    end
+    # Cells finer than the last digit of a float still give centers inside (0, 1).
+    @test QuasiMonteCarlo.grid_center(Float16, 2048, 2049) == prevfloat(Float16(1))
+    @test QuasiMonteCarlo.grid_center(Float16, 0, 2^30) == nextfloat(Float16(0))
+    # `2n` overflows a 32-bit integer here, so the center needs widened arithmetic.
+    @test QuasiMonteCarlo.grid_center(Float64, Int32(0), Int32(2)^30) == 2.0^-31
+    @test QuasiMonteCarlo.grid_center(Float64, typemax(Int) - 1, typemax(Int)) ≈ 1 - 0.5 / typemax(Int)
+    @test QuasiMonteCarlo.grid_center(Rational{Int}, 1, 4) == 3 // 8
+    @test all(0 .< QuasiMonteCarlo.sample(2049, 1, GridSample(), Float16) .< 1)
 end
 
 @testset "Kronecker" begin
@@ -430,6 +493,10 @@ end
         @test isa(B, Matrix{typeof(B[1][1])}) == true
         @test size(B) == (d, n)
     end
+    # Invalid arguments fail with the messages that `sample` gives.
+    @test_throws ArgumentError(QuasiMonteCarlo.ZERO_SAMPLES_MESSAGE) QuasiMonteCarlo.generate_design_matrices(0, lb, ub, SobolSample(), num_mat)
+    @test_throws DimensionMismatch(QuasiMonteCarlo.DIM_MISMATCH_MESSAGE) QuasiMonteCarlo.generate_design_matrices(n, lb, ub[1:2], SobolSample(), num_mat)
+    @test_throws ArgumentError(QuasiMonteCarlo.UB_LB_MESSAGE) QuasiMonteCarlo.generate_design_matrices(n, ub, lb, SobolSample(), num_mat)
 end
 
 @testset "iterators" begin

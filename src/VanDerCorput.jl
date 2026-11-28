@@ -34,12 +34,12 @@ Base.@kwdef @concrete struct VanDerCorputSample{I <: Integer} <:
 end
 
 function sample(n::Integer, d::Integer, S::VanDerCorputSample, T::Type = Float64)
-    @assert d == 1 "Van der Corput sequence only supports 1D sampling"
-    @assert n > 0 ZERO_SAMPLES_MESSAGE
+    d == 1 || throw(ArgumentError("Van der Corput sequence only supports 1D sampling"))
+    _check_sequence(n)
     base = S.base
     log_n = log(base, n)
     t = floor(Int, log_n)
-    n_digits = ceil(Int, log_n)
+    n_digits = _index_digits(n, base)
     λ = n ÷ (base^t)
     # Randomize the points as one coordinate of n points, then return them as a vector.
     return vec(randomize(reshape(_vdc(promote(λ, n_digits, base)..., T; n), 1, n), S.R))
@@ -72,6 +72,24 @@ end
         sequence[sample_idx] = evalpoly(inv_base, dgs) * inv_base + offset
     end
     return sequence
+end
+
+"""
+    _index_digits(n, base)
+
+The number of base-`base` digits of the largest index `n - 1` of `n ≥ 1` points, at least 1.
+Integer arithmetic keeps it exact where `ceil(log(base, n))` rounds, as at `n = 5^3`.
+
+```jldoctest
+julia> using QuasiMonteCarlo
+
+julia> QuasiMonteCarlo._index_digits.((1, 8, 9, 125), (2, 2, 2, 5))
+(1, 3, 4, 3)
+```
+"""
+function _index_digits(n::Integer, base::Integer)
+    _check_sequence(n)
+    return ndigits(n - 1; base)
 end
 
 @fastmath @views function _base_sum!(dgs::AbstractVector, base::Integer)

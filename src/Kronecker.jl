@@ -65,12 +65,12 @@ function sample(
         n::Integer, d::Integer, k::KroneckerSample{V},
         T
     ) where {V <: AbstractVector}
-    @assert eltype(V) == T "Sample type must match generator type."
+    eltype(V) == T || throw(ArgumentError("Sample type must match generator type."))
     return randomize(sample(n, d, k), k.R)
 end
 
 function sample(n::Integer, d::Integer, k::KroneckerSample{V}) where {V <: AbstractVector}
-    @assert d == length(k.generator) "Dimensions of generator and sample must match."
+    d == length(k.generator) || throw(DimensionMismatch("Dimensions of generator and sample must match."))
     return @. mod(k.generator * (1:n)', 1)
 end
 

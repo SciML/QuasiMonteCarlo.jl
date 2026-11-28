@@ -303,8 +303,9 @@ bounds form maps every coordinate to its corresponding interval `[lb[i], ub[i]]`
 
 # Throws
 
-- `AssertionError`: If the bounds have different lengths or a lower bound
-  exceeds its corresponding upper bound.
+- `ArgumentError`: If `n` is not positive, or a lower bound exceeds its
+  corresponding upper bound.
+- `DimensionMismatch`: If the bounds have different lengths.
 - An exception from the selected sampler if `n`, `d`, or `num_mats` is invalid.
 
 # Examples
@@ -345,10 +346,7 @@ function generate_design_matrices(
         n, lb, ub, sampler,
         num_mats = 2
     )
-    if n <= 0
-        throw(ZeroSamplesError())
-    end
-    @assert length(lb) == length(ub)
+    _check_sequence(lb, ub, n)
 
     # Generate a vector of num_mats independent "randomized" version of the QMC sequence
     out = generate_design_matrices(n, length(lb), sampler, num_mats, eltype(lb))
