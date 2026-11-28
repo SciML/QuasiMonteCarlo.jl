@@ -15,7 +15,7 @@ Scramble each column of the `pad × n` matrix `digit_columns` with one `OwenScra
 """
 function scramble_digits(digit_columns::AbstractMatrix{<:Integer}, base::Integer, seed::Integer)
     origin = reshape(digit_columns, size(digit_columns, 1), :, 1)
-    scramble = OwenScramble(base = base, pad = size(digit_columns, 1), rng = Xoshiro(seed))
+    scramble = OwenScramble(base = base, pad = oftype(base, size(digit_columns, 1)), rng = Xoshiro(seed))
     return QuasiMonteCarlo.randomize_bits!(similar(origin), origin, scramble)[:, :, 1]
 end
 
@@ -44,6 +44,12 @@ end
         @test !allequal(mod.(scrambled[end, :] .- grid[end, :], base))
         @test scrambled != scramble_digits(grid, base, 4)
     end
+end
+
+@testset "OwenScramble: a narrow digit type does not overflow" begin
+    # 126 plus a shift of 2 or more exceeds typemax(Int8).
+    top_digits = fill(Int8(126), 4, 50)
+    @test all(0 .<= scramble_digits(top_digits, Int8(127), 1) .< 127)
 end
 
 @testset "OwenScramble: sibling nodes draw independent permutations" begin

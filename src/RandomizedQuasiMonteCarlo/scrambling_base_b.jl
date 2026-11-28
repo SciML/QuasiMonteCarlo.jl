@@ -171,7 +171,8 @@ function randomize_bits!(
             node = root
             for k in 1:pad
                 digit = origin_bits[k, point, dimension]
-                random_bits[k, point, dimension] = (digit + T(node_shift(node, R.base))) % R.base
+                # Add in UInt64: `digit + shift` can overflow a narrow `T` such as `Int8`.
+                random_bits[k, point, dimension] = T((UInt64(digit) + node_shift(node, R.base)) % UInt64(R.base))
                 node = child_node(node, digit)
             end
         end
