@@ -41,7 +41,8 @@ function sample(n::Integer, d::Integer, S::VanDerCorputSample, T::Type = Float64
     t = floor(Int, log_n)
     n_digits = ceil(Int, log_n)
     λ = n ÷ (base^t)
-    return randomize(_vdc(promote(λ, n_digits, base)..., T; n), S.R)
+    # Randomize the points as one coordinate of n points, then return them as a vector.
+    return vec(randomize(reshape(_vdc(promote(λ, n_digits, base)..., T; n), 1, n), S.R))
 end
 
 """
