@@ -258,6 +258,21 @@ end
     end
 end
 
+@testset "radical-inverse samplers count index digits exactly" begin
+    # One point has one index digit, so it is the center of the unit interval.
+    @test QuasiMonteCarlo.sample(1, 1, VanDerCorputSample(base = 3)) == [0.5]
+    @test QuasiMonteCarlo.sample(1, 3, HaltonSample()) == fill(0.5, 3, 1)
+    # Every coordinate of the one Faure point is the same offset, strictly inside the unit interval.
+    one_point = only(eachcol(QuasiMonteCarlo.sample(1, 3, FaureSample())))
+    @test length(one_point) == 3 && allequal(one_point) && 0 < first(one_point) < 1
+    # Float `ceil(log(5, 125))` is 4. The first Faure point is its offset, which one more digit divides by the base.
+    @test QuasiMonteCarlo.sample(125, 5, FaureSample())[:, 1] ≈ QuasiMonteCarlo.sample(25, 5, FaureSample())[:, 1] ./ 5
+    # Zero points have no index to count, so every sampler rejects them.
+    @test_throws AssertionError QuasiMonteCarlo.sample(0, 2, HaltonSample())
+    @test_throws AssertionError QuasiMonteCarlo.sample(0, 2, FaureSample())
+    @test_throws AssertionError QuasiMonteCarlo.sample(0, 1, VanDerCorputSample(base = 2))
+end
+
 @testset "Faure Sample" begin
     #FaureSample()
     d = 17

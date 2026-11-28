@@ -69,7 +69,7 @@ end
         skipchecks = false
     )
     base = nextprime(dimension)
-    n_digits = ceil(Int, log(base, n))
+    n_digits = _index_digits(n, base)
     power = n_digits - 1
 
     if !skipchecks && (n % prevpow(base, n) ≠ 0)
