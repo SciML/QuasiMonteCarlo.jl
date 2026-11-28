@@ -45,132 +45,6 @@ function randomize(x, R::ScrambleMethod)
     return permutedims(random_x)
 end
 
-"""
-    OwenScramble(base::Integer; pad = 32, rng = Random.TaskLocalRNG()) <: ScrambleMethod
-
-Nested Uniform Scramble, also known as Owen's scramble.
-
-# Fields
-
-- `base::Integer`: Base of the digital net being scrambled.
-- `pad::Integer = 32`: Number of base-`base` digits retained for each point.
-- `rng::AbstractRNG = Random.TaskLocalRNG()`: Random-number generator used by
-  the scramble.
-
-`randomize(x, R::OwenScramble)` returns a scrambled version of `x`.
-The scramble method is Nested Uniform Scramble which was introduced in Owen (1995).
-`pad` is the number of bits used for each point. One needs `pad ≥ log(base, n)`.
-
-References: Owen, A. B. (1995). Randomly permuted (t, m, s)-nets and (t, s)-sequences. In Monte Carlo and Quasi-Monte Carlo Methods in Scientific Computing: Proceedings of a conference at the University of Nevada, Las Vegas, Nevada, USA, June 23–25, 1994 (pp. 299-317). Springer New York.
-"""
-Base.@kwdef struct OwenScramble{I <: Integer} <: ScrambleMethod
-    base::I
-    pad::I = 32
-    rng::AbstractRNG = Random.TaskLocalRNG()
-end
-
-function randomize!(
-        random_points::AbstractMatrix{T},
-        points::AbstractMatrix{T}, R::OwenScramble
-    ) where {T <: Real}
-    @assert size(points) == size(random_points)
-    b = R.base
-    unrandomized_bits = unif2bits(points, b, pad = R.pad)
-    random_bits = similar(unrandomized_bits)
-    indices = which_permutation(unrandomized_bits, b)
-    randomize_bits!(random_bits, unrandomized_bits, indices, R)
-    for i in CartesianIndices(random_points)
-        random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
-    end
-    return
-end
-
-"""
-    randomize_bits!(random_bits::AbstractArray{T, 3}, origin_bits::AbstractArray{T, 3}, R::ScrambleMethod) where {T <: Integer}
-
-In place version of a `OwenScramble` (Nested Uniform Scramble) for the "bit" array.
-This is faster to use this functions for multiple scramble of the same array (use `generate_design_matrices`).
-"""
-function randomize_bits!(
-        random_bits::AbstractArray{T, 3},
-        origin_bits::AbstractArray{T, 3},
-        indices::AbstractArray{F, 3},
-        R::OwenScramble
-    ) where {T <: Integer, F <: Integer}
-    # in place nested uniform Scramble.
-    #
-    m, n, d = size(indices)
-    b = R.base
-    rng = R.rng
-    pad = size(random_bits, 1)
-    @assert m ≥ 1 "We need m ≥ 1" # m=0 causes awkward corner case below.
-
-    for s in 1:d
-        theperms = getpermset(rng, m, b)         # Permutations to apply to bits 1:m
-        for k in 1:m                             # Here is where we want m > 0 so the loop works ok
-            @views random_bits[k, :, s] .= (
-                origin_bits[k, :, s] .+
-                    theperms[k, indices[k, :, s]]
-            ) .%
-                b   # permutation by adding a bit modulo b
-        end
-    end
-
-    # Paste in random entries for bits after m'th one
-    return if pad > m
-        # random_bits[(m + 1):pad, :, :] = rand(rng, 0:(b - 1), n * d * (pad - m))
-        rand!(rng, @view(random_bits[(m + 1):pad, :, :]), 0:(b - 1))
-    end
-end
-
-function getpermset(rng::AbstractRNG, m::Integer, b::I) where {I <: Integer}
-    # Get b^(k-1) random binary permutations for k=1 ... m
-    # m will ordinarily be m when there are n=b^m points
-    #
-    y = zeros(I, m, b^(m - 1))
-    for k in 1:m
-        nₖ = b^(k - 1)
-        y[k, 1:nₖ] = rand(rng, 0:(b - 1), nₖ)
-    end
-    return y
-end
-
-getpermset(m::Integer, b::Integer) = getpermset(Random.TaskLocalRNG(), m, b)
-
-"""
-    which_permutation(bits::AbstractArray{<:Integer,3}, b)
-
-This function is used in Nested Uniform Scramble.
-It assigns for each point (in every dimension) `m` number corresponding to its location on the slices 1, 1/b, 1/b², ..., 1/bᵐ⁻¹ of the axes [0,1[.
-This also can be used to verify some equidistribution prorepreties.
-Here we create the `indices` array `m`, and not `pad`. Indeed `(t,m,d)-net` in base `b` are scrambled up to the `1/bᵐ` component.
-Higher order components are just used i.i.d. `Uₖ ∼ 𝐔({0:b-1})` in `owen_scramble_bit!`.
-"""
-function which_permutation(bits::AbstractArray, b::I) where {I <: Integer}
-    n, d = size(bits)[2:end]
-    m = logi(b, n)
-
-    indices = zeros(I, m, n, d)
-    for j in axes(bits, 3)
-        which_permutation!(@view(indices[:, :, j]), bits[:, :, j], b)
-    end
-    return indices
-end
-
-function which_permutation!(
-        indices::AbstractMatrix{<:Integer},
-        bits::AbstractMatrix{<:Integer}, b::Integer
-    )
-    @assert size(indices)[2:end] == size(bits)[2:end] "You need size(indices) = $(size(indices)) equal size(bits) = $(size(bits))"
-    indices[1, :] .= 0 # same permutation for all observations i
-    for i in axes(indices, 2)                     # Here is where we want m > 0 so the loop works ok
-        for k in axes(indices, 1)[2:end]
-            indices[k, i] = bits2int(@view(bits[1:(k - 1), i]), b) # index of which perms to use at bit k for each i
-        end
-    end
-    return indices .+= 1 # array indexing starts at 1
-end
-
 function randomize!(
         random_points::AbstractMatrix{T},
         points::AbstractMatrix{T}, R::ScrambleMethod
@@ -184,6 +58,206 @@ function randomize!(
         random_points[i] = bits2unif(T, @view(random_bits[:, i]), b)
     end
     return
+end
+
+"""
+    OwenScramble(; base::Integer, pad = 32, rng = Random.TaskLocalRNG()) <: ScrambleMethod
+
+Nested Uniform Scramble, also known as Owen's scramble.
+
+# Fields
+
+- `base::Integer`: Prime base of the digital net being scrambled.
+- `pad::Integer = 32`: Number of base-`base` digits scrambled in each coordinate.
+- `rng::AbstractRNG = Random.TaskLocalRNG()`: Random-number generator from which each
+  `randomize` call draws one 64-bit seed.
+
+A nested scramble gives each node of the `base`-ary digit tree a random permutation of `0:(base - 1)`.
+Digit `k` of a coordinate goes through the permutation of the node that the `k - 1` digits above it select.
+A hash of the seed, the dimension and these digits gives the permutation (Burley 2020), so no table is stored.
+The scramble of a point thus depends only on the point and the seed:
+
+  - `randomize` accepts any number of points.
+  - The first `n` points of a scrambled sequence are the scrambled first `n` points.
+    Extending a sample keeps the points already drawn.
+
+Each node permutation is a random affine map `a ↦ h·a + g mod base`, with `h` uniform on `1:(base - 1)` and `g` uniform on `0:(base - 1)`.
+For `base` 2 or 3, this is a uniform random permutation.
+For larger bases, each pair of distinct digits maps to a uniform pair of distinct digits, as under a uniform permutation.
+Two scrambled points thus have the same joint law as under Owen's scramble, so estimates have the same variance.
+These laws treat the node hashes as independent uniform draws.
+One 64-bit seed selects the scramble, so at most `2^64` scrambles occur, as for any 64-bit random generator.
+The cost is `O(pad)` hashes per coordinate.
+
+References: Owen, A. B. (1995). Randomly permuted (t, m, s)-nets and (t, s)-sequences. In Monte Carlo and Quasi-Monte Carlo Methods in Scientific Computing: Proceedings of a conference at the University of Nevada, Las Vegas, Nevada, USA, June 23–25, 1994 (pp. 299-317). Springer New York.
+Burley, B. (2020). Practical Hash-based Owen Scrambling. Journal of Computer Graphics Techniques, 9(4), 1-20.
+
+# Examples
+
+```jldoctest
+julia> using QuasiMonteCarlo, Random
+
+julia> points = sample(8, 2, SobolSample());
+
+julia> first_three = randomize(points[:, 1:3], OwenScramble(base = 2, rng = Xoshiro(1)));
+
+julia> randomize(points, OwenScramble(base = 2, rng = Xoshiro(1)))[:, 1:3] == first_three
+true
+```
+"""
+Base.@kwdef struct OwenScramble{I <: Integer} <: ScrambleMethod
+    base::I
+    pad::I = 32
+    rng::AbstractRNG = Random.TaskLocalRNG()
+    function OwenScramble(base::I, pad::I, rng::AbstractRNG) where {I <: Integer}
+        # A multiplier `h` that shares a factor with `base` would merge digits.
+        isprime(base) || throw(ArgumentError("OwenScramble needs a prime base, got $base"))
+        return new{I}(base, pad, rng)
+    end
+end
+
+"""Odd 64-bit constant `2^64 / φ` that SplitMix64 adds to its state."""
+const GOLDEN_GAMMA = 0x9e3779b97f4a7c15
+
+"""
+    splitmix64(word::Unsigned) -> UInt64
+
+Return the SplitMix64 output for state `word`: a bijective avalanche of 64 bits.
+
+# Examples
+
+```jldoctest
+julia> QuasiMonteCarlo.splitmix64(0x0)
+0xe220a8397b1dcdaf
+```
+"""
+function splitmix64(word::Unsigned)
+    mixed = UInt64(word) + GOLDEN_GAMMA
+    mixed = (mixed ⊻ (mixed >> 30)) * 0xbf58476d1ce4e5b9
+    mixed = (mixed ⊻ (mixed >> 27)) * 0x94d049bb133111eb
+    return mixed ⊻ (mixed >> 31)
+end
+
+"""
+    root_node(seed::UInt64, dimension::Integer) -> UInt64
+
+Return the hash of the digit tree's root for coordinate `dimension` under `seed`.
+
+# Examples
+
+```jldoctest
+julia> QuasiMonteCarlo.root_node(UInt64(0), 1) != QuasiMonteCarlo.root_node(UInt64(0), 2)
+true
+```
+"""
+root_node(seed::UInt64, dimension::Integer) = splitmix64(seed ⊻ splitmix64(UInt64(dimension)))
+
+"""
+    child_node(node::UInt64, digit::Integer) -> UInt64
+
+Return the hash of the child that `digit` selects below `node` in the digit tree.
+Distinct digits give distinct children, as `splitmix64` is a bijection.
+
+# Examples
+
+```jldoctest
+julia> QuasiMonteCarlo.child_node(UInt64(0), 0) != QuasiMonteCarlo.child_node(UInt64(0), 1)
+true
+```
+"""
+child_node(node::UInt64, digit::Integer) = splitmix64(node + (UInt64(digit) + 1) * GOLDEN_GAMMA)
+
+"""
+    node_shift(node::UInt64, base::Integer) -> UInt64
+
+Return the shift in `0:(base - 1)` that `node` applies to its digit: the top 64 bits of `node * base`.
+
+# Examples
+
+```jldoctest
+julia> QuasiMonteCarlo.node_shift(typemax(UInt64), 3)
+0x0000000000000002
+```
+"""
+node_shift(node::UInt64, base::Integer) = (widemul(node, UInt64(base)) >> 64) % UInt64
+
+"""
+    node_multiplier(node::UInt64, base::Integer) -> UInt64
+
+Return the multiplier in `1:(base - 1)` that `node` applies to its digit, from one more hash of `node`.
+Base 2 has only the multiplier 1 and skips the hash.
+
+# Examples
+
+```jldoctest
+julia> QuasiMonteCarlo.node_multiplier(UInt64(12345), 2)
+0x0000000000000001
+```
+"""
+node_multiplier(node::UInt64, base::Integer) = base == 2 ? one(UInt64) : node_shift(splitmix64(node), base - 1) + 1
+
+"""
+    add_mod(digit::T, shift::T, base::T) where {T <: Unsigned} -> T
+
+Return `(digit + shift) mod base` without overflow, for `digit, shift < base`.
+
+# Examples
+
+```jldoctest
+julia> QuasiMonteCarlo.add_mod(typemax(UInt64) - 1, typemax(UInt64) - 1, typemax(UInt64))
+0xfffffffffffffffd
+```
+"""
+function add_mod(digit::T, shift::T, base::T) where {T <: Unsigned}
+    gap = base - digit
+    return shift >= gap ? shift - gap : digit + shift
+end
+
+"""
+    permute_digit(node::UInt64, digit::UInt64, base::UInt64) -> UInt64
+
+Return `h·digit + g mod base`, with multiplier `h` and shift `g` from the hash `node`.
+Throw a `DomainError` if `digit` is not a base-`base` digit.
+
+# Examples
+
+```jldoctest
+julia> sort([QuasiMonteCarlo.permute_digit(UInt64(7), UInt64(digit), UInt64(5)) for digit in 0:4])
+5-element Vector{UInt64}:
+ 0x0000000000000000
+ 0x0000000000000001
+ 0x0000000000000002
+ 0x0000000000000003
+ 0x0000000000000004
+```
+"""
+function permute_digit(node::UInt64, digit::UInt64, base::UInt64)
+    digit < base || throw(DomainError(digit, "a base-$base digit must lie in 0:$(base - 1)"))
+    multiplier = node_multiplier(node, base)
+    # Every base-2 multiplier is 1, so base 2 skips the 128-bit division.
+    scaled = isone(multiplier) ? digit : (widemul(multiplier, digit) % base) % UInt64
+    return add_mod(scaled, node_shift(node, base), base)
+end
+
+function randomize_bits!(
+        random_bits::AbstractArray{T, 3},
+        origin_bits::AbstractArray{T, 3},
+        R::OwenScramble
+    ) where {T <: Integer}
+    pad, n, d = size(origin_bits)
+    seed = rand(R.rng, UInt64)
+    for dimension in 1:d
+        root = root_node(seed, dimension)
+        for point in 1:n
+            node = root
+            for k in 1:pad
+                digit = origin_bits[k, point, dimension]
+                random_bits[k, point, dimension] = T(permute_digit(node, UInt64(digit), UInt64(R.base)))
+                node = child_node(node, digit)
+            end
+        end
+    end
+    return random_bits
 end
 
 """
