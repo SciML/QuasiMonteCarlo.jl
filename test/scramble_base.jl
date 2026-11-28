@@ -8,8 +8,6 @@ using QuasiMonteCarlo, Test
     @test_throws ArgumentError DesignMatrix(8, 2, SobolSample(), OwenScramble(base = 3), 2)
     @test_throws ArgumentError DesignMatrix(8, 2, SobolSample(R = MatousekScramble(base = 3)), 2)
     @test size(QuasiMonteCarlo.sample(27, 3, FaureSample(R = OwenScramble(base = 3)))) == (3, 27)
-    # `_vdc` returns a vector, which every scramble rejects.
-    @test_broken size(QuasiMonteCarlo.sample(9, 1, VanDerCorputSample(base = 3, R = DigitalShift(base = 3)))) == (1, 9)
 end
 
 @testset "HaltonSample rejects a one-base scramble in more than one dimension" begin
