@@ -24,7 +24,7 @@ end
 
 @views function sample(n::I, d::I, S::HaltonSample, T::Type = Float64) where {I <: Integer}
     bases = nextprimes(one(n), d)
-    n_digits = ceil.(I, log.(bases, n))
+    n_digits = I.(_index_digits.(n, bases))
     λ = n .÷ bases .^ n_digits
     halton_seq = Matrix{T}(undef, d, n)
     for i in axes(halton_seq, 1)

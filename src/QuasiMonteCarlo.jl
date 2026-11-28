@@ -126,9 +126,9 @@ Validate the sample count and, when supplied, the bounds of a sampling sequence.
 
 # Throws
 
-  - `AssertionError`: Thrown when `n` is not positive, when `lb` and `ub` have
-    different lengths, or when any lower bound exceeds its corresponding upper
-    bound.
+  - `ArgumentError`: Thrown when `n` is not positive, or when any lower bound
+    exceeds its corresponding upper bound.
+  - `DimensionMismatch`: Thrown when `lb` and `ub` have different lengths.
 
 # Examples
 
@@ -140,16 +140,19 @@ julia> QuasiMonteCarlo._check_sequence(8)
 julia> QuasiMonteCarlo._check_sequence([0.0, -1.0], [1.0, 1.0], 8)
 
 julia> QuasiMonteCarlo._check_sequence([0.0, 2.0], [1.0, 1.0], 8)
-ERROR: AssertionError: Lower bound exceeds upper bound (lb > ub)
+ERROR: ArgumentError: Lower bound exceeds upper bound (lb > ub)
 ```
 """
 function _check_sequence(lb, ub, n::Integer)
-    @assert length(lb) == length(ub) DIM_MISMATCH_MESSAGE
-    @assert all(x -> x[1] ≤ x[2], zip(lb, ub)) UB_LB_MESSAGE
-    return @assert n > 0 ZERO_SAMPLES_MESSAGE
+    length(lb) == length(ub) || throw(DimensionMismatch(DIM_MISMATCH_MESSAGE))
+    all(x -> x[1] ≤ x[2], zip(lb, ub)) || throw(ArgumentError(UB_LB_MESSAGE))
+    return _check_sequence(n)
 end
 
-_check_sequence(n::Integer) = @assert n > 0 ZERO_SAMPLES_MESSAGE
+function _check_sequence(n::Integer)
+    n > 0 || throw(ArgumentError(ZERO_SAMPLES_MESSAGE))
+    return nothing
+end
 
 @public _check_sequence
 
@@ -218,8 +221,9 @@ maps every coordinate from `[0, 1]` to its corresponding closed interval
 
 # Throws
 
-- `AssertionError`: If `n` is not positive, the bounds have different lengths,
-  or a lower bound exceeds its corresponding upper bound.
+- `ArgumentError`: If `n` is not positive, or a lower bound exceeds its
+  corresponding upper bound.
+- `DimensionMismatch`: If the bounds have different lengths.
 
 # Examples
 
