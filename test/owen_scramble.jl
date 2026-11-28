@@ -46,10 +46,20 @@ end
     end
 end
 
-@testset "OwenScramble: a narrow digit type does not overflow" begin
+@testset "OwenScramble: digit sums do not overflow" begin
     # 126 plus a shift of 2 or more exceeds typemax(Int8).
     top_digits = fill(Int8(126), 4, 50)
     @test all(0 .<= scramble_digits(top_digits, Int8(127), 1) .< 127)
+    # Digits on both sides of `digit + root shift == base` must keep distinct images.
+    huge_base = typemax(UInt64)
+    root = QuasiMonteCarlo.root_node(rand(Xoshiro(1), UInt64), 1)
+    root_shift = QuasiMonteCarlo.node_shift(root, huge_base)
+    @test root_shift >= 2
+    @test allunique(scramble_digits(UInt64[huge_base - root_shift huge_base - root_shift + 1], huge_base, 1))
+    @test QuasiMonteCarlo.add_mod(huge_base - 1, huge_base - 1, huge_base) == huge_base - 2
+    @test QuasiMonteCarlo.add_mod(UInt8(3), UInt8(4), UInt8(5)) == 2
+    @test QuasiMonteCarlo.add_mod(UInt8(1), UInt8(2), UInt8(5)) == 3
+    @test_throws DomainError QuasiMonteCarlo.add_mod(UInt8(5), UInt8(0), UInt8(5))
 end
 
 @testset "OwenScramble: sibling nodes draw independent permutations" begin

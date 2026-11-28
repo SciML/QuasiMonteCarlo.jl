@@ -130,6 +130,20 @@ function splitmix64(word::Unsigned)
 end
 
 """
+    root_node(seed::UInt64, dimension::Integer) -> UInt64
+
+Return the hash of the digit tree's root for coordinate `dimension` under `seed`.
+
+# Examples
+
+```jldoctest
+julia> QuasiMonteCarlo.root_node(UInt64(0), 1) != QuasiMonteCarlo.root_node(UInt64(0), 2)
+true
+```
+"""
+root_node(seed::UInt64, dimension::Integer) = splitmix64(seed ⊻ splitmix64(UInt64(dimension)))
+
+"""
     child_node(node::UInt64, digit::Integer) -> UInt64
 
 Return the hash of the child that `digit` selects below `node` in the digit tree.
@@ -158,6 +172,25 @@ julia> QuasiMonteCarlo.node_shift(typemax(UInt64), 3)
 """
 node_shift(node::UInt64, base::Integer) = (widemul(node, UInt64(base)) >> 64) % UInt64
 
+"""
+    add_mod(digit::T, shift::T, base::T) where {T <: Unsigned} -> T
+
+Return `(digit + shift) mod base` without overflow, for `shift < base`.
+Throw a `DomainError` if `digit` is not a base-`base` digit.
+
+# Examples
+
+```jldoctest
+julia> QuasiMonteCarlo.add_mod(typemax(UInt64) - 1, typemax(UInt64) - 1, typemax(UInt64))
+0xfffffffffffffffd
+```
+"""
+function add_mod(digit::T, shift::T, base::T) where {T <: Unsigned}
+    digit < base || throw(DomainError(digit, "a base-$base digit must lie in 0:$(base - 1)"))
+    gap = base - digit
+    return shift >= gap ? shift - gap : digit + shift
+end
+
 function randomize_bits!(
         random_bits::AbstractArray{T, 3},
         origin_bits::AbstractArray{T, 3},
@@ -166,13 +199,13 @@ function randomize_bits!(
     pad, n, d = size(origin_bits)
     seed = rand(R.rng, UInt64)
     for dimension in 1:d
-        root = splitmix64(seed ⊻ splitmix64(UInt64(dimension)))
+        root = root_node(seed, dimension)
         for point in 1:n
             node = root
             for k in 1:pad
                 digit = origin_bits[k, point, dimension]
-                # Add in UInt64: `digit + shift` can overflow a narrow `T` such as `Int8`.
-                random_bits[k, point, dimension] = T((UInt64(digit) + node_shift(node, R.base)) % UInt64(R.base))
+                shifted = add_mod(UInt64(digit), node_shift(node, R.base), UInt64(R.base))
+                random_bits[k, point, dimension] = T(shifted)
                 node = child_node(node, digit)
             end
         end
