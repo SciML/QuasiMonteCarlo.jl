@@ -2,12 +2,14 @@ using QuasiMonteCarlo, Test, Primes
 using Supposition: Data, @check
 
 # Samplers that accept every size `n ≥ 1` in every dimension.
-const ANY_SIZE_SAMPLERS = (
+# Supposition names each example file after the generated types. A `Union` of every
+# sampler type exceeds the 255-byte file-name limit, so the element type stays abstract.
+const ANY_SIZE_SAMPLERS = QuasiMonteCarlo.SamplingAlgorithm[
     GridSample(), SobolSample(), LatticeRuleSample(), HaltonSample(), GoldenSample(),
     KroneckerSample(), RandomSample(), LatinHypercubeSample(), RandomizedHaltonSample(),
-)
+]
 const DETERMINISTIC_SAMPLERS = filter(s -> s isa QuasiMonteCarlo.DeterministicSamplingAlgorithm, ANY_SIZE_SAMPLERS)
-const ALL_SAMPLERS = (ANY_SIZE_SAMPLERS..., FaureSample())
+const ALL_SAMPLERS = QuasiMonteCarlo.SamplingAlgorithm[ANY_SIZE_SAMPLERS..., FaureSample()]
 
 inside_open_box(points) = all(x -> 0 < x < 1, points)
 # Uniform draws from 1:2000 rarely give the smallest sizes, where edge cases live.
