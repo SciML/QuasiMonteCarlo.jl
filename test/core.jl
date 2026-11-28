@@ -236,19 +236,6 @@ end
     end
 end
 
-@testset "Faure nets put each point at the center of its cell" begin
-    for (d, power) in ((1, 3), (3, 3), (5, 2), (7, 2))
-        base = nextprime(d)
-        n = base^power
-        points = QuasiMonteCarlo.sample(n, d, FaureSample())
-        # Each coordinate of a full net is a permutation of the n cell centers.
-        @test all(sort(row) ≈ ((0:(n - 1)) .+ 0.5) ./ n for row in eachrow(points))
-    end
-    # With λ < base copies of base^power, the cells have one more digit.
-    points = QuasiMonteCarlo.sample(2 * 3^2, 3, FaureSample())
-    @test points .* 3^3 .- 0.5 ≈ round.(points .* 3^3 .- 0.5)
-end
-
 @testset "Faure Sample" begin
     #FaureSample()
     d = 17
@@ -293,6 +280,19 @@ end
         s = QuasiMonteCarlo.sample(n, d, sampler)
         @test istmsnet(s; λ, t = 0, m = power, s = d, base)  # test 3d stratification of next 3 primes
     end
+end
+
+@testset "Faure nets put each point at the center of its cell" begin
+    for (d, power) in ((1, 3), (3, 3), (5, 2), (7, 2))
+        base = nextprime(d)
+        n = base^power
+        points = QuasiMonteCarlo.sample(n, d, FaureSample())
+        # Each coordinate of a full net is a permutation of the n cell centers.
+        @test all(sort(row) ≈ ((0:(n - 1)) .+ 0.5) ./ n for row in eachrow(points))
+    end
+    # With λ < base copies of base^power, the cells have one more digit.
+    points = QuasiMonteCarlo.sample(2 * 3^2, 3, FaureSample())
+    @test points .* 3^3 .- 0.5 ≈ round.(points .* 3^3 .- 0.5)
 end
 
 @testset "(Randomized) Halton Sequence" begin
