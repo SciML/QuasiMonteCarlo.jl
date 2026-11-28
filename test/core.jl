@@ -132,23 +132,55 @@ end
 
 #ND
 @testset "GridSample" begin
-    lb = [0.0, 0.0]
-    ub = [1.0, 1.0]
-    n = 64
-    d = 4
-
-    Random.seed!(1776)
-    s = QuasiMonteCarlo.sample(n, lb, ub, GridSample())
-    s = sortslices(s; dims = 2)
-    differences = diff(s; dims = 2)
-    # test for grid
-    @test all(x -> all(y -> y in 0.0:(1 / n):1.0, x), eachrow(s))
-    μ = mean(s; dims = 2)
-    variance = var(s; corrected = false, dims = 2)
-    for i in eachindex(μ)
-        @test μ[i] ≈ 0.5 atol = 2 / sqrt(n)
-        @test variance[i] ≈ 1 / 12 rtol = 2 / sqrt(n)
+    # A full grid holds every cell center once, in an order the rng sets.
+    for (cells, d) in ((10, 1), (8, 2), (3, 3))
+        centers = Float64.((2(0:(cells - 1)) .+ 1) .// 2cells)
+        points = QuasiMonteCarlo.sample(cells^d, d, GridSample(Xoshiro(1776)))
+        @test size(points) == (d, cells^d)
+        @test Set(collect.(eachcol(points))) == Set(collect.(Iterators.product(fill(centers, d)...)))
+        @test points == QuasiMonteCarlo.sample(cells^d, d, GridSample(Xoshiro(1776)))
+        @test points != QuasiMonteCarlo.sample(cells^d, d, GridSample(Xoshiro(1777)))
     end
+    # Other sizes take distinct points of the smallest grid that holds them.
+    for (n, d, cells) in ((5, 2, 3), (10, 3, 3), (3, 70, 2), (1, 4, 1))
+        points = QuasiMonteCarlo.sample(n, d, GridSample(Xoshiro(1)))
+        @test size(points) == (d, n)
+        @test allunique(eachcol(points))
+        @test all(in(Float64.((2(0:(cells - 1)) .+ 1) .// 2cells)), points)
+    end
+    @test_throws ArgumentError QuasiMonteCarlo.sample(4, 0, GridSample())
+    # The float root misses the exact count at these sizes.
+    @test QuasiMonteCarlo.grid_cells(Int64(10)^18, 3) === Int64(10)^6
+    @test QuasiMonteCarlo.grid_cells(Int64(10)^18 + 1, 3) === Int64(10)^6 + 1
+    @test QuasiMonteCarlo.grid_cells(Int64(2)^62 + 1, 2) === Int64(2)^31 + 1
+    @test QuasiMonteCarlo.grid_cells(typemax(Int64), 1) === typemax(Int64)
+    # Scaling a full grid keeps its exact mean and variance.
+    lb, ub = [-1.0, 10.0], [3.0, 12.0]
+    s = QuasiMonteCarlo.sample(64, lb, ub, GridSample(Xoshiro(1776)))
+    @test vec(mean(s; dims = 2)) ≈ (lb .+ ub) ./ 2
+    @test vec(var(s; corrected = false, dims = 2)) ≈ (ub .- lb) .^ 2 .* (1 - 1 / 64) ./ 12
+    for T in (Float64, Float32, Float16)
+        points = QuasiMonteCarlo.sample(125, 5, GridSample(), T)
+        @test eltype(points) == T && all(0 .< points .< 1)
+    end
+end
+
+@testset "distinct_indices draws uniformly without replacement" begin
+    # Each position of the order is uniform, so every leading run of grid points is unbiased.
+    # (10, 10) shuffles all indices; (27, 10) rejects repeated draws.
+    for (grid_size, n) in ((10, 10), (27, 10))
+        rng = Xoshiro(1776)
+        draws = [QuasiMonteCarlo.distinct_indices(rng, grid_size, n) for _ in 1:20_000]
+        @test all(allunique, draws) && all(draw -> all(in(0:(grid_size - 1)), draw), draws)
+        for position in (1, n)
+            tallies = [count(draw -> draw[position] == index, draws) for index in 0:(grid_size - 1)]
+            @test pvalue(ChisqTest(tallies)) > 1.0e-4
+        end
+    end
+    @test QuasiMonteCarlo.distinct_indices(Xoshiro(1), 5, 0) == Int[]
+    @test eltype(QuasiMonteCarlo.distinct_indices(Xoshiro(1), big(2)^70, 3)) == BigInt
+    @test_throws ArgumentError QuasiMonteCarlo.distinct_indices(Xoshiro(1), 3, 4)
+    @test_throws ArgumentError QuasiMonteCarlo.distinct_indices(Xoshiro(1), 3, -1)
 end
 
 @testset "RandomSample" begin
@@ -268,8 +300,8 @@ end
     @test_throws ArgumentError QuasiMonteCarlo.sample(d + 1, d, sampler)
     @test_throws ArgumentError QuasiMonteCarlo.sample(d^2 + 1, d, sampler)
     s = sortslices(QuasiMonteCarlo.sample(n, d, sampler); dims = 2)
-    # FaureSample() generates centered boxes, unlike DiceDesign
-    r = sortslices(include("shared/rfaure.jl")'; dims = 2) .+ inv(2base^(power + 1))
+    # FaureSample() generates centered boxes, unlike DiceDesign: n = base^power cells of width 1 / n.
+    r = sortslices(include("shared/rfaure.jl")'; dims = 2) .+ inv(2base^power)
 
     @test s isa Matrix
     @test size(s) == (d, n)
@@ -302,6 +334,20 @@ end
         s = QuasiMonteCarlo.sample(n, d, sampler)
         @test istmsnet(s; λ, t = 0, m = power, s = d, base)  # test 3d stratification of next 3 primes
     end
+end
+
+@testset "Faure nets put each point at the center of its cell" begin
+    # Float `log(5, 125)` exceeds 3, but the offset uses exact `nextpow`, so 125 points stay centered.
+    for (d, power) in ((1, 3), (3, 3), (5, 2), (5, 3), (7, 2))
+        base = nextprime(d)
+        n = base^power
+        points = QuasiMonteCarlo.sample(n, d, FaureSample())
+        # Each coordinate of a full net is a permutation of the n cell centers.
+        @test all(sort(row) ≈ ((0:(n - 1)) .+ 0.5) ./ n for row in eachrow(points))
+    end
+    # With λ < base copies of base^power, the cells have one more digit.
+    points = QuasiMonteCarlo.sample(2 * 3^2, 3, FaureSample())
+    @test points .* 3^3 .- 0.5 ≈ round.(points .* 3^3 .- 0.5)
 end
 
 @testset "(Randomized) Halton Sequence" begin
@@ -351,6 +397,34 @@ end
         @test μ[i] ≈ 0.5 atol = 3 / n
         @test variance[i] ≈ 1 / 12 rtol = 3 / n
     end
+end
+
+@testset "deterministic samplers never return 0 or 1" begin
+    samplers = [FaureSample(), HaltonSample(), KroneckerSample(), LatticeRuleSample(), SobolSample()]
+    for sampler in samplers, T in (Float64, Float32), (count, dims) in ((4, 1), (16, 2), (125, 5))
+        points = QuasiMonteCarlo.sample(count, dims, sampler, T)
+        @test eltype(points) == T
+        @test all(0 .< points .< 1)
+    end
+    # The lattice moves each point up by half a last digit, so its first point is not the origin.
+    lattice = QuasiMonteCarlo._lattice_rule(3)
+    @test QuasiMonteCarlo.sample(64, 3, LatticeRuleSample()) == reduce(hcat, lattice[0:63]) .+ 2.0^-53
+    @test QuasiMonteCarlo.sample(64, 3, LatticeRuleSample(), Float32)[:, 1] == fill(2.0f0^-24, 3)
+    @test QuasiMonteCarlo.cell_midpoint(Float32, prevfloat(1.0)) == prevfloat(1.0f0)
+    @test QuasiMonteCarlo.cell_midpoint(Rational{Int128}, 0.0) == 1 // Int128(2)^53
+    # A float wider than the exponent range of Float64 scales in its own type.
+    setprecision(BigFloat, 2048) do
+        points = QuasiMonteCarlo.sample(4, 1, LatticeRuleSample(), BigFloat)
+        @test points == [big(2)^-2048 0.5 + big(2)^-2048 0.25 + big(2)^-2048 0.75 + big(2)^-2048]
+    end
+    # Cells finer than the last digit of a float still give centers inside (0, 1).
+    @test QuasiMonteCarlo.grid_center(Float16, 2048, 2049) == prevfloat(Float16(1))
+    @test QuasiMonteCarlo.grid_center(Float16, 0, 2^30) == nextfloat(Float16(0))
+    # `2n` overflows a 32-bit integer here, so the center needs widened arithmetic.
+    @test QuasiMonteCarlo.grid_center(Float64, Int32(0), Int32(2)^30) == 2.0^-31
+    @test QuasiMonteCarlo.grid_center(Float64, typemax(Int) - 1, typemax(Int)) ≈ 1 - 0.5 / typemax(Int)
+    @test QuasiMonteCarlo.grid_center(Rational{Int}, 1, 4) == 3 // 8
+    @test all(0 .< QuasiMonteCarlo.sample(2049, 1, GridSample(), Float16) .< 1)
 end
 
 @testset "Kronecker" begin
