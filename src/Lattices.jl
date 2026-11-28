@@ -1,26 +1,137 @@
 """
-    GridSample(R::RandomizationMethod = NoRand()) <: DeterministicSamplingAlgorithm
+    GridSample(rng::AbstractRNG = Random.TaskLocalRNG()) <: RandomSamplingAlgorithm
 
-A simple rectangular grid lattice. It samples from a regular grid in the unit
-box and optionally applies `R`. Each coordinate is the center of one of `n` equal
-cells, so no coordinate is 0 or 1.
+The points of a rectangular grid in the unit box, in random order. The grid has `m` equal
+cells along each axis, with `m` the smallest integer such that `m^d ≥ n`. Its points are
+the `m^d` cell centers, so no coordinate is 0 or 1.
+
+`sample(n, d, GridSample())` returns `n` distinct grid points, drawn without replacement
+and in random order. With `n = m^d` it is the whole grid. Every leading run of points is a
+uniform sample of the grid, so its mean is an unbiased estimate of the grid's mean.
 
 # Fields
 
-- `R::RandomizationMethod = NoRand()`: Randomization applied to the grid.
+- `rng::AbstractRNG = Random.TaskLocalRNG()`: Random-number generator that orders the grid.
 
 In more than 2 dimensions, grids have worse discrepancy than simple Monte Carlo. As a
 result, they should almost never be used for multivariate integration; their use is as
 a starting point for other algorithms.
+
+# Examples
+
+```jldoctest
+julia> using QuasiMonteCarlo, Random
+
+julia> sort(vec(sample(4, 1, GridSample(Xoshiro(1)))))
+4-element Vector{Float64}:
+ 0.125
+ 0.375
+ 0.625
+ 0.875
+
+julia> size(unique(sample(9, 2, GridSample()); dims = 2))
+(2, 9)
+```
 """
-Base.@kwdef @concrete struct GridSample <: DeterministicSamplingAlgorithm
-    R::RandomizationMethod = NoRand()
+Base.@kwdef @concrete struct GridSample <: RandomSamplingAlgorithm
+    rng::AbstractRNG = Random.TaskLocalRNG()
 end
 
 function sample(n::Integer, d::Integer, S::GridSample, T = Float64)
-    centers = [grid_center(T, cell, n) for cell in 0:(n - 1)]
-    samples = [rand(centers, n) for _ in 1:d]
-    return randomize(mapreduce(permutedims, vcat, samples), S.R)
+    _check_sequence(n)
+    d > 0 || throw(ArgumentError("GridSample needs at least one dimension, got d = $d"))
+    cells = grid_cells(n, d)
+    grid_size = big(cells)^d
+    indices = distinct_indices(S.rng, grid_size <= typemax(Int) ? Int(grid_size) : grid_size, n)
+    return fill_grid_points!(Matrix{T}(undef, d, n), indices, cells)
+end
+
+"""
+    grid_cells(n, d)
+
+The smallest number `m` of cells per axis such that the grid of `m^d` cells holds `n` points.
+
+```jldoctest
+julia> using QuasiMonteCarlo
+
+julia> QuasiMonteCarlo.grid_cells(10, 2)
+4
+```
+"""
+function grid_cells(n::Integer, d::Integer)
+    # The float root is near `m`; the exact checks correct it.
+    cells = max(big(1), floor(BigInt, Float64(n)^(1 / d)))
+    while cells^d < n
+        cells += 1
+    end
+    while cells > 1 && (cells - 1)^d >= n
+        cells -= 1
+    end
+    return Int(cells)
+end
+
+"""
+    fill_grid_points!(points, indices, cells)
+
+Write grid point `indices[j]` into column `j` of `points`. Coordinate `i` is the center of the
+cell given by digit `i` of the index in base `cells`.
+
+```jldoctest
+julia> using QuasiMonteCarlo
+
+julia> QuasiMonteCarlo.fill_grid_points!(zeros(2, 2), [1, 2], 2)
+2×2 Matrix{Float64}:
+ 0.75  0.25
+ 0.25  0.75
+```
+"""
+function fill_grid_points!(points::AbstractMatrix{T}, indices::AbstractVector{<:Integer}, cells::Integer) where {T}
+    for (point, index) in zip(eachcol(points), indices)
+        rest = index
+        for axis in eachindex(point)
+            rest, cell = divrem(rest, cells)
+            point[axis] = grid_center(T, Int(cell), cells)
+        end
+    end
+    return points
+end
+
+"""
+    distinct_indices(rng, count, n)
+
+`n` distinct indices of `0:(count - 1)`, drawn uniformly without replacement, in random
+order: every leading run of them is a uniform sample without replacement.
+
+```jldoctest
+julia> using QuasiMonteCarlo, Random
+
+julia> sort(QuasiMonteCarlo.distinct_indices(Xoshiro(1), 5, 5))
+5-element Vector{Int64}:
+ 0
+ 1
+ 2
+ 3
+ 4
+```
+"""
+function distinct_indices(rng::AbstractRNG, count::Integer, n::Integer)
+    if !(0 <= n <= count)
+        throw(ArgumentError("cannot draw $n distinct indices from $count"))
+    end
+    # A shuffle needs `count` entries; rejection needs fewer than 2n draws when n ≤ count / 2.
+    if 2n >= count
+        return shuffle(rng, 0:(count - 1))[1:n]
+    end
+    drawn = Set{typeof(count)}()
+    indices = typeof(count)[]
+    while length(indices) < n
+        index = rand(rng, 0:(count - 1))
+        if !(index in drawn)
+            push!(drawn, index)
+            push!(indices, index)
+        end
+    end
+    return indices
 end
 
 """

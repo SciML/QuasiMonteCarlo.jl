@@ -132,23 +132,55 @@ end
 
 #ND
 @testset "GridSample" begin
-    lb = [0.0, 0.0]
-    ub = [1.0, 1.0]
-    n = 64
-    d = 4
-
-    Random.seed!(1776)
-    s = QuasiMonteCarlo.sample(n, lb, ub, GridSample())
-    s = sortslices(s; dims = 2)
-    differences = diff(s; dims = 2)
-    # test for grid: the centers of n equal cells
-    @test all(x -> all(y -> y in (1:2:(2n - 1)) ./ 2n, x), eachrow(s))
-    μ = mean(s; dims = 2)
-    variance = var(s; corrected = false, dims = 2)
-    for i in eachindex(μ)
-        @test μ[i] ≈ 0.5 atol = 2 / sqrt(n)
-        @test variance[i] ≈ 1 / 12 rtol = 2 / sqrt(n)
+    # A full grid holds every cell center once, in an order the rng sets.
+    for (cells, d) in ((10, 1), (8, 2), (3, 3))
+        centers = Float64.((2(0:(cells - 1)) .+ 1) .// 2cells)
+        points = QuasiMonteCarlo.sample(cells^d, d, GridSample(Xoshiro(1776)))
+        @test size(points) == (d, cells^d)
+        @test Set(collect.(eachcol(points))) == Set(collect.(Iterators.product(fill(centers, d)...)))
+        @test points == QuasiMonteCarlo.sample(cells^d, d, GridSample(Xoshiro(1776)))
+        @test points != QuasiMonteCarlo.sample(cells^d, d, GridSample(Xoshiro(1777)))
     end
+    # Other sizes take distinct points of the smallest grid that holds them.
+    for (n, d, cells) in ((5, 2, 3), (10, 3, 3), (3, 70, 2), (1, 4, 1))
+        points = QuasiMonteCarlo.sample(n, d, GridSample(Xoshiro(1)))
+        @test size(points) == (d, n)
+        @test allunique(eachcol(points))
+        @test all(in(Float64.((2(0:(cells - 1)) .+ 1) .// 2cells)), points)
+    end
+    @test_throws ArgumentError QuasiMonteCarlo.sample(4, 0, GridSample())
+    # The float root misses the exact count at these sizes.
+    @test QuasiMonteCarlo.grid_cells(10^18, 3) == 10^6
+    @test QuasiMonteCarlo.grid_cells(10^18 + 1, 3) == 10^6 + 1
+    @test QuasiMonteCarlo.grid_cells(2^62 + 1, 2) == 2^31 + 1
+    @test QuasiMonteCarlo.grid_cells(typemax(Int), 1) == typemax(Int)
+    # Scaling a full grid keeps its exact mean and variance.
+    lb, ub = [-1.0, 10.0], [3.0, 12.0]
+    s = QuasiMonteCarlo.sample(64, lb, ub, GridSample(Xoshiro(1776)))
+    @test vec(mean(s; dims = 2)) ≈ (lb .+ ub) ./ 2
+    @test vec(var(s; corrected = false, dims = 2)) ≈ (ub .- lb) .^ 2 .* (1 - 1 / 64) ./ 12
+    for T in (Float64, Float32, Float16)
+        points = QuasiMonteCarlo.sample(125, 5, GridSample(), T)
+        @test eltype(points) == T && all(0 .< points .< 1)
+    end
+end
+
+@testset "distinct_indices draws uniformly without replacement" begin
+    # Each position of the order is uniform, so every leading run of grid points is unbiased.
+    # (10, 10) shuffles all indices; (27, 10) rejects repeated draws.
+    for (grid_size, n) in ((10, 10), (27, 10))
+        rng = Xoshiro(1776)
+        draws = [QuasiMonteCarlo.distinct_indices(rng, grid_size, n) for _ in 1:20_000]
+        @test all(allunique, draws) && all(draw -> all(in(0:(grid_size - 1)), draw), draws)
+        for position in (1, n)
+            tallies = [count(draw -> draw[position] == index, draws) for index in 0:(grid_size - 1)]
+            @test pvalue(ChisqTest(tallies)) > 1.0e-4
+        end
+    end
+    @test QuasiMonteCarlo.distinct_indices(Xoshiro(1), 5, 0) == Int[]
+    @test eltype(QuasiMonteCarlo.distinct_indices(Xoshiro(1), big(2)^70, 3)) == BigInt
+    @test_throws ArgumentError QuasiMonteCarlo.distinct_indices(Xoshiro(1), 3, 4)
+    @test_throws ArgumentError QuasiMonteCarlo.distinct_indices(Xoshiro(1), 3, -1)
 end
 
 @testset "RandomSample" begin
@@ -346,7 +378,7 @@ end
 end
 
 @testset "deterministic samplers never return 0 or 1" begin
-    samplers = [FaureSample(), GridSample(), HaltonSample(), KroneckerSample(), LatticeRuleSample(), SobolSample()]
+    samplers = [FaureSample(), HaltonSample(), KroneckerSample(), LatticeRuleSample(), SobolSample()]
     for sampler in samplers, T in (Float64, Float32), (count, dims) in ((4, 1), (16, 2), (125, 5))
         points = QuasiMonteCarlo.sample(count, dims, sampler, T)
         @test eltype(points) == T

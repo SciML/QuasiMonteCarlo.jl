@@ -23,10 +23,6 @@ DeveloperAPI) page.
 All `DeterministicSamplingAlgorithm` have `NoRand()` as their default `RandomizationMethod`, see [Randomization methods](@ref Randomization) and [Design Matrices section](@ref DesignMatrices) for more information on randomization.
 
 ```@docs
-GridSample
-```
-
-```@docs
 SobolSample
 ```
 
@@ -47,6 +43,7 @@ KroneckerSample
 
 ```@docs
 RandomSample
+GridSample
 LatinHypercubeSample
 RandomizedHaltonSample
 ```
