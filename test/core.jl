@@ -758,6 +758,9 @@ end
         cells = floor.(randomize(QuasiMonteCarlo.sample(n, d, DigitalNetSample(sobol)), scramble()) .* 2.0^pad)
         @test points == (cells .+ 0.5) ./ 2.0^pad
         @test scrambled_net_words(sobol, Scramble, n, d, 3, pad) == UInt32.(cells) .<< (32 - pad)
+        # A design matrix scrambles the points with the same draws, so it gives the same cells.
+        matrix = first(QuasiMonteCarlo.DesignMatrix(n, d, DigitalNetSample(sobol), scramble(), 1))
+        @test floor.(matrix .* 2.0^pad) == cells
     end
     @test all(iszero, scrambled_net_words(sobol, Scramble, n, d, 3, 20) .& 0x00000fff)
 
