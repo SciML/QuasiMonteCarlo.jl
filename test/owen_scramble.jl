@@ -61,7 +61,7 @@ end
     @test QuasiMonteCarlo.add_mod(huge_base - 1, huge_base - 1, huge_base) == huge_base - 2
     @test QuasiMonteCarlo.add_mod(UInt8(3), UInt8(4), UInt8(5)) == 2
     @test QuasiMonteCarlo.add_mod(UInt8(1), UInt8(2), UInt8(5)) == 3
-    @test_throws DomainError QuasiMonteCarlo.permute_digit(UInt64(1), UInt64(5), UInt64(5))
+    @test_throws DomainError(UInt64(5), "a base-5 digit must lie in 0:4") QuasiMonteCarlo.permute_digit(UInt64(1), UInt64(5), UInt64(5))
 end
 
 @testset "OwenScramble: node permutations are affine with a uniform multiplier" begin
@@ -89,12 +89,26 @@ end
     end
 end
 
+@testset "OwenScramble: a child's permutation is independent of its parent's" begin
+    # Digit 1 of these points gives the root's multiplier; digit 2 of point `child` is that child's shift.
+    points = [0 1 2; 0 0 0]
+    seeds = 1:6000
+    scrambles = [scramble_digits(points, 3, seed) for seed in seeds]
+    multipliers = [mod(scrambled[1, 2] - scrambled[1, 1], 3) for scrambled in scrambles]
+    for child in 1:3
+        cells = [(multiplier, scrambled[2, child]) for (multiplier, scrambled) in zip(multipliers, scrambles)]
+        @test all(abs(count(==((multiplier, shift)), cells) / length(seeds) - 1 / 6) < 4 * sqrt(5 / 36 / length(seeds)) for multiplier in 1:2, shift in 0:2)
+    end
+end
+
 @testset "OwenScramble: any point count, and extension keeps drawn points" begin
     points = QuasiMonteCarlo.sample(1000, 3, SobolSample())
     scramble(seed::Integer) = OwenScramble(base = 2, pad = 32, rng = Xoshiro(seed))
     long = randomize(points, scramble(1))
     @test randomize(points[:, 1:37], scramble(1)) == long[:, 1:37]
     @test all(0 .<= long .< 1)
+    @test OwenScramble(base = 2).pad == 32
+    @test_throws AssertionError QuasiMonteCarlo.randomize!(zeros(3, 10), points, scramble(1))
 
     # Each scrambled point is uniform: over 4000 seeds, its mean and variance lie within 4 standard errors of ½ and ¹⁄₁₂.
     # The variance check also fails if `randomize` returns its input unchanged.
