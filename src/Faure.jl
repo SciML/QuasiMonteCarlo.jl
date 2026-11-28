@@ -91,6 +91,8 @@ end
     ) where {I <: Integer, F}
     base = nextprime(dimension)
     inv_base = inv(base)
+    # Center each point in the finest grid of base^m cells that has at least n_samples cells.
+    offset = inv(2nextpow(base, n_samples))
 
     # Upper triangular Pascal matrix
     pascal = pascal_mat(n_digits, base)
@@ -113,7 +115,7 @@ end
             if dim_idx ≠ 1
                 dgs .= (permutation * dgs) .% base
             end
-            vdc[sample_idx] = (evalpoly(inv_base, dgs) + inv(2base^n_digits)) * inv_base
+            vdc[sample_idx] = evalpoly(inv_base, dgs) * inv_base + offset
         end
     end
     return faure
