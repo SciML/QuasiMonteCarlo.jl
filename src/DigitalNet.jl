@@ -1,5 +1,5 @@
 """
-    DigitalNetSample(generating_matrices::AbstractMatrix{<:Unsigned}; R::RandomizationMethod = NoRand(), shift = nothing) <: DeterministicSamplingAlgorithm
+    DigitalNetSample(generating_matrices::AbstractMatrix{<:Unsigned}; R::RandomizationMethod = NoRand(), shift = nothing, pad = nothing) <: DeterministicSamplingAlgorithm
     DigitalNetSample(file; R::RandomizationMethod = NoRand())
 
 A base-2 digital net or sequence defined by its generating matrices, such as a net
@@ -13,9 +13,10 @@ first. The points come in natural order, so the first `2^m` points form a net wh
 the leading `m` columns do.
 
 `sample(n, d, DigitalNetSample(generating_matrices))` requires
-`d ≤ size(generating_matrices, 1)` and `n ≤ 2^size(generating_matrices, 2)`. Each
-coordinate keeps as many leading bits as the output type `T` can represent exactly.
-An unsigned `T` returns the digits themselves: each coordinate is a left-aligned word
+`d ≤ size(generating_matrices, 1)` and `n ≤ 2^size(generating_matrices, 2)`. A float
+coordinate is the midpoint of the cell of its leading digits, so it lies strictly inside
+`(0, 1)`. The cell keeps the `pad` digits of a scramble, or else as many digits as `T`
+holds exactly, minus one. An unsigned `T` returns the digits themselves: each coordinate is a left-aligned word
 holding its leading `8 * sizeof(T)` binary digits. `R` may be `NoRand`,
 [`MatousekScramble`](@ref) or [`DigitalShift`](@ref), which are applied to the generating
 matrices (`L C`, then a digit shift XORed into every point, `scramble_generators`)
@@ -23,9 +24,10 @@ rather than to the sampled points: the same points as `randomize` gives, from `O
 work per column rather than per point, keeping `pad` digits.
 
 A `shift` (one left-aligned word per dimension, `R = NoRand()`) is XORed into every point
-of the net instead: with the matrices and shifts `scramble_generators` returns, it
-generates the points of a scramble from the few kilobytes it is held in, one XOR per
-coordinate, equal to sampling with that scramble.
+of the net instead. Give it with the `pad` of its scramble, which sets the float cells.
+With the matrices and shifts `scramble_generators` returns, it generates the points of a
+scramble from the few kilobytes it is held in, one XOR per coordinate, equal to sampling
+with that scramble.
 
 The second form reads the generating matrices from `file`, a path or an `IO`, in the
 `dnet` format of [LDData](https://github.com/QMCSoftware/LDData) or in LatNet
@@ -39,6 +41,8 @@ Builder's `-O net` output format, which is the same without the base line.
   Scrambles must use `base = 2`.
 - `shift::Union{Nothing, AbstractVector{<:Unsigned}} = nothing`: Left-aligned digit shift
   XORed into each dimension's points; at least one entry per sampled dimension.
+- `pad::Union{Nothing, Int} = nothing`: Number of scrambled digits of a held `shift`.
+  Required with `shift`, and only with `shift`.
 
 # Examples
 
@@ -47,10 +51,20 @@ julia> using QuasiMonteCarlo
 
 julia> generating_matrices = UInt32[0x80000000 0x40000000; 0x80000000 0xc0000000];
 
-julia> sample(4, 2, DigitalNetSample(generating_matrices))
+julia> points = sample(4, 2, DigitalNetSample(generating_matrices));
+
+julia> round.(points; digits = 6)
 2×4 Matrix{Float64}:
  0.0  0.5  0.25  0.75
  0.0  0.5  0.75  0.25
+
+julia> minimum(points) == 2.0^-53
+true
+
+julia> sample(4, 2, DigitalNetSample(generating_matrices), UInt32)
+2×4 Matrix{UInt32}:
+ 0x00000000  0x80000000  0x40000000  0xc0000000
+ 0x00000000  0x80000000  0xc0000000  0x40000000
 ```
 
 References:
@@ -61,17 +75,26 @@ L'Ecuyer, P., Marion, P., Godin, M., & Puchhammer, F. (2022). A tool for custom 
     generating_matrices::AbstractMatrix{<:Unsigned}
     R::RandomizationMethod
     shift::Union{Nothing, AbstractVector{<:Unsigned}}
+    pad::Union{Nothing, Int}
 end
 
 function DigitalNetSample(
         generating_matrices::AbstractMatrix{<:Unsigned};
         R::RandomizationMethod = NoRand(),
-        shift::Union{Nothing, AbstractVector{<:Unsigned}} = nothing
+        shift::Union{Nothing, AbstractVector{<:Unsigned}} = nothing,
+        pad::Union{Nothing, Integer} = nothing
     )
     if !isnothing(shift) && !(R isa NoRand)
         throw(ArgumentError("a digit shift replaces the randomization: use R = NoRand() with shift, not $(typeof(R))"))
     end
-    return DigitalNetSample(generating_matrices, R, shift)
+    if isnothing(shift) != isnothing(pad)
+        throw(ArgumentError("give a held shift together with the pad of its scramble, and pad only with a shift"))
+    end
+    width = 8 * sizeof(eltype(generating_matrices))
+    if !isnothing(pad) && !(1 <= pad <= width)
+        throw(ArgumentError("pad = $pad digits do not fit in a $width-bit word"))
+    end
+    return DigitalNetSample(generating_matrices, R, shift, isnothing(pad) ? nothing : Int(pad))
 end
 
 function DigitalNetSample(file::Union{AbstractString, IO}; R::RandomizationMethod = NoRand())
@@ -94,12 +117,12 @@ function DigitalNetSample(file::Union{AbstractString, IO}; R::RandomizationMetho
     if size(generating_matrices, 2) != k
         throw(ArgumentError("the header gives $k columns, but the generating matrices have $(size(generating_matrices, 2))"))
     end
-    return DigitalNetSample(generating_matrices, R, nothing)
+    return DigitalNetSample(generating_matrices, R, nothing, nothing)
 end
 
 function sample(n::Integer, d::Integer, S::DigitalNetSample, T::Type = Float64)
     if !isnothing(S.shift)
-        return _digits2unif.(T, _shifted_net_digits(n, d, S))
+        return _digits2unif.(T, _shifted_net_digits(n, d, S), S.pad)
     end
     return _sample_net(n, d, S.generating_matrices, S.R, T)
 end
@@ -109,7 +132,7 @@ function _sample_net(n::Integer, d::Integer, C::AbstractMatrix{<:Unsigned}, R::R
 end
 
 function _sample_net(n::Integer, d::Integer, C::AbstractMatrix{<:Unsigned}, R::DigitalMatrixScramble, ::Type{T}) where {T}
-    return _digits2unif.(T, _scrambled_net_digits(n, d, C, R))
+    return _digits2unif.(T, _scrambled_net_digits(n, d, C, R), Int(R.pad))
 end
 
 function sample(n::Integer, d::Integer, S::DigitalNetSample, ::Type{T}) where {T <: Unsigned}
@@ -214,13 +237,20 @@ function _leading_digits(::Type{T}, x::U) where {T <: Unsigned, U <: Unsigned}
 end
 
 """
-    _digits2unif(T, x::Unsigned)
+    _digits2unif(T, x::Unsigned, digits = precision(T) - 1)
 
-The left-aligned integer `x` as a fraction in [0, 1). A float `T` keeps the leading bits
-it holds exactly, which keeps the result below 1; other types keep 53 bits.
+The midpoint of the cell of the leading `digits` binary digits of the left-aligned word
+`x`, as in `bits2unif`. A float `T` keeps at most `precision(T) - 1` digits, so the midpoint
+is exact and lies strictly inside `(0, 1)`; other types use `Float64`.
+
+```jldoctest
+julia> QuasiMonteCarlo._digits2unif(Float64, 0xc0000000, 2)
+0.875
+```
 """
-function _digits2unif(::Type{T}, x::Unsigned) where {T <: AbstractFloat}
-    shift = max(0, 8 * sizeof(x) - precision(T))
-    return ldexp(T(x >> shift), shift - 8 * sizeof(x))
+function _digits2unif(::Type{T}, x::Unsigned, digits::Integer = precision(T) - 1) where {T <: AbstractFloat}
+    kept = min(digits, precision(T) - 1)
+    dropped = max(0, 8 * sizeof(x) - kept)
+    return ldexp(T(x >> dropped), dropped - 8 * sizeof(x)) + ldexp(one(T), -(kept + 1))
 end
-_digits2unif(::Type{T}, x::Unsigned) where {T} = T(_digits2unif(Float64, x))
+_digits2unif(::Type{T}, x::Unsigned, digits::Integer = precision(Float64) - 1) where {T} = T(_digits2unif(Float64, x, digits))

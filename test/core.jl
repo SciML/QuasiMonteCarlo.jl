@@ -243,10 +243,15 @@ end
     # Sobol.jl's direction integers satisfy m[j, k] < 2^k; left-align them in 32 bits.
     sobol = SobolSeq(d).m .<< (32 .- (1:32)')
     net = QuasiMonteCarlo.sample(2n, d, DigitalNetSample(sobol))
+    words = QuasiMonteCarlo.sample(2n, d, DigitalNetSample(sobol), UInt32)
     # SobolSample skips the first n - 1 points and runs in Gray-code order, so its n
     # points are points n, ..., 2n - 1 of the digital sequence, at the Gray-code indices.
-    @test QuasiMonteCarlo.sample(n, d, SobolSample()) ==
-        net[:, [(k ⊻ (k >> 1)) + 1 for k in n:(2n - 1)]]
+    @test QuasiMonteCarlo.sample(n, d, SobolSample()) .* 2.0^32 ==
+        words[:, [(k ⊻ (k >> 1)) + 1 for k in n:(2n - 1)]]
+    # A float is the midpoint of the finest cell Float64 holds around its digits, so none is 0 or 1.
+    @test net == words ./ 2.0^32 .+ 2.0^-53
+    @test net[:, 1] == fill(2.0^-53, d)
+    @test all(0 .< QuasiMonteCarlo.sample(2n, d, DigitalNetSample(sobol), Float32) .< 1)
 
     function stratified(points)
         # Each coordinate puts exactly one point in each interval [k, k + 1) / n.
@@ -261,7 +266,11 @@ end
 
     # Float32 keeps only the bits it can hold, so an all-ones coordinate stays below 1.
     @test QuasiMonteCarlo.sample(2, 1, DigitalNetSample(fill(typemax(UInt64), 1, 1)), Float32) ==
-        [0.0f0 prevfloat(1.0f0)]
+        [2.0f0^-24 prevfloat(1.0f0)]
+    @test QuasiMonteCarlo.sample(2, 1, DigitalNetSample(fill(typemax(UInt64), 1, 1))) ==
+        [2.0^-53 prevfloat(1.0)]
+    @test QuasiMonteCarlo.sample(2, 1, DigitalNetSample(fill(typemax(UInt64), 1, 1)), Rational{Int128}) ==
+        [1 // 2^53 (2^53 - 1) // 2^53]
 
     # LatNet Builder `-O net` output for the Joe-Kuo nets, cut to 3 dimensions and 5 columns.
     latnet = """
@@ -274,6 +283,7 @@ end
     1073741824 1610612736 1342177280 2013265920 1140850688
     1073741824 1610612736 805306368 1207959552 1946157056
     """
+    # The 64-bit words of a file give the same floats as the 32-bit words of the same net.
     @test QuasiMonteCarlo.sample(32, 3, DigitalNetSample(IOBuffer(latnet))) == net[1:3, 1:32]
     # LDData's `dnet` format adds the base to the same layout.
     dnet = "# dnet\n2    # base b = 2\n" * latnet
@@ -740,13 +750,14 @@ end
     words = scrambled_net_words(sobol, Scramble, n, d, 3, 32)
     @test words != plain
 
-    # Scrambling the generating matrices is the scramble of the points, for the same draws,
-    # as floats and as digit words, and the digits after `pad` are cleared.
+    # Scrambling the generating matrices is the scramble of the points, for the same draws:
+    # the same cells of `pad` digits. Floats are the cell midpoints, and words clear the digits after `pad`.
     for pad in (32, 20, 5)
         scramble() = Scramble(base = 2, pad = pad, rng = Xoshiro(3))
         points = QuasiMonteCarlo.sample(n, d, DigitalNetSample(sobol; R = scramble()))
-        @test points == randomize(QuasiMonteCarlo.sample(n, d, DigitalNetSample(sobol)), scramble())
-        @test scrambled_net_words(sobol, Scramble, n, d, 3, pad) == UInt32.(floor.(points .* 2.0^32))
+        cells = floor.(randomize(QuasiMonteCarlo.sample(n, d, DigitalNetSample(sobol)), scramble()) .* 2.0^pad)
+        @test points == (cells .+ 0.5) ./ 2.0^pad
+        @test scrambled_net_words(sobol, Scramble, n, d, 3, pad) == UInt32.(cells) .<< (32 - pad)
     end
     @test all(iszero, scrambled_net_words(sobol, Scramble, n, d, 3, 20) .& 0x00000fff)
 
@@ -782,14 +793,21 @@ end
     for pad in (32, 20)
         direct = scrambled_net_words(sobol, Scramble, n, d, 3, pad)
         matrices, shifts = QuasiMonteCarlo.scramble_generators(sobol, d, Scramble(base = 2, pad = pad, rng = Xoshiro(3)))
-        held = DigitalNetSample(matrices; shift = shifts)
+        held = DigitalNetSample(matrices; shift = shifts, pad = pad)
         @test QuasiMonteCarlo.sample(n, d, held, UInt32) == direct
         # A longer sample keeps a shorter one's points, and fewer dimensions the leading ones.
         @test QuasiMonteCarlo.sample(2n, d, held, UInt32)[:, 1:n] == direct
         @test QuasiMonteCarlo.sample(n, 2, held, UInt32) == direct[1:2, :]
-        # Floats are the left ends of the cells of the leading digits.
-        @test QuasiMonteCarlo.sample(n, d, held, Float64) == Float64.(direct) ./ 2.0^32
+        # Floats are the midpoints of the cells of the `pad` leading digits, as the direct scramble gives.
+        @test QuasiMonteCarlo.sample(n, d, held, Float64) == (Float64.(direct .>> (32 - pad)) .+ 0.5) ./ 2.0^pad
+        @test QuasiMonteCarlo.sample(n, d, held, Float64) ==
+            QuasiMonteCarlo.sample(n, d, DigitalNetSample(sobol; R = Scramble(base = 2, pad = pad, rng = Xoshiro(3))))
     end
-    @test_throws ArgumentError QuasiMonteCarlo.sample(n, d, DigitalNetSample(sobol; shift = zeros(UInt32, d - 1)), UInt32)
-    @test_throws ArgumentError DigitalNetSample(sobol; R = Scramble(base = 2, pad = 32), shift = zeros(UInt32, d))
+    @test_throws ArgumentError QuasiMonteCarlo.sample(n, d, DigitalNetSample(sobol; shift = zeros(UInt32, d - 1), pad = 32), UInt32)
+    @test_throws ArgumentError DigitalNetSample(sobol; R = Scramble(base = 2, pad = 32), shift = zeros(UInt32, d), pad = 32)
+    # The pad sets the float cells, so a held shift needs it, and only a held shift takes it.
+    @test_throws ArgumentError("give a held shift together with the pad of its scramble, and pad only with a shift") DigitalNetSample(sobol; shift = zeros(UInt32, d))
+    @test_throws ArgumentError DigitalNetSample(sobol; pad = 32)
+    @test_throws ArgumentError("pad = 33 digits do not fit in a 32-bit word") DigitalNetSample(sobol; shift = zeros(UInt32, d), pad = 33)
+    @test_throws ArgumentError DigitalNetSample(sobol; shift = zeros(UInt32, d), pad = 0)
 end

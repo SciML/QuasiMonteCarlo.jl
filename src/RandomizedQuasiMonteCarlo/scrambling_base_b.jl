@@ -320,7 +320,8 @@ they equal the scramble of the unscrambled points. Only the first `pad` digits o
 column and shift are kept. It costs `O(pad²)` per column, not per point.
 
 The generating matrices are left-aligned `U` words; returns the scrambled matrices and a
-vector of shifts, one per dimension.
+vector of shifts, one per dimension. Sample them as
+`DigitalNetSample(matrices; shift = shifts, pad = R.pad)`.
 """
 function scramble_generators(
         generating_matrices::AbstractMatrix{U}, d::Integer, R::DigitalMatrixScramble
