@@ -207,6 +207,22 @@ end
     end
 end
 
+@testset "Van der Corput Sequence with a randomization" begin
+    base, n = 3, 27
+    plain = QuasiMonteCarlo.sample(n, 1, VanDerCorputSample(; base))
+    randomizations = (
+        Shift(rng = Xoshiro(1)), DigitalShift(; base, rng = Xoshiro(1)),
+        OwenScramble(; base, rng = Xoshiro(1)), MatousekScramble(; base, rng = Xoshiro(1)),
+    )
+    for R in randomizations
+        s = QuasiMonteCarlo.sample(n, 1, VanDerCorputSample(; base, R))
+        @test s isa Vector{Float64} && length(s) == n
+        # One randomization for all points keeps one point in each cell of width 1/n.
+        @test sort(floor.(Int, n .* s)) == 0:(n - 1)
+        @test s != plain
+    end
+end
+
 @testset "SobolSample" begin
     lb = [0.0, 0.0, 0.0]
     ub = [1.0, 1.0, 1.0]
