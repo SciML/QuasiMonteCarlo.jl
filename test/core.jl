@@ -236,6 +236,19 @@ end
     end
 end
 
+@testset "Faure nets put each point at the center of its cell" begin
+    for (d, power) in ((1, 3), (3, 3), (5, 2), (7, 2))
+        base = nextprime(d)
+        n = base^power
+        points = QuasiMonteCarlo.sample(n, d, FaureSample())
+        # Each coordinate of a full net is a permutation of the n cell centers.
+        @test all(sort(row) ≈ ((0:(n - 1)) .+ 0.5) ./ n for row in eachrow(points))
+    end
+    # With λ < base copies of base^power, the cells have one more digit.
+    points = QuasiMonteCarlo.sample(2 * 3^2, 3, FaureSample())
+    @test points .* 3^3 .- 0.5 ≈ round.(points .* 3^3 .- 0.5)
+end
+
 @testset "Faure Sample" begin
     #FaureSample()
     d = 17
@@ -246,8 +259,8 @@ end
     @test_throws ArgumentError QuasiMonteCarlo.sample(d + 1, d, sampler)
     @test_throws ArgumentError QuasiMonteCarlo.sample(d^2 + 1, d, sampler)
     s = sortslices(QuasiMonteCarlo.sample(n, d, sampler); dims = 2)
-    # FaureSample() generates centered boxes, unlike DiceDesign
-    r = sortslices(include("shared/rfaure.jl")'; dims = 2) .+ inv(2base^(power + 1))
+    # FaureSample() generates centered boxes, unlike DiceDesign: n = base^power cells of width 1 / n.
+    r = sortslices(include("shared/rfaure.jl")'; dims = 2) .+ inv(2base^power)
 
     @test s isa Matrix
     @test size(s) == (d, n)
