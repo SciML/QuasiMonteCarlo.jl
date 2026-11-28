@@ -161,7 +161,7 @@ Distinct digits give distinct children, as `splitmix64` is a bijection.
 # Examples
 
 ```jldoctest
-julia> QuasiMonteCarlo.child_node(0x0, 0) != QuasiMonteCarlo.child_node(0x0, 1)
+julia> QuasiMonteCarlo.child_node(UInt64(0), 0) != QuasiMonteCarlo.child_node(UInt64(0), 1)
 true
 ```
 """

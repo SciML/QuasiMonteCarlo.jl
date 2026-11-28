@@ -1,5 +1,8 @@
 using Documenter, QuasiMonteCarlo
 
+# Doctests of internal functions name the package, so load it before each one.
+DocMeta.setdocmeta!(QuasiMonteCarlo, :DocTestSetup, :(using QuasiMonteCarlo); recursive = true)
+
 include("pages.jl")
 
 makedocs(
